@@ -28,16 +28,12 @@ export interface TmdbShowDetail {
   number_of_seasons: number
   number_of_episodes: number
   status: string
-  /** ISO 3166-1 country codes (e.g. "US", "KR") -- powers the History
-   * filters' Country facet. Always present in TMDB's response; just wasn't
-   * typed/used here until that filter needed it. */
+  /** ISO 3166-1 country code, powers the History filters' Country facet. */
   origin_country: string[]
-  /** ISO 639-1 language code (e.g. "en", "ko") -- powers the History
-   * filters' Language facet. Same as origin_country above. */
+  /** ISO 639-1 language code, powers the History filters' Language facet. */
   original_language: string
   seasons: TmdbSeasonSummary[]
-  /** Fetched via append_to_response=external_ids -- used to cross-reference
-   * this show on TVmaze for a corrected air date, see lib/tvmaze.ts. */
+  /** Fetched via append_to_response=external_ids, used to cross-reference TVmaze; see lib/tvmaze.ts. */
   external_ids?: { imdb_id: string | null }
 }
 
@@ -69,7 +65,7 @@ export interface TmdbWatchProvider {
 }
 
 export interface TmdbWatchProviderRegion {
-  /** TMDB's own watch page for this title/region -- has full deep links + JustWatch attribution. */
+  /** TMDB's own watch page for this title/region. */
   link: string
   flatrate?: TmdbWatchProvider[]
   free?: TmdbWatchProvider[]
@@ -84,7 +80,7 @@ export interface TmdbWatchProviders {
   results: Record<string, TmdbWatchProviderRegion>
 }
 
-/** One entry from the full /watch/providers/tv list (every provider TMDB knows about). */
+/** One entry from the full /watch/providers/tv list. */
 export interface TmdbProviderListItem {
   provider_id: number
   provider_name: string
@@ -113,15 +109,11 @@ export interface AppUser {
   email: string
   username: string
   created_at: string
-  /** Last time this person opened their notifications -- powers the unread
-   * new-follower count. Not present on rows fetched before this column
-   * existed... except there's no such thing here, it's backfilled to now()
-   * for everyone at migration time. See lib/follows.ts. */
+  /** Last time this person opened notifications -- powers the unread new-follower count. */
   notifications_seen_at: string
 }
 
-/** One "follower_id follows followed_id" edge. Replaces the old flat
- * Members directory with a real social graph -- see lib/follows.ts. */
+/** One "follower_id follows followed_id" edge; see lib/follows.ts. */
 export interface Follow {
   id: string
   follower_id: string
@@ -145,9 +137,7 @@ export interface ShowRatingWithUser extends ShowRating {
   users: { username: string } | null
 }
 
-/** One person's rating for a single season -- independent of ShowRating
- * above, the way IMDb/Rotten Tomatoes show a season score next to a show's
- * overall one. */
+/** One person's rating for a single season, independent of ShowRating above. */
 export interface SeasonRating {
   id: string
   user_id: string
@@ -180,9 +170,7 @@ export interface EpisodeWatched {
   watched_at: string
   /** True when the actual date wasn't known and watched_at is just a placeholder. */
   watched_at_unknown: boolean
-  /** Snapshot of the episode's runtime (minutes) as of this watch, for the
-   * "hours watched" stat. Null for rows logged before this column existed,
-   * or when TMDB doesn't have a runtime for the episode. */
+  /** Snapshot of the episode's runtime (minutes) for the "hours watched" stat; null if unavailable. */
   runtime_minutes: number | null
 }
 
@@ -194,8 +182,7 @@ export interface EpisodeWatchedWithUser extends EpisodeWatched {
   users: { username: string } | null
 }
 
-/** A show someone wants to watch but hasn't started -- see EpisodeWatched
- * for actual progress once they do. */
+/** A show someone wants to watch but hasn't started; see EpisodeWatched for actual progress. */
 export interface WatchlistItem {
   id: string
   user_id: string
@@ -206,8 +193,7 @@ export interface WatchlistItem {
 }
 
 /** An explicit "I'm starting this" declaration -- covers the 0/x gap in Now
- * Watching before any episode has actually been marked watched. Independent
- * of EpisodeWatched; see show_started in supabase/schema.sql. */
+ * Watching before any episode is marked watched. Independent of EpisodeWatched. */
 export interface ShowStarted {
   id: string
   user_id: string
@@ -218,11 +204,9 @@ export interface ShowStarted {
   started_at: string
 }
 
-/** A "hide this from Now Watching" marker -- doesn't touch show_started or
- * episode_watched, just suppresses the show from Home until the user
- * resumes it (see undismissShow in lib/showDismissed.ts). No denormalized
- * show name/poster since nothing renders this row directly -- it's only
- * ever used as a lookup set. */
+/** A "hide this from Now Watching" marker -- suppresses a show from Home until
+ * resumed (see lib/showDismissed.ts). Only ever used as a lookup set, so no
+ * denormalized name/poster. */
 export interface ShowWatchingDismissed {
   id: string
   user_id: string
@@ -230,9 +214,8 @@ export interface ShowWatchingDismissed {
   dismissed_at: string
 }
 
-/** One "I rewatched this" log entry -- independent of EpisodeWatched (which
- * only tracks first-time progress toward "finished"). Append-only: logging
- * a rewatch never edits or replaces an earlier one. */
+/** One "I rewatched this" log entry, independent of EpisodeWatched (first-time
+ * progress only). Append-only: logging a rewatch never edits an earlier one. */
 export interface ShowRewatch {
   id: string
   user_id: string
@@ -242,8 +225,7 @@ export interface ShowRewatch {
   rewatched_at: string
 }
 
-/** A user-curated list of shows (e.g. "Comfort shows"). Readable by anyone,
- * like everything else in this app -- "shareable" just means a clean URL. */
+/** A user-curated list of shows (e.g. "Comfort shows"). Readable by anyone, like everything else here. */
 export interface ShowList {
   id: string
   user_id: string

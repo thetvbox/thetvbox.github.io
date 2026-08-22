@@ -11,7 +11,7 @@ import {
   isHistoryFiltersActive,
 } from '../lib/historyFilters'
 import type { HistoryFilters } from '../lib/historyFilters'
-import { posterUrl, providerLogoUrl } from '../lib/tmdb'
+import { providerLogoUrl } from '../lib/tmdb'
 import type { ResolvedProvider } from '../lib/streamingProvider'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useShowDetails } from '../hooks/useShowDetails'
@@ -19,7 +19,9 @@ import HistoryFiltersPanel from './HistoryFiltersPanel'
 import StreamingBadge from './StreamingBadge'
 import EmptyState from './EmptyState'
 import StarGlyph from './StarGlyph'
+import PosterTile, { POSTER_GRID_CLASSES } from './PosterTile'
 import { formatShortDate } from '../lib/date'
+import { staggerDelay } from '../lib/motion'
 
 const SORT_LABELS: Record<HistorySort, string> = {
   recent: 'Recent',
@@ -166,7 +168,7 @@ export default function HistorySection({
         </EmptyState>
       ) : sort === 'platform' ? (
         loadingPlatforms && platforms.size === 0 ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className={POSTER_GRID_CLASSES}>
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[2/3] rounded-2xl bg-base-800" />
@@ -192,7 +194,7 @@ export default function HistorySection({
                     {group.name} <span className="text-base-600">· {group.shows.length}</span>
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className={POSTER_GRID_CLASSES}>
                   {group.shows.map((s, i) => (
                     <HistoryCard
                       key={s.showId}
@@ -208,7 +210,7 @@ export default function HistorySection({
           </div>
         )
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className={POSTER_GRID_CLASSES}>
           {flatSorted.map((s, i) => (
             <HistoryCard key={s.showId} show={s} username={username} index={i} provider={platforms.get(s.showId)} />
           ))}
@@ -233,23 +235,10 @@ function HistoryCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(index, 12) * 0.02 }}
+      transition={{ duration: 0.3, delay: staggerDelay(index, 12) }}
     >
       <Link to={`/u/${username}/shows/${s.showId}`} className="group block">
-        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-base-800 ring-1 ring-hairline transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_32px_-8px_rgba(139,92,246,0.35)]">
-          {s.showPosterPath ? (
-            <img
-              src={posterUrl(s.showPosterPath) ?? undefined}
-              alt={s.showName}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center p-3 text-center text-xs text-base-400">
-              {s.showName}
-            </div>
-          )}
+        <PosterTile posterPath={s.showPosterPath} name={s.showName}>
           <StreamingBadge provider={provider} />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-4">
             {s.rating !== null ? (
@@ -261,7 +250,7 @@ function HistoryCard({
               <div className="text-[11px] font-semibold text-accent-400">Finished</div>
             )}
           </div>
-        </div>
+        </PosterTile>
         <p className="mt-2 truncate text-sm font-medium text-base-100">{s.showName}</p>
         <p className="text-xs text-base-400">
           {s.finishedAt

@@ -11,13 +11,9 @@ export interface ChangelogRelease {
   blocks: ChangelogBlock[]
 }
 
-/**
- * Hand-rolled, not a markdown library -- CHANGELOG.md only ever uses a small,
- * fixed subset of markdown (## release headings, ### subheadings, "- " list
- * items, plain paragraphs, and trailing "[x.y.z]: url" reference links to
- * skip), since this app is the only thing that ever writes to that file. A
- * real parser would be overkill for a format this constrained.
- */
+/** Hand-rolled, not a markdown library -- CHANGELOG.md only ever uses a
+ * small, fixed subset (## headings, ### subheadings, "- " list items,
+ * paragraphs, trailing reference links), so a real parser would be overkill. */
 export function parseChangelog(raw: string): ChangelogRelease[] {
   const releases: ChangelogRelease[] = []
   let current: ChangelogRelease | null = null

@@ -10,8 +10,7 @@ interface StarRatingProps {
   readOnly?: boolean
   className?: string
   /** Screen-reader label for the interactive case, e.g. "Rate this show" --
-   * this component has no idea what it's rating on its own, so the caller
-   * (RatingSummary) always supplies one rather than this guessing wrong. */
+   * this component has no idea what it's rating, so the caller supplies one. */
   label?: string
 }
 
@@ -27,10 +26,8 @@ const SIZE_MAP: Record<NonNullable<StarRatingProps['size']>, number> = {
 const DRAG_THRESHOLD_PX = 6
 
 function Star({ fill, px }: { fill: number; px: number }) {
-  // fill: 0, 0.5, or 1
-  // useId (not Math.random()) -- stable across re-renders and guaranteed
-  // unique even with several StarRating instances on screen at once (e.g.
-  // ShowDetail's show + season ratings, both mounted simultaneously).
+  // fill: 0, 0.5, or 1. useId is stable and unique even with several
+  // StarRating instances mounted at once (show + season ratings).
   const clipId = useId()
   return (
     <svg width={px} height={px} viewBox="0 0 24 24" className="pointer-events-none block">
@@ -70,9 +67,8 @@ export default function StarRating({
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  // Tracks an in-progress press across the whole row (not per-star) so a
-  // drag can be dragged. Ref, not state -- read/written inside the same
-  // pointer-event sequence, doesn't need to trigger a re-render itself.
+  // Tracks an in-progress press across the whole row (not per-star). Ref, not
+  // state -- read/written within one pointer-event sequence, no re-render needed.
   const dragRef = useRef<{ pointerId: number; startX: number; dragging: boolean } | null>(null)
   const px = SIZE_MAP[size]
   const displayValue = hoverValue ?? value
@@ -89,22 +85,16 @@ export default function StarRating({
   function handlePick(starIndex: number, half: boolean) {
     if (!interactive || !onChange) return
     const picked = half ? starIndex - 0.5 : starIndex
-    // Picking the exact same rating again clears it (toggle off) -- also
-    // reachable via the explicit "Clear" control in RatingSummary, this is
-    // just the quicker shortcut once you know it's there.
+    // Picking the same rating again clears it -- a shortcut for the explicit
+    // "Clear" control in RatingSummary.
     onChange(picked === value ? 0 : picked)
   }
 
-  // A precise first tap on a ~10px-wide half-star zone is genuinely hard to
-  // land on a phone. Letting a press drag across the whole row -- watching
-  // the preview update live and only committing on release -- turns "land
-  // exactly right the first time" into "get close, then adjust," which is
-  // far more forgiving on touch. Plain taps/clicks are untouched (each
-  // half-star button's own onClick above still handles those); this only
-  // takes over once real movement is detected, and capturing the pointer at
-  // that point redirects its eventual pointerup/click away from whatever
-  // button is underneath -- so the two paths can never both fire for the
-  // same gesture.
+  // A precise tap on a ~10px half-star zone is hard on a phone. Letting a
+  // press drag across the row -- previewing live, committing on release --
+  // is more forgiving. Only takes over once real movement is detected
+  // (pointer capture then redirects the eventual click away from the button
+  // underneath), so plain taps/clicks still go through each button's onClick.
   function handlePointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (!interactive) return
     dragRef.current = { pointerId: e.pointerId, startX: e.clientX, dragging: false }
@@ -138,15 +128,10 @@ export default function StarRating({
   return (
     <div
       ref={containerRef}
-      // py-2.5/-my-2.5 pads the actual touch/click/drag target well past the
-      // visible icon size (WCAG/HIG/Material all call for ~44px minimum)
-      // without the extra padding pushing surrounding layout around -- the
-      // matching negative margin cancels it back out to the same footprint.
-      // touch-pan-y tells the browser to keep handling vertical scroll
-      // gestures natively and only hand horizontal movement to the drag
-      // logic below -- without it, starting a scroll with a finger that
-      // happens to land on the star row would get hijacked into a rating
-      // drag instead of scrolling the page.
+      // py-2.5/-my-2.5 pads the touch target to ~44px (WCAG/HIG minimum)
+      // without affecting surrounding layout. touch-pan-y keeps vertical
+      // scroll gestures native so a scroll starting on the star row isn't
+      // hijacked into a rating drag.
       className={`inline-flex touch-pan-y items-center gap-[3px] py-2.5 -my-2.5 ${className}`}
       onMouseLeave={() => {
         if (!dragRef.current?.dragging) setHoverValue(null)

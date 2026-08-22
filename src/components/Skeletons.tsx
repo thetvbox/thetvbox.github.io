@@ -1,3 +1,5 @@
+import { POSTER_GRID_CLASSES } from './PosterTile'
+
 export function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
   return (
     <div className="animate-pulse">
@@ -18,7 +20,7 @@ export function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
 
 export function ShowGridSkeleton({ count = 12, progress = false }: { count?: number; progress?: boolean }) {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className={POSTER_GRID_CLASSES}>
       {Array.from({ length: count }).map((_, i) => (
         <ShowCardSkeleton key={i} progress={progress} />
       ))}

@@ -21,19 +21,13 @@ interface RatingSummaryProps {
   currentUserId?: string
   size?: 'sm' | 'md' | 'lg'
   emptyLabel?: string
-  /** Screen-reader label for the star input itself, e.g. "Rate this show" or
-   * "Rate this season" -- passed through to StarRating's aria-label instead
-   * of it guessing, since this component (and StarRating underneath it) has
-   * no way to know which context it's being used in otherwise. */
+  /** Screen-reader label for the star input, e.g. "Rate this show" or "Rate
+   * this season" -- passed through to StarRating's aria-label. */
   ratingLabel: string
 }
 
-/**
- * Star input + "here's what everyone else thought" -- shared by the show-
- * level rating and the per-season one, since both are exactly the same
- * interaction (rate it, see the crowd's average, expand to see who rated
- * what) just scoped to a different rating list.
- */
+/** Star input + "here's what everyone else thought" -- shared by the show-
+ * level rating and the per-season one; same interaction, different rating list. */
 export default function RatingSummary({
   ratings,
   myRating,
@@ -56,10 +50,8 @@ export default function RatingSummary({
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-base-600 border-t-accent-400" />
         )}
         {myRating > 0 && (
-          // The star row itself supports clearing too (tap/click your
-          // current rating again), but that's a hidden gesture nobody would
-          // guess on their own -- this is the actual, visible way to undo a
-          // rating.
+          // The star row also supports clearing via re-tap, but that's a
+          // hidden gesture -- this is the visible way to undo a rating.
           <button
             type="button"
             onClick={() => onChange(0)}

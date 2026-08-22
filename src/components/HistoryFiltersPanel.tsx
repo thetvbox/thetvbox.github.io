@@ -7,10 +7,9 @@ import {
   type HistoryFilters,
 } from '../lib/historyFilters'
 
-// Built once and reused for every .of() call rather than per-render --
-// these are just ISO-code -> readable-name lookups (e.g. "KR" -> "South
-// Korea", "ko" -> "Korean"), no reason to recreate them constantly. Guarded
-// since Intl.DisplayNames, while broadly supported, isn't guaranteed.
+// Built once, reused for every .of() call -- ISO-code to readable-name
+// lookups (e.g. "KR" -> "South Korea"). Guarded since Intl.DisplayNames
+// isn't universally available.
 const countryNames =
   typeof Intl !== 'undefined' && 'DisplayNames' in Intl
     ? new Intl.DisplayNames(['en'], { type: 'region' })

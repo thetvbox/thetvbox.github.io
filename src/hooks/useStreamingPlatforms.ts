@@ -3,13 +3,8 @@ import { detectRegion } from '../lib/tmdb'
 import { resolveShowPlatforms } from '../lib/streamingProvider'
 import type { ResolvedProvider } from '../lib/streamingProvider'
 
-/**
- * Resolves "where to watch" for a batch of shows (cached, so repeat calls
- * across pages/components are free) and keeps it as component state --
- * factored out of HistorySection's original inline effect so the same
- * fetch-and-hold logic can back a poster badge anywhere, not just the
- * "sort by platform" grouping it was first built for.
- */
+/** Resolves "where to watch" for a batch of shows (cached, so repeat calls
+ * are free) and keeps it as component state. */
 export function useStreamingPlatforms(showIds: number[]): {
   platforms: Map<number, ResolvedProvider | null>
   loading: boolean

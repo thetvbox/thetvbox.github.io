@@ -1,14 +1,9 @@
 import { providerLogoUrl } from '../lib/tmdb'
 import type { ResolvedProvider } from '../lib/streamingProvider'
 
-/**
- * Small corner badge showing where a show is free to stream -- the same
- * resolved answer (override-first, else best free guess) as the "Streaming"
- * section on the show page, just surfaced everywhere its poster shows up so
- * you don't have to open a show to see where it lives. Renders nothing if
- * there's no resolved provider yet or no logo to show, so it never leaves a
- * broken-image placeholder behind.
- */
+/** Small corner badge showing where a show is free to stream, using the same
+ * resolved answer as the show page's Streaming section. Renders nothing
+ * without a resolved provider/logo, so it never leaves a broken-image placeholder. */
 export default function StreamingBadge({ provider }: { provider: ResolvedProvider | null | undefined }) {
   const logo = provider ? providerLogoUrl(provider.logo_path) : null
   if (!provider || !logo) return null

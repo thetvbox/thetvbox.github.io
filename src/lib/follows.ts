@@ -60,13 +60,9 @@ export async function unfollowUser(followerId: string, followedId: string): Prom
   if (error) throw error
 }
 
-/** Resolves a list of user ids against the users table and returns them as
- * AppUser rows in the *same order* as the input ids. Two-step (ids, then a
- * batched `.in()` lookup) rather than an embedded join on `follows` --
- * follows has two FKs to users (follower_id, followed_id), and PostgREST
- * needs an explicit constraint-name hint to disambiguate an embedded join
- * on a table shaped like that. A plain lookup sidesteps that fragility
- * entirely, at the cost of one extra round trip. */
+/** Resolves user ids to AppUser rows in the same order as the input. A
+ * separate `.in()` lookup, not an embedded join -- `follows` has two FKs to
+ * `users`, and PostgREST needs a constraint-name hint to disambiguate that. */
 async function resolveUsersInOrder(ids: string[]): Promise<AppUser[]> {
   if (ids.length === 0) return []
   const { data, error } = await supabase.from('users').select('*').in('id', ids)

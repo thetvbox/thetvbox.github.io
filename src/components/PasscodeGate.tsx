@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { checkPasscode, markGatePassed } from '../lib/siteGate'
+import { EASE_OUT_EXPO } from '../lib/motion'
 import AppLogo from './AppLogo'
 
 export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
@@ -27,7 +28,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
         className="w-full max-w-sm"
       >
         <div className="mb-8 flex flex-col items-center text-center">

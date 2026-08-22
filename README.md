@@ -21,7 +21,7 @@ Letterboxd, but for TV shows — search a show, rate it, and track what you've w
 - **See what others rated** — the show page also shows everyone else's rating for it; tap it to see who rated what.
 - **Where to watch** — the show page shows one clear answer for where it's free to stream (subscription or ad-supported, never rent/buy), based on your browser's region (data from JustWatch via TMDB). Wrong or missing? Anyone can fix it with "Not right? Fix it," which searches TMDB's full platform list and corrects it for the whole group until someone resets it back to automatic. That same answer also shows up as a small logo badge on posters across Home, History, and Search, so you can see where something streams without opening it.
 - **Lists** — build your own curated lists (like "Comfort shows") from any show's page. Lists live at a shareable link and are visible to the whole group, the same as everything else here.
-- **Members** — browse everyone who's registered and check out their diaries.
+- **Members** — browse everyone who's registered and check out their diaries. Follow people to filter Activity down to just them, and see who follows you back.
 - **Compare with a friend** — from anyone's profile, see the shows you've both rated, your taste-match %, and your biggest agreements/disagreements.
 - **Profile** — stats (including hours watched), the Diary, History, Watchlist, and Lists tabs described above. "Year in review" pulls those same stats into a per-year recap: shows finished, hours watched, your top-rated show, busiest month, and more.
 - **Light / dark mode** — tap the sun/moon icon in the top bar to switch. It remembers your choice and otherwise follows your system setting.
@@ -30,37 +30,6 @@ Sign-in has no password or verification, so anyone who knows your email could si
 
 If a passcode gate is enabled, you'll be asked for a shared code before you can reach the sign-in screen at all — ask whoever set up the site for it.
 
-## Development
+---
 
-**Stack:** React 19 + TypeScript, Vite, Tailwind CSS 4, react-router (HashRouter), framer-motion, Supabase (Postgres + client SDK), TMDB API for show/episode data, TVmaze as a secondary source for air-date corrections.
-
-### Setup
-
-1. `npm install`
-2. Copy `.env.example` to `.env.local` and fill in your own values:
-   - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — from your Supabase project's API settings.
-   - `VITE_TMDB_API_KEY` — a TMDB v3 API key.
-   - `VITE_SITE_PASSCODE` — optional; leave unset to disable the passcode gate.
-3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables and RLS policies.
-4. `npm run dev`
-
-### Scripts
-
-- `npm run dev` — local dev server.
-- `npm run build` — typecheck (`tsc -b`) then production build to `dist/`.
-- `npm run lint` — oxlint.
-- `npm run preview` — serve the production build locally.
-
-### Deployment
-
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds with the four `VITE_*` variables above (set as repository secrets) and publishes `dist/` to GitHub Pages.
-
-### Project structure
-
-- `src/pages/` — one component per route.
-- `src/components/` — shared UI (cards, rows, pickers, toasts, empty states).
-- `src/lib/` — data access (Supabase queries, TMDB/TVmaze clients) and pure business logic (activity/diary building, date handling, streaming-provider resolution), no React.
-- `src/hooks/` — small reusable hooks (toasts, scroll restoration, escape-to-close, streaming-platform resolution).
-- `src/contexts/` — auth and theme, provided at the app root.
-- `supabase/schema.sql` — full schema + RLS policies, safe to re-run (`create table if not exists`, `drop policy if exists` before every `create policy`).
-- `scripts/backfill-runtime.mjs` — one-off maintenance script for backfilling episode runtime data on existing rows.
+Contributing or running this locally? See [DEVELOPMENT.md](./DEVELOPMENT.md).

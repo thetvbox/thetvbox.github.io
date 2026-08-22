@@ -11,14 +11,15 @@ import { summarizeShowActivity, nowWatching } from '../lib/showActivity'
 import { computeSeasonProgress, fetchNextEpisode, fetchSeasonBreakdowns } from '../lib/seasonProgress'
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
-import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
+import { staggerDelay } from '../lib/motion'
 import SeasonProgressBar from '../components/SeasonProgressBar'
 import StreamingBadge from '../components/StreamingBadge'
 import UpcomingRow from '../components/UpcomingRow'
 import type { UpcomingItem } from '../components/UpcomingRow'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
+import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import type { EpisodeWatched, ShowRating, ShowStarted, ShowWatchingDismissed, WatchlistItem } from '../types'
 
 function greeting(): string {
@@ -204,7 +205,7 @@ export default function Home() {
           </Link>
         </EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className={POSTER_GRID_CLASSES}>
           {watching.map((s, i) => {
             const progress = seasonProgress.get(s.showId)
             const isMultiSeason = Boolean(progress && progress.segments.length > 1)
@@ -216,25 +217,12 @@ export default function Home() {
                 key={s.showId}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: Math.min(i, 12) * 0.02 }}
+                transition={{ duration: 0.3, delay: staggerDelay(i, 12) }}
               >
                 <Link to={`/show/${s.showId}`} className="group block">
-                  <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-base-800 ring-1 ring-hairline transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_32px_-8px_rgba(139,92,246,0.35)]">
-                    {s.showPosterPath ? (
-                      <img
-                        src={posterUrl(s.showPosterPath) ?? undefined}
-                        alt={s.showName}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center p-3 text-center text-xs text-base-400">
-                        {s.showName}
-                      </div>
-                    )}
+                  <PosterTile posterPath={s.showPosterPath} name={s.showName}>
                     <StreamingBadge provider={platforms.get(s.showId)} />
-                  </div>
+                  </PosterTile>
                   <p className="mt-2 truncate text-sm font-medium text-base-100">{s.showName}</p>
                   <p className="text-xs text-base-400">
                     {isMultiSeason && `Season ${progress!.currentSeasonNumber} · `}
@@ -296,30 +284,16 @@ export default function Home() {
               See all &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className={POSTER_GRID_CLASSES}>
             {watchlist.map((w, i) => (
               <motion.div
                 key={w.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: Math.min(i, 12) * 0.02 }}
+                transition={{ duration: 0.3, delay: staggerDelay(i, 12) }}
               >
                 <Link to={`/show/${w.show_id}`} className="group block">
-                  <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-base-800 ring-1 ring-hairline transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_32px_-8px_rgba(139,92,246,0.35)]">
-                    {w.show_poster_path ? (
-                      <img
-                        src={posterUrl(w.show_poster_path) ?? undefined}
-                        alt={w.show_name}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center p-3 text-center text-xs text-base-400">
-                        {w.show_name}
-                      </div>
-                    )}
-                  </div>
+                  <PosterTile posterPath={w.show_poster_path} name={w.show_name} />
                   <p className="mt-2 truncate text-sm font-medium text-base-100">{w.show_name}</p>
                   <p className="text-xs text-base-400">Added {formatShortDate(w.added_at)}</p>
                 </Link>

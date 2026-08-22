@@ -5,14 +5,10 @@ export function watchedKey(seasonNumber: number, episodeNumber: number): string 
   return `${seasonNumber}-${episodeNumber}`
 }
 
-/**
- * Placeholder timestamp for "watched at some point, don't know when" -- the
- * column is NOT NULL so we still need a value, and epoch sorts before every
- * real watch date, so unknown-date entries naturally fall to the back of any
- * "most recent" sort without special-casing. Never shown to the user
- * directly -- always paired with watched_at_unknown, which is what the UI
- * actually checks before rendering a date.
- */
+/** Placeholder timestamp for "watched at some point, don't know when" -- the
+ * column is NOT NULL, and epoch sorts before every real date so these fall to
+ * the back of any "most recent" sort. Always paired with watched_at_unknown,
+ * which is what the UI checks before rendering a date. */
 export const UNKNOWN_WATCHED_AT = new Date(0).toISOString()
 
 /** All of one user's watched episodes for a show (every season), keyed for quick lookup. */
@@ -31,10 +27,8 @@ export async function fetchWatchedForShow(userId: string, showId: number): Promi
 }
 
 /** Same as fetchWatchedForShow but ordered, for the per-show watch-history view.
- * Bulk actions ("mark season/show watched") stamp every row in the batch with
- * the exact same watched_at, so watched_at alone leaves ties in whatever order
- * Postgres feels like returning them -- season/episode number (descending)
- * breaks those ties deterministically instead of the list looking shuffled. */
+ * Bulk actions stamp a whole batch with the same watched_at, so season/episode
+ * number (descending) breaks ties deterministically. */
 export async function fetchWatchedForUserAndShow(
   userId: string,
   showId: number,
@@ -64,8 +58,8 @@ export async function fetchRecentWatched(userId: string, limit = 2000): Promise<
   return (data ?? []) as EpisodeWatched[]
 }
 
-/** Most recent watched-episode rows across the whole group (every user), for the group
- * Activity feed -- used to work out who just finished a show, not shown episode-by-episode. */
+/** Most recent watched-episode rows across the whole group, for the group
+ * Activity feed to work out who just finished a show. */
 export async function fetchRecentWatchedAllUsers(limit = 1500): Promise<EpisodeWatchedWithUser[]> {
   const { data, error } = await supabase
     .from('episode_watched')
@@ -104,8 +98,8 @@ export async function markWatched(input: MarkWatchedInput): Promise<EpisodeWatch
         episode_number: input.episodeNumber,
         episode_name: input.episodeName,
         watched_at: new Date().toISOString(),
-        // Real-time single toggle -- always a known, current date, even if
-        // this episode previously carried an unknown-date bulk mark.
+        // Single real-time toggle -- always a known date, overriding any
+        // prior unknown-date bulk mark.
         watched_at_unknown: false,
         runtime_minutes: input.runtimeMinutes ?? null,
       },
@@ -137,11 +131,8 @@ export interface BulkMarkWatchedInput {
   watchedAtUnknown?: boolean
 }
 
-/**
- * Marks many episodes watched in one request (e.g. "mark this whole show/season
- * watched" for something seen before you started using TV Box). Far cheaper
- * than looping markWatched() per episode -- one upsert, one round trip.
- */
+/** Marks many episodes watched in one request (e.g. "mark this whole
+ * show/season watched"). One upsert, one round trip, instead of looping. */
 export async function bulkMarkWatched(input: BulkMarkWatchedInput): Promise<EpisodeWatched[]> {
   if (input.episodes.length === 0) return []
   const rows = input.episodes.map((ep) => ({
@@ -184,13 +175,9 @@ export async function unmarkWatched(
   if (error) throw error
 }
 
-/**
- * Restores episode_watched rows to an exact prior state -- used only to
- * undo a bulk action that just overwrote them. Unlike markWatched (always
- * "now") or bulkMarkWatched (one shared date for the whole batch), this
- * preserves each row's own original watched_at/watched_at_unknown, since
- * that's the whole point of an undo.
- */
+/** Restores episode_watched rows to an exact prior state, to undo a bulk
+ * action that overwrote them -- preserves each row's own original
+ * watched_at/watched_at_unknown rather than stamping one shared date. */
 export async function restoreWatched(rows: EpisodeWatched[]): Promise<EpisodeWatched[]> {
   if (rows.length === 0) return []
   const payload = rows.map((r) => ({
@@ -214,14 +201,9 @@ export async function restoreWatched(rows: EpisodeWatched[]): Promise<EpisodeWat
   return (data ?? []) as EpisodeWatched[]
 }
 
-/**
- * Deletes many episode_watched rows in one request -- used to undo a bulk
- * mark that created brand-new rows (the ones that didn't exist before, so
- * "undo" means removing them rather than restoring an old value). Supabase
- * doesn't support an OR-of-tuples filter directly, so this builds one
- * `and(...)` clause per episode and ORs them together -- fine at the sizes
- * a single show ever has.
- */
+/** Deletes many episode_watched rows in one request, to undo a bulk mark that
+ * created brand-new rows. Supabase has no OR-of-tuples filter, so this builds
+ * one `and(...)` clause per episode and ORs them together. */
 export async function bulkUnmarkWatched(
   userId: string,
   showId: number,

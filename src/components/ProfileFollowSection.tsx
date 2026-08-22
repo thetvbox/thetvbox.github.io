@@ -10,9 +10,7 @@ interface ProfileFollowSectionProps {
 }
 
 /** Follower/following counts (clickable, opening FollowListPanel) plus a
- * Follow/Unfollow button for someone else's profile -- shared between
- * Profile.tsx (self) and PublicProfile.tsx (others) so the fetch/toggle
- * logic and optimistic-count-update behavior only exist in one place. */
+ * Follow/Unfollow button, shared between Profile.tsx and PublicProfile.tsx. */
 export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowSectionProps) {
   const { user: me } = useAuth()
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
@@ -34,8 +32,7 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
         }
       })
       .catch(() => {
-        // Silent -- a failed count fetch just leaves the counts at 0 rather
-        // than blocking the rest of the profile from rendering.
+        // Silent -- a failed fetch just leaves counts at 0.
       })
     return () => {
       cancelled = true
@@ -76,10 +73,8 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
     }
   }
 
-  // Only meaningful for your own profile: nobody in a followers/following
-  // list can ever be you (you can't follow yourself), so the only count
-  // that could ever change from actions taken *inside* that panel is your
-  // own following count -- and only when the panel IS your own profile's.
+  // Only meaningful on your own profile: the only count that can change from
+  // actions inside the panel is your own following count.
   function handlePanelFollowingCountChange(delta: number) {
     setCounts((c) => ({ ...c, following: Math.max(0, c.following + delta) }))
   }
@@ -103,10 +98,8 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
           <span className="font-semibold text-base-200">{counts.following}</span> following
         </button>
         {!isMe && me && (
-          // Default (md) size here, not "sm" -- this is a primary action on
-          // a spacious profile header, not a dense list row like Members.tsx
-          // or FollowListPanel, so it should get a comfortable touch target
-          // (44px+ tall) rather than the same compact sizing those use.
+          // Default (md) size -- a primary action on a spacious profile
+          // header, not a dense list row like Members.tsx/FollowListPanel.
           <FollowButton isFollowing={isFollowing} saving={saving} onFollow={handleFollow} onUnfollow={handleUnfollow} />
         )}
       </div>

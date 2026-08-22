@@ -19,21 +19,15 @@ interface FollowListPanelProps {
   userId: string
   mode: 'followers' | 'following'
   onClose: () => void
-  /** Called with +1/-1 whenever a follow/unfollow *inside this panel*
-   * succeeds -- lets the caller keep its own "N following" count in sync.
-   * Only meaningful when the panel is showing the viewer's own profile: the
-   * only count that can ever change from actions taken in here is the
-   * viewer's own following count (nobody in this list can ever be the
-   * viewer, since you can't follow yourself), so callers viewing someone
-   * else's list can safely omit this. */
+  /** Called with +1/-1 when a follow/unfollow inside this panel succeeds, so
+   * the caller can keep its own "N following" count in sync. Only meaningful
+   * when the panel shows the viewer's own profile; safe to omit otherwise. */
   onMyFollowingCountChange?: (delta: number) => void
 }
 
 /** Inline followers/following list, opened from the count buttons on
- * Profile/PublicProfile. Every row gets its own Follow/Unfollow button (for
- * the *viewer's* relationship to that person, not the profile owner's) plus
- * a "Follows you" badge -- so browsing someone else's followers is also a
- * place to follow people back. */
+ * Profile/PublicProfile. Every row gets its own Follow/Unfollow button for
+ * the *viewer's* relationship to that person, plus a "Follows you" badge. */
 export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCountChange }: FollowListPanelProps) {
   const { user: me } = useAuth()
   const [people, setPeople] = useState<AppUser[]>([])

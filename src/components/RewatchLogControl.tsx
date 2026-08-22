@@ -2,19 +2,12 @@ import { useState } from 'react'
 import { todayLocalDateInput } from '../lib/date'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 
-/**
- * Expand-to-confirm control for logging a rewatch -- same shape as
- * DateMarkControl (no native confirm(): opening this and then tapping
- * Confirm *is* the confirmation) so a stray double-tap on the collapsed
- * trigger can't silently insert a second rewatch. That was the actual bug
- * behind "it keeps adding it" -- logRewatch is an intentional plain insert
- * (rewatching the same show twice is the whole point of the log), so
- * nothing ever stopped a second, accidental tap from counting too.
- *
- * Doesn't reuse DateMarkControl directly: that control's "date unknown"
- * checkbox is specific to backfilling watched-episode history and doesn't
- * apply to logging a single rewatch event happening (approximately) now.
- */
+/** Expand-to-confirm control for logging a rewatch -- same shape as
+ * DateMarkControl (no native confirm(): opening it and tapping Confirm *is*
+ * the confirmation) so a stray double-tap can't insert a second rewatch.
+ * logRewatch is a plain insert since rewatching twice is the point of the
+ * log, so nothing else guards against an accidental extra tap. Doesn't reuse
+ * DateMarkControl directly: its "date unknown" checkbox doesn't apply here. */
 export default function RewatchLogControl({
   count,
   onConfirm,
@@ -34,10 +27,8 @@ export default function RewatchLogControl({
       <button
         type="button"
         onClick={() => {
-          // Reset to today on each open -- this control stays mounted
-          // (just toggled) across repeat opens in the same session, so
-          // without this, opening it a second time would silently keep
-          // whatever date was left over from the last rewatch logged.
+          // Reset to today -- this control stays mounted across repeat
+          // opens, so without this it'd keep the last-used date.
           setDate(todayLocalDateInput())
           setOpen(true)
         }}

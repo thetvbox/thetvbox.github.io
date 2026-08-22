@@ -2,12 +2,8 @@ import { supabase } from './supabase'
 import type { ShowRewatch } from '../types'
 
 /** Keeps a rewatch list in newest-first order. Needed anywhere a row is
- * inserted back into local state outside of a fresh fetch (logging one,
- * undoing a delete, rolling back a failed delete) -- those all used to just
- * prepend, which only happened to look right when every rewatch was logged
- * as "now" (see logRewatch below). Now that rewatchedAt can be backdated,
- * and since undo/rollback can reinsert a row from anywhere in the list, a
- * plain prepend can land it in the wrong position. */
+ * reinserted into local state outside a fresh fetch (log, undo delete,
+ * rollback) -- a plain prepend breaks now that rewatchedAt can be backdated. */
 export function sortRewatchesDesc(rows: ShowRewatch[]): ShowRewatch[] {
   return [...rows].sort((a, b) => b.rewatched_at.localeCompare(a.rewatched_at))
 }
@@ -41,9 +37,8 @@ export interface LogRewatchInput {
   showId: number
   showName: string
   showPosterPath: string | null
-  /** Caller-chosen, like bulkMarkWatched's watchedAt -- defaults to "now" at
-   * the call site (RewatchLogControl), but letting it be backdated means a
-   * rewatch you finished last week doesn't have to be logged as today. */
+  /** Caller-chosen, like bulkMarkWatched's watchedAt -- lets a rewatch from
+   * last week be backdated instead of logged as today. */
   rewatchedAt: string
 }
 
@@ -72,11 +67,10 @@ export async function deleteRewatch(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Re-inserts a deleted rewatch, preserving its original rewatched_at (not
- * "now") -- used to undo deleteRewatch. There's no unique constraint on this
- * table to upsert against (repeat rewatches are the whole point), so this is
- * a plain insert and the restored row gets a new id -- fine, since nothing
- * in the UI keys off a rewatch's id beyond React's list key. */
+/** Re-inserts a deleted rewatch, preserving its original rewatched_at, to
+ * undo deleteRewatch. Plain insert (no unique constraint to upsert against),
+ * so the restored row gets a new id -- fine, nothing keys off it beyond
+ * React's list key. */
 export async function restoreRewatch(row: ShowRewatch): Promise<ShowRewatch> {
   const { data, error } = await supabase
     .from('show_rewatches')

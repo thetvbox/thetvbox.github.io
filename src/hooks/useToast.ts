@@ -7,23 +7,13 @@ export interface ToastState {
   action?: ToastAction
 }
 
-/**
- * One toast slot per page/component, shared by every mutating action on it.
- * showUndo/showError both funnel into the same slot -- a second toast
- * naturally replaces an earlier, un-actioned one rather than stacking, which
- * also means an error toast will cover over a stale, no-longer-relevant
- * undo offer if one somehow overlaps with another action failing.
- *
- * `onUndo` should do its own try/catch and call `showError` on failure --
- * this hook doesn't guess at how to report an undo that itself failed.
- */
+/** One toast slot per page, shared by every mutating action -- a new toast
+ * replaces the last un-actioned one rather than stacking. `onUndo` should
+ * handle its own errors via showError; this hook doesn't guess at those. */
 export function useToast() {
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const showUndo = useCallback((message: string, onUndo: () => void) => {
-    // Dismiss immediately on click, don't wait for the auto-dismiss timer --
-    // otherwise the toast (and a second, accidental click on "Undo") lingers
-    // for however long is left of the 8s window.
     setToast({
       message,
       tone: 'info',

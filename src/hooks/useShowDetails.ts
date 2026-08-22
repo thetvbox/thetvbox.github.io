@@ -2,15 +2,9 @@ import { useEffect, useState } from 'react'
 import { getShowDetailsBulk } from '../lib/tmdb'
 import type { TmdbShowDetail } from '../types'
 
-/**
- * Bulk TMDB show details (genre, year, country, language, status) for the
- * History filters -- same shape as useStreamingPlatforms, so the two can
- * sit side by side in HistorySection.
- *
- * `enabled` gates the fetch entirely: the filters panel is what needs this
- * data, and most History views never open it, so this only fires once
- * someone actually expands Filters rather than on every History tab visit.
- */
+/** Bulk TMDB show details (genre, year, country, language, status) for the
+ * History filters. `enabled` gates the fetch so it only fires once someone
+ * expands Filters, not on every History tab visit. */
 export function useShowDetails(
   showIds: number[],
   enabled: boolean,
@@ -30,8 +24,7 @@ export function useShowDetails(
         if (!cancelled) setDetails(map)
       })
       .catch(() => {
-        // Filters degrade gracefully -- a show missing from the map just
-        // won't match any genre/year/country/language facet.
+        // Degrades gracefully -- a missing show just won't match any facet.
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

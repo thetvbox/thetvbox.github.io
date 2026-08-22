@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
+import { staggerDelay } from '../lib/motion'
 import CenteredMessage from '../components/CenteredMessage'
 import StatCard from '../components/StatCard'
 import type { AppUser, ShowRating } from '../types'
@@ -135,7 +136,7 @@ export default function Compare() {
                 key={r.showId}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(i, 10) * 0.02 }}
+                transition={{ duration: 0.25, delay: staggerDelay(i) }}
               >
                 <Link
                   to={`/show/${r.showId}`}

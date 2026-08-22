@@ -11,6 +11,7 @@ import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watc
 import { createList, fetchListsForUser } from '../lib/lists'
 import { posterUrl } from '../lib/tmdb'
 import { dayKey, formatDiaryHeading, formatShortDate } from '../lib/date'
+import { staggerDelay } from '../lib/motion'
 import { useAuth } from '../contexts/AuthContext'
 import HistorySection from './HistorySection'
 import RatingDistribution from './RatingDistribution'
@@ -262,7 +263,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                 key={w.id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(i, 8) * 0.02 }}
+                transition={{ duration: 0.25, delay: staggerDelay(i, 8) }}
                 className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5"
               >
                 <Link to={`/show/${w.show_id}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -353,7 +354,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                   key={l.id}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: Math.min(i, 8) * 0.02 }}
+                  transition={{ duration: 0.25, delay: staggerDelay(i, 8) }}
                 >
                   <Link
                     to={`/u/${username}/lists/${l.id}`}
@@ -411,7 +412,7 @@ function DiaryRow({ entry, index }: { entry: DiaryEntry; index: number }) {
     <motion.li
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.02 }}
+      transition={{ duration: 0.25, delay: staggerDelay(index, 8) }}
     >
       <Link
         to={`/show/${entry.showId}`}

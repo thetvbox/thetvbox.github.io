@@ -10,6 +10,7 @@ import type { ActivityFeedItem } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
+import { staggerDelay } from '../lib/motion'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
@@ -207,7 +208,7 @@ export default function Activity() {
                     key={item.key}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: Math.min(i, 10) * 0.02 }}
+                    transition={{ duration: 0.25, delay: staggerDelay(i) }}
                   >
                     {item.kind === 'follow' ? <FollowActivityRow event={item} /> : <ActivityRow event={item} />}
                   </motion.div>

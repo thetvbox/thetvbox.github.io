@@ -1,26 +1,20 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { TOAST_SECONDS } from '../lib/constants'
 
 export interface ToastAction {
   label: string
   onClick: () => void
 }
 
-/**
- * One shared toast component for two jobs: offering "Undo" right after a
- * destructive action, and reporting a write that failed and couldn't be
- * silently fixed. Every mutating action in the app funnels through this (via
- * the useToast hook) instead of each component inventing its own toast/error
- * state -- previously only bulk mark-watched had this, and most failed
- * writes had no user-facing feedback at all. Auto-dismisses after `seconds`
- * -- long enough to notice and react, short enough not to just sit there.
- */
+/** Shared toast for "Undo" offers and failed-write errors -- every mutating
+ * action in the app funnels through this via the useToast hook. */
 export default function Toast({
   message,
   tone = 'info',
   action,
   onDismiss,
-  seconds = 8,
+  seconds = TOAST_SECONDS,
 }: {
   message: string
   tone?: 'info' | 'error'

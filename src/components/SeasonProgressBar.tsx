@@ -1,13 +1,8 @@
 import type { SeasonSegment } from '../lib/seasonProgress'
 
-/**
- * A story-bar style progress readout: one capsule per season instead of one
- * bar for the whole show. Finished seasons read as solid, the current one
- * as partially filled, later ones as empty track -- the whole watch history
- * at a glance, the same way a Story's segmented bar tells you how many are
- * left without a single number. Falls back to a single bar for single-season
- * shows, where a "season breakdown" would just repeat the overall fraction.
- */
+/** Story-bar style progress: one capsule per season instead of one bar for
+ * the whole show. Falls back to a single bar for single-season shows, where
+ * a season breakdown would just repeat the overall fraction. */
 export default function SeasonProgressBar({ segments }: { segments: SeasonSegment[] }) {
   if (segments.length <= 1) {
     const s = segments[0]

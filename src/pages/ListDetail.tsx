@@ -4,10 +4,10 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchUserByUsername } from '../lib/users'
 import { addShowToList, deleteList, fetchList, fetchListItems, removeShowFromList } from '../lib/lists'
-import { posterUrl } from '../lib/tmdb'
 import Toast from '../components/Toast'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
+import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { AppUser, ShowList, ShowListItem } from '../types'
@@ -179,36 +179,18 @@ export default function ListDetail() {
                 </p>
               </EmptyState>
             ) : (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div className={POSTER_GRID_CLASSES}>
                 {items.map((item) => (
                   <div key={item.id} className="group relative">
                     <Link to={`/show/${item.show_id}`} className="block">
-                      <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-base-800 ring-1 ring-hairline transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_32px_-8px_rgba(139,92,246,0.35)]">
-                        {item.show_poster_path ? (
-                          <img
-                            src={posterUrl(item.show_poster_path) ?? undefined}
-                            alt={item.show_name}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center p-3 text-center text-xs text-base-400">
-                            {item.show_name}
-                          </div>
-                        )}
-                      </div>
+                      <PosterTile posterPath={item.show_poster_path} name={item.show_name} />
                       <p className="mt-2 truncate text-sm font-medium text-base-100">{item.show_name}</p>
                     </Link>
                     {isMine && (
                       <button
                         type="button"
                         onClick={() => handleRemove(item)}
-                        // Visible by default, hover-gated only from sm: up --
-                        // opacity-0-until-hover has no equivalent on a touch
-                        // screen (there's no persistent hover state to reveal
-                        // it), so a phone would never be able to find or tap
-                        // this at all if it stayed hidden below that breakpoint.
+                        // Always visible on touch (no hover state to reveal it there), hover-gated from sm: up.
                         className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white backdrop-blur-sm transition-opacity duration-200 sm:h-6 sm:w-6 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100"
                         aria-label={`Remove ${item.show_name} from this list`}
                       >

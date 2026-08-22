@@ -8,6 +8,7 @@ import { appVersion } from '../lib/changelog'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
+import { EASE_OUT_EXPO } from '../lib/motion'
 
 /** Small persistent trigger in the top bar (every page, not tied to any one
  * section) -- opens a dropdown-style panel instead of a true modal, same as
@@ -109,7 +110,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0, scale: 0.94, y: -6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96, y: -4 }}
-      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.16, ease: EASE_OUT_EXPO }}
       className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
     >
       {status === 'success' && result ? (

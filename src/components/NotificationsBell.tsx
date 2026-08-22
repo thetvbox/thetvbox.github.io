@@ -11,6 +11,8 @@ import {
 } from '../lib/follows'
 import type { RecentFollowerNotification } from '../lib/follows'
 import { formatShortDate } from '../lib/date'
+import { EASE_OUT_EXPO } from '../lib/motion'
+import { NOTIFICATIONS_POLL_MS } from '../lib/constants'
 import Avatar from './Avatar'
 
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
@@ -51,7 +53,7 @@ export default function NotificationsBell() {
     // per-route, so without polling a new follower picked up mid-session
     // would never show up until a hard reload. A minute is frequent enough
     // to feel "live" without hammering Supabase on a low-stakes badge count.
-    const interval = window.setInterval(refresh, 60_000)
+    const interval = window.setInterval(refresh, NOTIFICATIONS_POLL_MS)
     return () => {
       cancelled = true
       window.clearInterval(interval)
@@ -143,7 +145,7 @@ function NotificationsPanel({
       initial={{ opacity: 0, scale: 0.94, y: -6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96, y: -4 }}
-      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.16, ease: EASE_OUT_EXPO }}
       className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
     >
       <div className="mb-3 flex items-center justify-between gap-2">

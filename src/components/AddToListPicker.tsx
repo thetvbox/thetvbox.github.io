@@ -5,11 +5,8 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { ShowListWithCount } from '../types'
 
-/**
- * Small expandable panel for adding/removing a show from your lists, or
- * creating a new one on the spot -- same spirit as the streaming-platform
- * picker on this same page (ShowDetail.tsx), just for lists instead.
- */
+/** Expandable panel for adding/removing a show from your lists, or creating
+ * a new one on the spot. */
 export default function AddToListPicker({
   userId,
   showId,
@@ -32,13 +29,10 @@ export default function AddToListPicker({
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
-  // Toast state (undo + error) is tied to this panel's own lifetime
-  // (closing "Add to a list" dismisses it) rather than living at the page
-  // level -- simpler, and the removal is still visible right there either way.
+  // Toast is tied to this panel's own lifetime, not the page's.
   const { toast, showUndo, showError, dismiss } = useToast()
 
-  // Only ever mounted while open (ShowDetail conditionally renders it) --
-  // "active" for the whole lifetime of this component instance.
+  // Only ever mounted while open, so "active" for its whole lifetime.
   useEscapeAndFocusReturn(true, onClose)
   useEscapeAndFocusReturn(creating, () => setCreating(false))
 
@@ -116,9 +110,8 @@ export default function AddToListPicker({
       try {
         await addShowToList({ listId: list.id, showId, showName, showPosterPath })
       } catch {
-        // The list itself was created but the show didn't make it on -- an
-        // empty orphan list nobody asked for is worse than just retrying the
-        // whole thing, so clean it up rather than leaving it behind.
+        // List was created but the show didn't make it on -- clean up rather
+        // than leave an orphan list behind.
         await deleteList(list.id).catch(() => {})
         throw new Error('add-to-new-list-failed')
       }

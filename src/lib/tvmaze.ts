@@ -1,21 +1,10 @@
-/**
- * TMDB's episode air_date sometimes reflects an early-access drop time
- * rather than a show's officially marketed release day -- e.g. Apple TV+
- * titles that post the next episode the evening before its Wednesday release
- * (TMDB records that Tuesday timestamp). TVmaze is purpose-built for
- * broadcast scheduling and tracks the TV-guide release day instead, so it's
- * used here as a correction layer over specific episodes: TMDB stays the
- * backbone for everything else in the app (show/episode IDs, posters, cast,
- * overviews, watch providers), and only the *displayed* air date gets
- * overlaid with TVmaze's when a confident match exists.
- *
- * Matched via IMDb ID (TMDB's external_ids, TVmaze's /lookup/shows?imdb=) --
- * more reliable than matching by name, which risks pairing the wrong show
- * for common titles or reboots. Every lookup fails silently and falls back
- * to TMDB's own air_date: TVmaze's catalog is smaller than TMDB's (weaker on
- * reality TV, anime, and very niche/international titles), so "not found"
- * is an expected, normal outcome, not an error.
- */
+/** TMDB's air_date sometimes reflects an early-access drop rather than the
+ * marketed release day (e.g. Apple TV+ episodes posted the evening before).
+ * TVmaze tracks the TV-guide release day, so it's used as a correction layer
+ * over just the *displayed* date -- TMDB stays the backbone for everything
+ * else. Matched by IMDb ID (more reliable than title matching); every lookup
+ * fails silently to TMDB's own date, since TVmaze's smaller catalog missing
+ * a show is expected, not an error. */
 
 const TVMAZE_BASE = 'https://api.tvmaze.com'
 
@@ -41,9 +30,7 @@ export function tvmazeEpisodeKey(seasonNumber: number, episodeNumber: number): s
   return `${seasonNumber}-${episodeNumber}`
 }
 
-// Module-level caches, same pattern as the rest of lib/ -- this data doesn't
-// change within a session. Keyed by IMDb ID (TVmaze's own natural key here)
-// rather than TMDB show ID, since that's what both lookups actually need.
+// Session-lifetime caches, keyed by IMDb ID -- what both lookups need.
 const showIdByImdbId = new Map<string, number | null>()
 const airDatesByTvmazeShowId = new Map<number, Map<string, string>>()
 
@@ -77,12 +64,9 @@ async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, st
   return map
 }
 
-/**
- * Corrected air dates for one show, keyed by tvmazeEpisodeKey(season, episode)
- * -- empty map (not an error) when there's no IMDb ID, no TVmaze match, or
- * the lookup fails for any reason. Callers should treat a missing entry the
- * same way: `corrected.get(key) ?? episode.air_date`.
- */
+/** Corrected air dates for one show, keyed by tvmazeEpisodeKey. Empty map
+ * (not an error) on no IMDb ID, no match, or a failed lookup -- callers do
+ * `corrected.get(key) ?? episode.air_date`. */
 export async function getCorrectedAirDates(imdbId: string | null | undefined): Promise<Map<string, string>> {
   if (!imdbId) return new Map()
   const tvmazeShowId = await findTvmazeShowId(imdbId)

@@ -40,9 +40,7 @@ export interface ShowActivity {
 
 /** Merges show_ratings + episode_watched (+ optional show_started,
  * show_watching_dismissed) rows for one user into one summary per show.
- * `started`/`dismissed` default to empty since only Home's Now Watching view
- * needs them -- other callers (Recap, ProfileActivity) don't render a 0/x
- * state or a remove button and can skip fetching either. */
+ * `started`/`dismissed` default to empty -- only Home's Now Watching needs them. */
 export function summarizeShowActivity(
   ratings: ShowRating[],
   watched: EpisodeWatched[],
@@ -86,8 +84,7 @@ export function summarizeShowActivity(
     const entry = entryFor(s.show_id, s.show_name, s.show_poster_path)
     entry.started = true
     entry.startedAt = s.started_at
-    // Fallback only -- if this show also has real episode_watched rows, the
-    // loop below overwrites this with a more current snapshot.
+    // Fallback -- overwritten below if real episode_watched rows exist.
     entry.totalEpisodes = s.show_total_episodes
   }
 
@@ -105,9 +102,8 @@ export function summarizeShowActivity(
       if (r.show_total_episodes == null) return max
       return max === null ? r.show_total_episodes : Math.max(max, r.show_total_episodes)
     }, null)
-    // Epoch (UNKNOWN_WATCHED_AT) always loses this comparison against a real
-    // date, so a show with even one precisely-dated episode correctly picks
-    // that as "last watched" -- only an all-unknown show ends up flagged.
+    // Epoch (UNKNOWN_WATCHED_AT) always loses vs a real date, so one
+    // precisely-dated episode correctly wins "last watched".
     for (const r of rows) {
       if (!entry.lastWatchedAt || r.watched_at > entry.lastWatchedAt) {
         entry.lastWatchedAt = r.watched_at
@@ -119,10 +115,8 @@ export function summarizeShowActivity(
     entry.finishedAtUnknown = entry.finished ? entry.lastWatchedAtUnknown : false
   }
 
-  // Dismissed rows only ever target a show that's already in the map (you
-  // can only dismiss something currently showing in Now Watching) -- a
-  // missing entry means the underlying rating/watched/started rows were
-  // removed some other way, in which case there's nothing left to suppress.
+  // A dismissed row always targets a show already in the map; a missing
+  // entry means there's nothing left to suppress.
   for (const d of dismissed) {
     const entry = map.get(d.show_id)
     if (entry) entry.dismissed = true
@@ -139,13 +133,9 @@ export function nowWatching(summaries: ShowActivity[]): ShowActivity[] {
     .sort((a, b) => (b.lastWatchedAt ?? b.startedAt ?? '').localeCompare(a.lastWatchedAt ?? a.startedAt ?? ''))
 }
 
-/**
- * "Done with it" shows: finished (100% watched), or rated without ever
- * tracking episodes. Excludes shows still in progress -- those live in
- * nowWatching() until they're finished. A show that's been explicitly
- * started stays in nowWatching() even if it's also rated with 0 episodes
- * watched, rather than showing up in both places.
- */
+/** "Done with it" shows: finished, or rated without ever tracking episodes.
+ * A started-but-unwatched-and-rated show stays in nowWatching() instead of
+ * showing up in both places. */
 export function watchHistory(summaries: ShowActivity[]): ShowActivity[] {
   return summaries.filter((s) => s.finished || (s.rating !== null && s.watchedCount === 0 && !s.started))
 }
@@ -161,9 +151,8 @@ export function sortHistory(entries: ShowActivity[], sort: HistorySort): ShowAct
   } else if (sort === 'name') {
     sorted.sort((a, b) => a.showName.localeCompare(b.showName))
   } else if (sort === 'finished') {
-    // Strictly finish date -- shows that were only ever rated (never
-    // episode-tracked) have no finishedAt, so they sink to the bottom
-    // instead of borrowing their rated date the way "recent" does.
+    // Strictly finish date -- rated-only shows have no finishedAt and sink
+    // to the bottom, unlike "recent" which borrows their rated date.
     sorted.sort((a, b) => {
       if (a.finishedAt && b.finishedAt) return b.finishedAt.localeCompare(a.finishedAt)
       if (a.finishedAt) return -1
@@ -185,33 +174,24 @@ export function sortHistory(entries: ShowActivity[], sort: HistorySort): ShowAct
 export type DiaryEntryKind = 'watched' | 'rated' | 'rewatched'
 
 /** One diary-worthy, personally-dated event. `watched` entries are grouped
- * per show per calendar day (see buildDiaryEntries) -- a 6-episode binge
- * session is one entry, not six, the same granularity every other
- * show-level view in this app already uses. */
+ * per show per calendar day -- a 6-episode binge is one entry, not six. */
 export interface DiaryEntry {
   id: string
   kind: DiaryEntryKind
   showId: number
   showName: string
   showPosterPath: string | null
-  /** ISO timestamp used for sorting -- empty string for undated entries
-   * (see buildUndatedDiaryEntries), which are never mixed into the sorted
-   * list this drives. */
+  /** ISO timestamp for sorting; empty string for undated entries (see buildUndatedDiaryEntries). */
   at: string
-  /** Set for a standalone 'rated' entry, or merged onto a same-day
-   * 'watched'/'rewatched' entry for the same show -- logging and rating a
-   * show on the same day is one diary row, not two (matches how
-   * Letterboxd/Serializd treat a log + rating as a single entry). */
+  /** Set standalone, or merged onto a same-day watched/rewatched entry --
+   * logging and rating a show the same day is one diary row, not two. */
   rating?: number
   episodeCount?: number
-  /** Only set when episodeCount > 1 and episodeLabel isn't (i.e. the
-   * episodes span more than one season, so no single "S2E4-E6" range makes
-   * sense) -- a single-episode entry shows episodeLabel instead. */
+  /** Set only when episodes span more than one season (no single range fits);
+   * a single episode uses episodeLabel instead. */
   seasonLabel?: string
-  /** A specific episode or contiguous range within one season, e.g.
-   * "S2E4 · Man of the People" (single episode) or "S2E4-E6" (a same-day,
-   * same-season binge). Left unset for a scattered/cross-season group,
-   * which falls back to episodeCount + seasonLabel instead. */
+  /** e.g. "S2E4 · Man of the People" or a same-day range "S2E4-E6"; unset
+   * for a scattered/cross-season group, which falls back to seasonLabel. */
   episodeLabel?: string
 }
 
@@ -221,13 +201,9 @@ function seasonLabelFor(seasonNumbers: number[]): string {
   return `S${sorted[0]}–S${sorted[sorted.length - 1]}`
 }
 
-/**
- * "S2E4-E6" for a same-day, same-season binge of more than one episode --
- * more useful at a glance than a bare episode count, since it says exactly
- * which episodes. Returns undefined (caller falls back to seasonLabelFor)
- * when the episodes span more than one season, or are scattered enough
- * (more than 4, non-contiguous) that a range/list would stop being readable.
- */
+/** "S2E4-E6" for a same-day, same-season binge. Undefined (falls back to
+ * seasonLabelFor) if episodes span more than one season, or are scattered
+ * enough (more than 4, non-contiguous) that a list would stop being readable. */
 function episodeRangeLabel(rows: EpisodeWatched[]): string | undefined {
   const seasons = new Set(rows.map((r) => r.season_number))
   if (seasons.size > 1) return undefined
@@ -239,30 +215,18 @@ function episodeRangeLabel(rows: EpisodeWatched[]): string | undefined {
   return undefined
 }
 
-/**
- * Merges one user's ratings, watched episodes, and rewatches into a single
- * reverse-chronological diary -- the same idea as a film-tracking diary,
- * just at "episode(s) of a show, in one sitting" granularity for TV.
- * Excludes watched rows with no real date (watched_at_unknown) -- a diary
- * is fundamentally date-ordered, so those live in buildUndatedDiaryEntries
- * instead rather than being silently dropped.
- *
- * A rating logged the same day as watching (or rewatching) that same show
- * merges onto that entry instead of getting its own row -- watching an
- * episode and rating the show afterwards in the same sitting is one action
- * from the diary's point of view, not two. Watched entries claim the merge
- * slot for a (show, day) pair before rewatches do, since watched carries the
- * more specific "what actually happened" detail.
- */
+/** Merges one user's ratings, watched episodes, and rewatches into a single
+ * reverse-chronological diary. Excludes undated watched rows (those go to
+ * buildUndatedDiaryEntries instead). A same-day rating for a show merges
+ * onto its watched/rewatched entry rather than getting its own row; watched
+ * entries claim that merge slot before rewatches do. */
 export function buildDiaryEntries(
   ratings: ShowRating[],
   watched: EpisodeWatched[],
   rewatches: ShowRewatch[],
 ): DiaryEntry[] {
   const entries: DiaryEntry[] = []
-  // Tracks which entry (if any) a same-day rating for this show should
-  // merge onto -- populated by the watched/rewatched passes below, read by
-  // the ratings pass after.
+  // Populated by the watched/rewatched passes below, read by the ratings pass after.
   const mergeTarget = new Map<string, DiaryEntry>()
 
   const watchedGroups = new Map<string, EpisodeWatched[]>()
@@ -274,9 +238,8 @@ export function buildDiaryEntries(
     else watchedGroups.set(key, [w])
   }
   for (const [key, rows] of watchedGroups) {
-    // Latest episode in the group stands in for the whole entry's timestamp
-    // and poster/name -- so a same-day binge still sorts correctly against
-    // a rating or rewatch logged the same day.
+    // Latest episode stands in for the group's timestamp/poster/name, so a
+    // same-day binge still sorts correctly against a same-day rating/rewatch.
     const latest = rows.reduce((a, b) => (b.watched_at > a.watched_at ? b : a))
     const range = rows.length > 1 ? episodeRangeLabel(rows) : undefined
     const entry: DiaryEntry = {
@@ -308,9 +271,7 @@ export function buildDiaryEntries(
     }
     entries.push(entry)
     const key = `${rw.show_id}-${dayKey(rw.rewatched_at)}`
-    // Don't let a rewatch steal the merge slot from a watched entry that's
-    // already claimed it for this show/day -- still logged as its own row
-    // above, just not where a same-day rating would land.
+    // Don't steal the merge slot from a watched entry that already claimed it.
     if (!mergeTarget.has(key)) mergeTarget.set(key, entry)
   }
 
@@ -336,10 +297,8 @@ export function buildDiaryEntries(
   return entries
 }
 
-/** Watched episodes with no real date ("watched a while ago") -- can't be
- * placed in a dated diary, so they're grouped by show only (no day
- * grouping possible) and surfaced separately rather than silently
- * vanishing from the diary entirely. */
+/** Watched episodes with no real date ("watched a while ago") -- grouped by
+ * show only, surfaced separately instead of vanishing from the diary. */
 export function buildUndatedDiaryEntries(watched: EpisodeWatched[]): DiaryEntry[] {
   const groups = new Map<number, EpisodeWatched[]>()
   for (const w of watched) {
@@ -367,11 +326,9 @@ export function buildUndatedDiaryEntries(watched: EpisodeWatched[]): DiaryEntry[
 // --- Group activity feed (every member's ratings/finishes, merged) ---
 
 export interface GroupActivityEvent {
-  /** Discriminates this from FollowActivityEvent in a merged feed (see
-   * mergeActivityFeed below) -- lets Activity.tsx pick the right row
-   * component without a shape check. */
+  /** Discriminates from FollowActivityEvent in a merged feed. */
   kind: 'show'
-  /** userId + showId is unique -- one "entry" per person per show, same as History. */
+  /** userId + showId is unique, same as History. */
   key: string
   userId: string
   username: string
@@ -381,26 +338,18 @@ export interface GroupActivityEvent {
   rating: number | null
   finished: boolean
   episodeCount: number | null
-  /** Set only for a season-level rating event -- distinguishes "rated
-   * Season 2" from a show-level "rated" event, which leaves this null. */
+  /** Set only for a season-level rating event. */
   seasonNumber: number | null
-  /** finishedAt if finished, otherwise ratedAt -- when this event "happened". */
+  /** finishedAt if finished, otherwise ratedAt. */
   at: string
   atUnknown: boolean
 }
 
-/**
- * Merges every member's ratings + watched-episode rows into one
- * reverse-chronological feed of "who finished/rated what". Reuses
- * summarizeShowActivity + watchHistory per-user (grouping the flat
- * multi-user rows first) so the semantics exactly match each person's own
- * History tab -- a show only ever shows up here once it would show up
- * there too. Season ratings are appended separately (see below) since
- * they're independent of a show's overall watch/rating state -- someone can
- * rate a season without that changing whether the show itself would show up
- * in their History tab, so routing them through the same
- * summarizeShowActivity/watchHistory filter would drop most of them.
- */
+/** Merges every member's ratings + watched rows into one reverse-chronological
+ * "who finished/rated what" feed. Reuses summarizeShowActivity + watchHistory
+ * per-user so semantics match each person's own History tab. Season ratings
+ * are appended separately since they're independent of a show's overall
+ * state and would mostly get dropped by that same filter. */
 export function buildGroupActivity(
   ratings: ShowRatingWithUser[],
   watched: EpisodeWatchedWithUser[],
@@ -451,8 +400,7 @@ export function buildGroupActivity(
     }
   }
 
-  // Appended directly rather than bucketed above -- a season rating always
-  // shows up here regardless of the show's overall progress/rating state.
+  // A season rating always shows up regardless of the show's overall state.
   for (const sr of seasonRatings) {
     events.push({
       kind: 'show',
@@ -479,27 +427,20 @@ export function buildGroupActivity(
 
 export interface FollowActivityEvent {
   kind: 'follow'
-  /** One entry per follow edge -- an unfollow just removes it from the next
-   * fetch, same as everything else here (nothing is soft-deleted). */
+  /** One entry per follow edge -- nothing here is soft-deleted. */
   key: string
   followerId: string
   followerUsername: string
   followedId: string
   followedUsername: string
   at: string
-  /** Always false -- a follow's created_at is always a real timestamp,
-   * never a placeholder. Present purely so FollowActivityEvent and
-   * GroupActivityEvent can share the same day-grouping code in Activity.tsx. */
+  /** Always false; exists so this shares GroupActivityEvent's day-grouping code. */
   atUnknown: false
 }
 
-/** Turns raw follow edges into feed-ready events, resolving both sides'
- * usernames against a shared lookup (the same `members` list Activity.tsx
- * already fetches for its person-filter chips). An edge whose follower or
- * followed id isn't in the lookup is skipped rather than rendered with a
- * fabricated "unknown" username -- shouldn't happen since both ids always
- * reference a real users row, but a stale/deleted account shouldn't produce
- * a broken-looking row. */
+/** Turns raw follow edges into feed-ready events, resolving usernames
+ * against a shared lookup. Skips an edge if either id is missing from it
+ * (shouldn't happen) rather than rendering a fabricated "unknown" row. */
 export function buildFollowActivity(follows: Follow[], usernameById: Map<string, string>): FollowActivityEvent[] {
   const events: FollowActivityEvent[] = []
   for (const f of follows) {

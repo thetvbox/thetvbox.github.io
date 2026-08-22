@@ -10,11 +10,9 @@ interface EpisodeRowProps {
   watched: boolean
   watchedAt: string | null
   watchedAtUnknown: boolean
-  /** One click, always "today" -- the fast path for the common case of
-   * marking an episode right after watching it. */
+  /** One click, always "today" -- the fast path right after watching. */
   onToggleWatched: () => Promise<void>
-  /** The slower path: pick a specific date (or "don't remember"), for
-   * logging episodes watched before today one at a time. */
+  /** The slower path: pick a specific date (or "don't remember"). */
   onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
 }
 
@@ -28,13 +26,8 @@ export default function EpisodeRow({
 }: EpisodeRowProps) {
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  // Whether the clamped overview actually overflows 2 lines -- measured
-  // once, while still collapsed, so "Show more" only appears when there's
-  // really more text to reveal (a short one-line overview shouldn't get a
-  // toggle that does nothing). Tapping the thumbnail or the title used to
-  // silently expand the description too, with no visual hint either was
-  // interactive -- an explicit "Show more" link is the standard, actually
-  // discoverable version of that same affordance.
+  // Whether the clamped overview overflows 2 lines -- measured while still
+  // collapsed, so "Show more" only appears when there's really more to reveal.
   const [isTruncated, setIsTruncated] = useState(false)
   const overviewRef = useRef<HTMLParagraphElement>(null)
   const still = stillUrl(episode.still_path)
@@ -44,13 +37,9 @@ export default function EpisodeRow({
     if (!el) return
     setIsTruncated(el.scrollHeight > el.clientHeight + 1)
   }, [episode.overview])
-  // TMDB lists placeholder rows for episodes that haven't aired yet (no
-  // synopsis, no image, generic "Episode N" title) for shows still airing --
-  // marking one of these "watched" would be nonsensical, and doing it by
-  // accident is exactly the kind of thing that makes a show's progress
-  // look stuck. Only treated as upcoming with a real, known future date --
-  // a missing air_date on an already-released obscure episode shouldn't
-  // get swept up in this.
+  // TMDB lists placeholder rows for unaired episodes of still-airing shows --
+  // only flagged upcoming with a real, known future date, so an obscure
+  // already-released episode with a missing air_date isn't swept up in this.
   const isUpcoming = Boolean(episode.air_date && isFutureDate(episode.air_date))
 
   async function handleToggle() {
@@ -71,25 +60,14 @@ export default function EpisodeRow({
         watched ? 'ring-1 ring-inset ring-accent-500/20' : ''
       } ${isUpcoming ? 'opacity-60' : ''}`}
     >
-      {/* Stacked (image full-width on top, text below) on mobile, side by
-          side from sm: up. A fixed 112px-wide side-by-side thumbnail left a
-          ton of dead space under it once its height stopped being distorted
-          to match the text column (see items-start above) -- letting the
-          image run the card's full width instead gives it real presence
-          (roughly 3x bigger) and gives the text column enough room that
-          "Show more" is rarely even needed. Desktop keeps the original
-          side-by-side layout, which already had room to spare. */}
+      {/* Stacked (image full-width, text below) on mobile; side-by-side from sm: up. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-base-800 sm:w-40 sm:shrink-0">
           {still ? (
             <img
               src={still}
-              // The still renders small (112-160 CSS px wide) but phone
-              // screens are commonly 2-3x device pixel ratio, and w300
-              // alone falls short of that -- looked fine on a 1x laptop
-              // display, soft/pixelated on a real phone. Letting the
-              // browser pick a density-matched variant fixes that without
-              // over-fetching the larger sizes on 1x displays.
+              // w300 alone looks soft on high-DPR phones; let the browser
+              // pick a density-matched variant.
               srcSet={`${stillUrl(episode.still_path, 'w300')} 1x, ${stillUrl(episode.still_path, 'w780')} 2x, ${stillUrl(episode.still_path, 'w1280')} 3x`}
               alt=""
               loading="lazy"
@@ -101,9 +79,7 @@ export default function EpisodeRow({
               No image
             </div>
           )}
-          {/* Runtime moved here (off the title row, which no longer needs to
-              share space with it) -- a corner badge on the still is the
-              same place every streaming app already puts it. */}
+          {/* Corner badge on the still, same place every streaming app puts it. */}
           {episode.runtime ? (
             <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
               {episode.runtime}m
@@ -162,14 +138,8 @@ export default function EpisodeRow({
                     <span className="ml-0.5 h-3 w-3 animate-spin rounded-full border-2 border-current/30 border-t-current" />
                   )}
                 </button>
-                {/* Fast path above always stamps "now" -- this is the second
-                    option for logging an episode watched on some other day,
-                    without slowing down the common one-tap case. Always
-                    rendered (just hidden once watched, via `invisible` not
-                    conditional rendering) so this row's layout height never
-                    changes on toggle -- unmounting it here used to shrink the
-                    card by a whole line the instant you marked an episode
-                    watched, visibly resizing/jumping every card below it. */}
+                {/* Always rendered (hidden via `invisible`, not unmounted) so
+                    marking watched doesn't shrink the row and jump cards below it. */}
                 <DateMarkControl
                   label="Watched in the past"
                   onConfirm={onMarkWatchedWithDate}

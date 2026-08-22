@@ -1,14 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { STORAGE_KEYS } from '../lib/constants'
 
 export type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'tvbox-theme'
 const THEME_COLOR = { dark: '#08080c', light: '#f8fafc' } as const
 
-/** The boot script in index.html already applied the right class before
- * first paint -- read it back rather than re-deriving it, so there's no
- * chance of a mismatched flash between the two. */
+/** Reads the class index.html's boot script already applied pre-paint, so
+ * there's no mismatch flash between the two. */
 function getInitialTheme(): Theme {
   if (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) {
     return 'light'
@@ -53,7 +52,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     )
 
     try {
-      localStorage.setItem(STORAGE_KEY, theme)
+      localStorage.setItem(STORAGE_KEYS.theme, theme)
     } catch {
       // Private browsing / storage disabled -- theme just won't persist.
     }

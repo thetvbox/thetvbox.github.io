@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import ShowCard from '../components/ShowCard'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
+import { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { searchShows, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
+import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
@@ -54,7 +56,7 @@ export default function Search() {
           setHasSearched(true)
         }
       }
-    }, 350)
+    }, SEARCH_DEBOUNCE_MS)
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -96,7 +98,7 @@ export default function Search() {
 
       {!isTmdbConfigured && (
         <div className="mb-6 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-          TMDB isn&apos;t configured yet. Set VITE_TMDB_API_KEY (see README) to enable search.
+          TMDB isn&apos;t configured yet. Set VITE_TMDB_API_KEY (see DEVELOPMENT.md) to enable search.
         </div>
       )}
 
@@ -109,7 +111,7 @@ export default function Search() {
           {results.length > 0 ? (
             <motion.div
               layout
-              className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              className={POSTER_GRID_CLASSES}
             >
               {results
                 .filter((s) => s.poster_path)

@@ -22,12 +22,9 @@ export function formatDiaryHeading(iso: string): string {
   })
 }
 
-/** Compact "Aug 12" style date for inline use in list rows. Handles both
- * full ISO timestamps (watched_at, rated_at, etc. -- a real instant, safe
- * to hand straight to `new Date`) and TMDB's date-only "YYYY-MM-DD" strings
- * (air_date -- needs the same local-calendar-day parsing as isFutureDate
- * above, or it silently rolls back a day for anyone west of UTC: an episode
- * airing "2026-08-18" would print as "Aug 17"). */
+/** Compact "Aug 12" for list rows. Handles both full ISO timestamps and
+ * TMDB's date-only "YYYY-MM-DD" (parsed as a local calendar day, not UTC,
+ * or it rolls back a day west of UTC). */
 export function formatShortDate(iso: string): string {
   const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso)
   const date = dateOnly
@@ -39,13 +36,9 @@ export function formatShortDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-/** Today's date as a local YYYY-MM-DD string, for pre-filling/limiting a
- * `<input type="date">`. Deliberately NOT `new Date().toISOString().slice(0, 10)`
- * -- that reads the UTC date, which is a different calendar day from the
- * viewer's local "today" for roughly 2/3 of the day depending on timezone
- * (e.g. it's already "tomorrow" in UTC well before midnight for anyone west
- * of it). Using the UTC string here would both pre-fill the wrong default
- * date and let the `max` bound silently accept a not-actually-past date. */
+/** Today as a local YYYY-MM-DD string for `<input type="date">`. Not
+ * `toISOString().slice(0, 10)` -- that's the UTC date, a different calendar
+ * day from local "today" for much of the day depending on timezone. */
 export function todayLocalDateInput(): string {
   const d = new Date()
   const y = d.getFullYear()
@@ -54,16 +47,9 @@ export function todayLocalDateInput(): string {
   return `${y}-${m}-${day}`
 }
 
-/**
- * Whether a TMDB date-only string (YYYY-MM-DD, no time component) is still
- * ahead of today, judged by the viewer's *local calendar day* -- not by
- * comparing to a UTC-midnight instant. `new Date(dateStr) > new Date()`
- * looks right but isn't: `new Date("2026-08-20")` is 2026-08-20T00:00:00Z,
- * which is already in the past for most of the day (in local terms) for
- * anyone west of UTC, and episodes would flip from "upcoming" to "aired" up
- * to ~12 hours before they actually air locally. Comparing local calendar
- * dates instead makes the flip happen at the viewer's own local midnight.
- */
+/** Whether a TMDB date-only string is still ahead of today, by the viewer's
+ * local calendar day -- not `new Date(dateStr) > new Date()`, which compares
+ * against UTC midnight and flips episodes to "aired" hours early west of UTC. */
 export function isFutureDate(dateStr: string): boolean {
   const [y, m, d] = dateStr.split('-').map(Number)
   if (!y || !m || !d) return false

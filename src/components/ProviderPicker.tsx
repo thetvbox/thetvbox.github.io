@@ -3,11 +3,8 @@ import { getAllTvProviders, providerLogoUrl } from '../lib/tmdb'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { TmdbProviderListItem } from '../types'
 
-/**
- * Small searchable panel for manually correcting "where to watch" -- backed
- * by TMDB's full provider list (not just the ones already known for this
- * show), since the whole point is fixing a wrong or missing automatic guess.
- */
+/** Searchable panel for manually correcting "where to watch" -- backed by
+ * TMDB's full provider list, not just those already known for this show. */
 export default function ProviderPicker({
   region,
   onPick,
@@ -22,8 +19,7 @@ export default function ProviderPicker({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // Only ever mounted while open (ShowDetail conditionally renders it) --
-  // so "active" for the whole lifetime of this component instance.
+  // Only ever mounted while open, so "active" for its whole lifetime.
   useEscapeAndFocusReturn(true, onClose)
 
   useEffect(() => {

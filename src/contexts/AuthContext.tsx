@@ -1,34 +1,29 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
+import { STORAGE_KEYS } from '../lib/constants'
 import type { AppUser } from '../types'
 
-const STORAGE_KEY = 'tvbox_user'
-
-// localStorage access itself (not just JSON.parse-ing what's in it) can
-// throw -- Safari private browsing on older iOS, storage-partitioning edge
-// cases, and locked-down/kiosk browser configs all do this. Without these
-// guards, a `localStorage.getItem` throwing here happens synchronously
-// inside an effect during the very first render, before there's any user to
-// show a friendly "logged out" state to -- worth catching explicitly rather
-// than relying on ErrorBoundary to paper over the whole app failing to boot.
+// localStorage access can throw (Safari private browsing, storage
+// partitioning, kiosk browsers) -- guard every call so a locked-down
+// browser degrades to logged-out instead of crashing on first render.
 function readStoredUser(): string | null {
   try {
-    return localStorage.getItem(STORAGE_KEY)
+    return localStorage.getItem(STORAGE_KEYS.user)
   } catch {
     return null
   }
 }
 function writeStoredUser(value: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY, value)
+    localStorage.setItem(STORAGE_KEYS.user, value)
   } catch {
     // Session still works in-memory for this tab; it just won't survive a reload.
   }
 }
 function clearStoredUser(): void {
   try {
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(STORAGE_KEYS.user)
   } catch {
     // Nothing to clean up if storage isn't writable in the first place.
   }

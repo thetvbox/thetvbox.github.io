@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
-import { scrollBehavior } from '../lib/motion'
+import { EASE_OUT_EXPO, scrollBehavior } from '../lib/motion'
 import AppLogo from './AppLogo'
 import ReportBugButton from './ReportBugButton'
 import NotificationsBell from './NotificationsBell'
@@ -135,7 +135,7 @@ function ThemeToggle() {
           initial={{ opacity: 0, rotate: -80, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
           exit={{ opacity: 0, rotate: 80, scale: 0.5 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
           className="flex"
         >
           {isDark ? <SunIcon /> : <MoonIcon />}
@@ -156,14 +156,8 @@ const NAV_ITEMS = [
 export default function Navbar() {
   const location = useLocation()
 
-  // React Router doesn't fire a navigation (no new history entry, no
-  // location change) when a Link targets the route you're already on -- so
-  // neither useScrollRestoration's location-keyed effect nor a plain
-  // location.pathname effect ever runs for "tap the tab you're already on."
-  // That's exactly the common case this was meant to cover (scrolled deep
-  // into Home's grid, tap Home again to jump back to the top), so it needs
-  // its own explicit handling here rather than relying on route-change
-  // effects at all.
+  // React Router fires no navigation when a Link targets the current route,
+  // so "tap the tab you're already on to scroll to top" needs explicit handling.
   function handleNavClick(to: string) {
     if (location.pathname === to) {
       window.scrollTo({ top: 0, left: 0, behavior: scrollBehavior() })
@@ -172,13 +166,9 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top bar (always visible). pt-[env(safe-area-inset-top)] keeps the
-          logo/theme-toggle clear of the iOS status bar + notch when the app
-          is added to the home screen -- viewport-fit=cover (index.html) lets
-          the page draw under that area, and black-translucent status-bar-style
-          means nothing else pushes content down automatically. Sticky (not
-          fixed) so the extra height is reserved in normal flow instead of
-          needing a matching top-padding on every page's content below it. */}
+      {/* Top bar. pt-[env(safe-area-inset-top)] clears the iOS status bar/notch
+          when installed to the home screen. Sticky (not fixed) so the extra
+          height reserves space in normal flow. */}
       <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <NavLink to="/home" onClick={() => handleNavClick('/home')} className="flex items-center gap-2">
@@ -219,14 +209,9 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Bottom tab bar (mobile only). Fixed position + backdrop-blur is a
-          known combination for mobile Safari/Chrome to visibly desync from
-          the viewport mid-scroll (the bar appears to lag or jump) -- forcing
-          this onto its own GPU compositing layer up front, rather than
-          promoting/demoting it dynamically as the page scrolls, is the
-          standard fix. Also animates opacity only (no y-transform) on mount,
-          so there's never a competing transform to reconcile with the
-          static one below. */}
+      {/* Bottom tab bar (mobile only). transform-gpu forces its own compositing
+          layer up front -- fixed + backdrop-blur otherwise desyncs from the
+          viewport mid-scroll on mobile Safari/Chrome. */}
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

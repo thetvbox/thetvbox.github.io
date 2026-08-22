@@ -9,12 +9,9 @@ interface State {
   error: Error | null
 }
 
-/**
- * Catches render-time exceptions anywhere below it in the tree so one bad
- * component can't white-screen the whole app -- shows a recoverable
- * "something broke" screen with a reload button instead. Error boundaries
- * have to be class components; React has no hook equivalent.
- */
+/** Catches render-time exceptions below it so one bad component can't
+ * white-screen the whole app. Must be a class component -- React has no
+ * hook equivalent for error boundaries. */
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null }
 

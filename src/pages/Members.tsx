@@ -4,14 +4,13 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
 import { fetchFollowerIds, fetchFollowingIds, followUser, unfollowUser } from '../lib/follows'
+import { staggerDelay } from '../lib/motion'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
 import type { AppUser } from '../types'
 
-/** The old flat Members directory, now with a real follow graph: every row
- * gets a Follow/Following button and a "Follows you" badge instead of just
- * being a static list. Search stays exactly as it was -- discovery still
- * matters at this app's size, just with follow state layered on top. */
+/** People directory: every row gets a Follow/Following button and a "Follows
+ * you" badge, layered on top of the original searchable list. */
 export default function Members() {
   const { user: me } = useAuth()
   const [users, setUsers] = useState<AppUser[]>([])
@@ -143,7 +142,7 @@ export default function Members() {
               key={u.id}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: Math.min(i, 10) * 0.02 }}
+              transition={{ duration: 0.25, delay: staggerDelay(i) }}
               className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
             >
               <Link to={`/u/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">

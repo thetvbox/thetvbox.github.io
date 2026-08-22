@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { isSupabaseConfigured } from '../lib/supabase'
 import AppLogo from '../components/AppLogo'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
+import { EASE_OUT_EXPO } from '../lib/motion'
+import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
 
 type Step = 'email' | 'username'
 
@@ -24,7 +26,7 @@ export default function Login() {
   async function handleEmailSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
+    if (!EMAIL_PATTERN.test(email)) {
       setError('Enter a valid email address.')
       return
     }
@@ -47,8 +49,8 @@ export default function Login() {
     e.preventDefault()
     setError(null)
     const trimmed = username.trim()
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(trimmed)) {
-      setError('Username must be 3-20 characters: letters, numbers, underscores.')
+    if (!USERNAME_PATTERN.test(trimmed)) {
+      setError(`Username must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters: letters, numbers, underscores.`)
       return
     }
     setBusy(true)
@@ -67,7 +69,7 @@ export default function Login() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
         className="w-full max-w-sm"
       >
         <div className="mb-8 flex flex-col items-center text-center">
@@ -79,7 +81,7 @@ export default function Login() {
         {!isSupabaseConfigured && (
           <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
             Supabase isn&apos;t configured yet. Set VITE_SUPABASE_URL and
-            VITE_SUPABASE_ANON_KEY (see README) for sign-in to work.
+            VITE_SUPABASE_ANON_KEY (see DEVELOPMENT.md) for sign-in to work.
           </div>
         )}
 

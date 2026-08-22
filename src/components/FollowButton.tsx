@@ -8,26 +8,19 @@ interface FollowButtonProps {
   size?: 'sm' | 'md'
 }
 
-// Checked once at module load, not per-render -- a device's hover capability
-// doesn't change mid-session. Gates the hover-to-"Unfollow" relabel below:
-// touch browsers frequently fire a synthetic mouseenter on tap with no
-// matching mouseleave (nothing "leaves" without a second tap elsewhere), so
-// without this check a tap would leave the button stuck showing "Unfollow"
-// styling right after a successful follow -- the same class of bug
-// useDesktopAutoFocus (src/hooks/useDesktopAutoFocus.ts) exists to avoid for
-// autofocus. `hover: hover` (not just `pointer: fine`) is the more precise
-// check here since it's specifically about whether hover *events* are real.
+// Checked once at module load -- gates the hover-to-"Unfollow" relabel below.
+// Touch browsers fire a synthetic mouseenter on tap with no matching
+// mouseleave, which would otherwise leave the button stuck showing
+// "Unfollow" styling after a tap (same class of bug useDesktopAutoFocus
+// exists to avoid). `hover: hover` checks for real hover events specifically.
 const supportsHover =
   typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
     : false
 
-/** Follow/Unfollow toggle -- controlled by the caller (isFollowing/saving
- * are read from parent state, not fetched here), so a page listing many
- * people (Find People, FollowListPanel) can hold one shared following-set
- * instead of every row independently re-fetching its own status. Hovering a
- * "Following" button relabels it "Unfollow" (desktop only -- touch just taps
- * straight through, the same pattern Twitter/Instagram use). */
+/** Follow/Unfollow toggle, controlled by the caller so list pages can share
+ * one following-set instead of each row re-fetching its own status. Hovering
+ * "Following" relabels it "Unfollow" on desktop only. */
 export default function FollowButton({
   isFollowing,
   saving = false,

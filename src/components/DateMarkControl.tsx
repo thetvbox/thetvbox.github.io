@@ -4,18 +4,10 @@ import { UNKNOWN_WATCHED_AT } from '../lib/watched'
 import { todayLocalDateInput } from '../lib/date'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 
-/**
- * A small text trigger that expands into a date picker + confirm, so any
- * "mark watched" action -- bulk (whole show/season), starting a show fresh,
- * or a single episode -- can land on the right date in History instead of
- * defaulting to today. Shared so all contexts stay visually and
- * behaviorally identical.
- *
- * No native confirm() dialog -- the inline Confirm button click, after
- * explicitly opening this control and picking a date, is already the
- * confirmation step. A second native popup on top of that is just friction,
- * even for the bulk actions.
- */
+/** Text trigger that expands into a date picker + confirm, so any "mark
+ * watched" action can land on the right date in History instead of
+ * defaulting to today. No native confirm() -- opening this control and
+ * tapping Confirm is already the confirmation step. */
 export default function DateMarkControl({
   label,
   onConfirm,
@@ -25,9 +17,8 @@ export default function DateMarkControl({
   label: string
   onConfirm: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
   className?: string
-  /** Shown above the date picker once expanded -- e.g. "This will overwrite
-   * the date on 3 already-watched episodes." A bulk action's real
-   * consequences should be visible before the Confirm tap, not just after. */
+  /** Shown above the date picker once expanded, e.g. "This will overwrite
+   * the date on 3 already-watched episodes." */
   confirmSummary?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
