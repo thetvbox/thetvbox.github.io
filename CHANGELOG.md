@@ -39,6 +39,8 @@ All notable changes to TV Box are documented here. Format loosely follows
   the corner -- it was sized to only look right as the rightmost icon in
   the top bar, which stopped being true once the notifications bell was
   added after it.
+- The notifications and bug-report dropdowns now open and close with a
+  quick fade/scale instead of snapping in and out instantly.
 
 ## [1.0.0] - 2026-08-22
 

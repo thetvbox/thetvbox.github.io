@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { submitBugReport } from '../lib/bugReport'
@@ -35,7 +36,7 @@ export default function ReportBugButton() {
       >
         <BugGlyph />
       </button>
-      {open && <ReportBugPanel onClose={() => setOpen(false)} />}
+      <AnimatePresence>{open && <ReportBugPanel onClose={() => setOpen(false)} />}</AnimatePresence>
     </div>
   )
 }
@@ -104,7 +105,13 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94, y: -6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, y: -4 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
+    >
       {status === 'success' && result ? (
         <div>
           <p className="text-sm text-base-200">Thanks — filed as issue #{result.number}.</p>
@@ -162,6 +169,6 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
           </button>
         </form>
       )}
-    </div>
+    </motion.div>
   )
 }

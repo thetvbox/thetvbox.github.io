@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
@@ -72,7 +73,9 @@ export default function NotificationsBell() {
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent-400 ring-2 ring-base-950" />
         )}
       </button>
-      {open && <NotificationsPanel userId={me.id} onSeen={() => setUnread(0)} onClose={() => setOpen(false)} />}
+      <AnimatePresence>
+        {open && <NotificationsPanel userId={me.id} onSeen={() => setUnread(0)} onClose={() => setOpen(false)} />}
+      </AnimatePresence>
     </div>
   )
 }
@@ -135,7 +138,13 @@ function NotificationsPanel({
   }, [userId])
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94, y: -6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, y: -4 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
+    >
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-base-500">Notifications</p>
         <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
@@ -174,6 +183,6 @@ function NotificationsPanel({
           ))}
         </ul>
       )}
-    </div>
+    </motion.div>
   )
 }
