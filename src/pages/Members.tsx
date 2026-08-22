@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
 import { fetchFollowerIds, fetchFollowingIds, followUser, unfollowUser } from '../lib/follows'
 import FollowButton from '../components/FollowButton'
+import Avatar from '../components/Avatar'
 import type { AppUser } from '../types'
 
 /** The old flat Members directory, now with a real follow graph: every row
@@ -146,9 +147,7 @@ export default function Members() {
               className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
             >
               <Link to={`/u/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-sm font-semibold text-accent-300 ring-1 ring-accent-500/20">
-                  {u.username.slice(0, 2).toUpperCase()}
-                </div>
+                <Avatar username={u.username} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-base-100">
                     @{u.username}

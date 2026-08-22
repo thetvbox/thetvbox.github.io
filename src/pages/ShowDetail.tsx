@@ -930,6 +930,7 @@ export default function ShowDetail() {
               saving={savingRating}
               currentUserId={user?.id}
               size="lg"
+              ratingLabel="Rate this show"
             />
           </div>
         )}
@@ -943,6 +944,7 @@ export default function ShowDetail() {
                 type="button"
                 onClick={handleToggleNowWatching}
                 disabled={savingNowWatching}
+                aria-pressed={inNowWatching}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 disabled:opacity-60 ${
                   inNowWatching
                     ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
@@ -962,6 +964,7 @@ export default function ShowDetail() {
               type="button"
               onClick={handleToggleWatchlist}
               disabled={savingWatchlist}
+              aria-pressed={Boolean(watchlistItem)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 disabled:opacity-60 ${
                 watchlistItem
                   ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
@@ -975,6 +978,7 @@ export default function ShowDetail() {
             <button
               type="button"
               onClick={() => setListPickerOpen((v) => !v)}
+              aria-pressed={listMembership.size > 0}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
                 listMembership.size > 0
                   ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
@@ -1194,6 +1198,7 @@ export default function ShowDetail() {
                 currentUserId={user?.id}
                 size="md"
                 emptyLabel="You're the first to rate this season"
+                ratingLabel={`Rate Season ${activeSeason}`}
               />
             </div>
 

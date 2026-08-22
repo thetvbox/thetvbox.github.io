@@ -11,6 +11,7 @@ import {
 } from '../lib/follows'
 import type { RecentFollowerNotification } from '../lib/follows'
 import { formatShortDate } from '../lib/date'
+import Avatar from './Avatar'
 
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
  * dropdown of recent "X followed you" events. Panel is `absolute right-0`
@@ -171,9 +172,7 @@ function NotificationsPanel({
                 onClick={onClose}
                 className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-[11px] font-semibold text-accent-300 ring-1 ring-accent-500/20">
-                  {n.followerUsername.slice(0, 2).toUpperCase()}
-                </div>
+                <Avatar username={n.followerUsername} size="xs" />
                 <p className="min-w-0 flex-1 truncate text-xs text-base-200">
                   <span className="font-medium text-base-100">@{n.followerUsername}</span> started following you
                 </p>

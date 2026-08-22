@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import StarGlyph from './StarGlyph'
 import type { ShowRating } from '../types'
 
 const BUCKETS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const
@@ -36,22 +37,14 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
       </div>
       <div className="mt-1.5 flex items-center justify-between text-[11px] text-base-500">
         <span className="flex items-center gap-1">
-          <StarGlyph />
+          <StarGlyph size={10} />
           0.5
         </span>
         <span className="flex items-center gap-1">
-          <StarGlyph />
+          <StarGlyph size={10} />
           5
         </span>
       </div>
     </div>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
   )
 }

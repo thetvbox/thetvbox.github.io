@@ -31,6 +31,7 @@ export default function SeasonTabs({ seasons, active, onSelect }: SeasonTabsProp
             ref={isActive ? activeRef : undefined}
             type="button"
             onClick={() => onSelect(season.season_number)}
+            aria-pressed={isActive}
             className="relative shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors duration-200"
           >
             {isActive && (

@@ -11,6 +11,7 @@ import {
   unfollowUser,
 } from '../lib/follows'
 import FollowButton from './FollowButton'
+import Avatar from './Avatar'
 import type { AppUser } from '../types'
 
 interface FollowListPanelProps {
@@ -140,9 +141,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
           {people.map((p) => (
             <li key={p.id} className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover">
               <Link to={`/u/${p.username}`} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-[11px] font-semibold text-accent-300 ring-1 ring-accent-500/20">
-                  {p.username.slice(0, 2).toUpperCase()}
-                </div>
+                <Avatar username={p.username} size="xs" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-base-100">@{p.username}</p>
                   {myFollowerIds.has(p.id) && <p className="text-[10px] text-base-500">Follows you</p>}

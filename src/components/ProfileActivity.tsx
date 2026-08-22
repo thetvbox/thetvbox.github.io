@@ -15,6 +15,9 @@ import { useAuth } from '../contexts/AuthContext'
 import HistorySection from './HistorySection'
 import RatingDistribution from './RatingDistribution'
 import Toast from './Toast'
+import StarGlyph from './StarGlyph'
+import StatCard from './StatCard'
+import EmptyState from './EmptyState'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { EpisodeWatched, ShowListWithCount, ShowRating, ShowRewatch, WatchlistItem } from '../types'
@@ -193,16 +196,15 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         </div>
       ) : tab === 'diary' ? (
         diaryGroups.length === 0 && undatedDiaryEntries.length === 0 ? (
-          <div className="mt-10 flex flex-col items-center text-center">
-            <div className="mb-3 text-4xl">📔</div>
-            <p className="text-sm text-base-500">
-              Nothing logged yet. Mark an episode watched or rate a show, and it'll show up here.{' '}
+          <EmptyState icon="📔">
+            <p className="max-w-xs text-sm text-base-500">
+              Nothing logged yet. Mark an episode watched or rate a show, and it&apos;ll show up here.{' '}
               <Link to="/search" className="text-accent-400 hover:underline">
                 Find a show
               </Link>{' '}
               to get started.
             </p>
-          </div>
+          </EmptyState>
         ) : (
           <div className="space-y-6">
             {diaryGroups.map((group) => (
@@ -240,10 +242,9 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         />
       ) : tab === 'watchlist' ? (
         watchlist.length === 0 ? (
-          <div className="mt-10 flex flex-col items-center text-center">
-            <div className="mb-3 text-4xl">🔖</div>
-            <p className="text-sm text-base-500">
-              {isMe ? "Nothing on your watchlist yet. " : 'Nothing here yet. '}
+          <EmptyState icon="🔖">
+            <p className="max-w-xs text-sm text-base-500">
+              {isMe ? 'Nothing on your watchlist yet. ' : 'Nothing here yet. '}
               {isMe && (
                 <>
                   <Link to="/search" className="text-accent-400 hover:underline">
@@ -253,7 +254,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                 </>
               )}
             </p>
-          </div>
+          </EmptyState>
         ) : (
           <ul className="space-y-2">
             {watchlist.map((w, i) => (
@@ -342,10 +343,9 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
           )}
 
           {lists.length === 0 ? (
-            <div className="mt-6 flex flex-col items-center text-center">
-              <div className="mb-3 text-4xl">📋</div>
+            <EmptyState icon="📋" className="mt-6">
               <p className="text-sm text-base-500">No lists yet.</p>
-            </div>
+            </EmptyState>
           ) : (
             <ul className="space-y-2">
               {lists.map((l, i) => (
@@ -394,21 +394,13 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
         active ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40' : 'text-base-400 hover:text-base-200'
       }`}
     >
       {children}
     </button>
-  )
-}
-
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-hairline bg-base-850/60 p-3.5 text-center">
-      <p className="text-lg font-semibold text-base-100 sm:text-xl">{value}</p>
-      <p className="mt-0.5 text-[11px] text-base-500">{label}</p>
-    </div>
   )
 }
 
@@ -469,14 +461,6 @@ function DiaryRow({ entry, index }: { entry: DiaryEntry; index: number }) {
         )}
       </Link>
     </motion.li>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
   )
 }
 

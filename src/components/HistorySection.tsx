@@ -18,6 +18,7 @@ import { useShowDetails } from '../hooks/useShowDetails'
 import HistoryFiltersPanel from './HistoryFiltersPanel'
 import StreamingBadge from './StreamingBadge'
 import EmptyState from './EmptyState'
+import StarGlyph from './StarGlyph'
 import { formatShortDate } from '../lib/date'
 
 const SORT_LABELS: Record<HistorySort, string> = {
@@ -117,6 +118,7 @@ export default function HistorySection({
               key={key}
               type="button"
               onClick={() => setSort(key)}
+              aria-pressed={sort === key}
               className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
                 sort === key
                   ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
@@ -130,6 +132,7 @@ export default function HistorySection({
         <button
           type="button"
           onClick={() => setFiltersOpen((v) => !v)}
+          aria-pressed={filtersOpen}
           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
             filtersOpen || activeFilterCount > 0
               ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
@@ -271,13 +274,5 @@ function HistoryCard({
         </p>
       </Link>
     </motion.div>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
   )
 }

@@ -41,6 +41,17 @@ All notable changes to TV Box are documented here. Format loosely follows
   added after it.
 - The notifications and bug-report dropdowns now open and close with a
   quick fade/scale instead of snapping in and out instantly.
+- The star rating control was announcing itself as "Rate this episode" to
+  screen readers everywhere it's actually used (rating a show or a season,
+  never an episode) -- it now says which one it actually is.
+- Every toggle-style button (Following/Everyone, sort and filter chips, the
+  season tabs, Now Watching/watchlist/list quick actions, profile tabs,
+  year picker) now reports its selected state to screen readers via
+  `aria-pressed`, not just visually.
+- Consolidated seven near-identical hand-rolled avatar circles, eight copies
+  of the star icon, and three copies of the stat-card tile into shared
+  `Avatar`/`StarGlyph`/`StatCard` components -- same look everywhere, one
+  place to change it.
 
 ## [1.0.0] - 2026-08-22
 

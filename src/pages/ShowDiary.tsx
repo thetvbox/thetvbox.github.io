@@ -9,6 +9,7 @@ import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
 import CenteredMessage from '../components/CenteredMessage'
+import StarGlyph from '../components/StarGlyph'
 import type { AppUser, EpisodeWatched, ShowRating, ShowRewatch } from '../types'
 
 export default function ShowDiary() {
@@ -185,13 +186,5 @@ export default function ShowDiary() {
         </>
       )}
     </div>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
   )
 }

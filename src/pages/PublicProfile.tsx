@@ -5,6 +5,7 @@ import { fetchUserByUsername } from '../lib/users'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import CenteredMessage from '../components/CenteredMessage'
+import Avatar from '../components/Avatar'
 import type { AppUser } from '../types'
 
 export default function PublicProfile() {
@@ -42,9 +43,7 @@ export default function PublicProfile() {
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-base font-semibold text-accent-300 ring-1 ring-accent-500/20">
-            {profile === undefined ? '' : profile.username.slice(0, 2).toUpperCase()}
-          </div>
+          <Avatar username={profile === undefined ? '' : profile.username} size="lg" />
           <div>
             <p className="text-xs uppercase tracking-wide text-base-500">
               {isMe ? 'This is you' : 'Member'}

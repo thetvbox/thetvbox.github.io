@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
+import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
 
 export default function Profile() {
@@ -14,9 +15,7 @@ export default function Profile() {
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-base font-semibold text-accent-300 ring-1 ring-accent-500/20">
-            {user?.username.slice(0, 2).toUpperCase()}
-          </div>
+          <Avatar username={user?.username ?? ''} size="lg" />
           <div>
             <p className="text-xs uppercase tracking-wide text-base-500">Signed in as</p>
             <h1 className="font-display text-lg font-semibold text-base-100 sm:text-xl">

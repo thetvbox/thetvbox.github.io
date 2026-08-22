@@ -44,6 +44,7 @@ export default function FollowButton({
       type="button"
       disabled={saving}
       aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+      aria-pressed={isFollowing}
       onClick={() => (isFollowing ? onUnfollow() : onFollow())}
       onMouseEnter={() => supportsHover && setHovering(true)}
       onMouseLeave={() => supportsHover && setHovering(false)}

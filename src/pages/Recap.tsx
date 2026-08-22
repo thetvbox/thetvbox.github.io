@@ -9,6 +9,8 @@ import { summarizeShowActivity } from '../lib/showActivity'
 import { availableRecapYears, buildYearRecap } from '../lib/recap'
 import { posterUrl } from '../lib/tmdb'
 import EmptyState from '../components/EmptyState'
+import StarGlyph from '../components/StarGlyph'
+import StatCard from '../components/StatCard'
 import type { EpisodeWatched, ShowRating, ShowRewatch } from '../types'
 
 export default function Recap() {
@@ -77,6 +79,7 @@ export default function Recap() {
                 key={y}
                 type="button"
                 onClick={() => setYear(y)}
+                aria-pressed={year === y}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
                   year === y
                     ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
@@ -161,19 +164,3 @@ export default function Recap() {
   )
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-hairline bg-base-850/60 p-3.5 text-center">
-      <p className="text-lg font-semibold text-base-100 sm:text-xl">{value}</p>
-      <p className="mt-0.5 text-[11px] text-base-500">{label}</p>
-    </div>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
-  )
-}

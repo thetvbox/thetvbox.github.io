@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import StarRating from './StarRating'
+import StarGlyph from './StarGlyph'
 
 /** Minimal shape both ShowRatingWithUser and SeasonRatingWithUser satisfy --
  * this component doesn't care which kind of rating it's showing. */
@@ -20,6 +21,11 @@ interface RatingSummaryProps {
   currentUserId?: string
   size?: 'sm' | 'md' | 'lg'
   emptyLabel?: string
+  /** Screen-reader label for the star input itself, e.g. "Rate this show" or
+   * "Rate this season" -- passed through to StarRating's aria-label instead
+   * of it guessing, since this component (and StarRating underneath it) has
+   * no way to know which context it's being used in otherwise. */
+  ratingLabel: string
 }
 
 /**
@@ -36,6 +42,7 @@ export default function RatingSummary({
   currentUserId,
   size = 'md',
   emptyLabel = "You're the first to rate this",
+  ratingLabel,
 }: RatingSummaryProps) {
   const [open, setOpen] = useState(false)
   const others = ratings.filter((r) => r.user_id !== currentUserId)
@@ -44,7 +51,7 @@ export default function RatingSummary({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <StarRating value={myRating} onChange={onChange} size={size} />
+        <StarRating value={myRating} onChange={onChange} size={size} label={ratingLabel} />
         {saving && (
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-base-600 border-t-accent-400" />
         )}
@@ -71,7 +78,7 @@ export default function RatingSummary({
           >
             {othersAvg !== null ? (
               <>
-                <StarGlyph />
+                <StarGlyph size={14} />
                 {othersAvg.toFixed(1)}
                 <span className="text-base-500">
                   ({others.length} {others.length === 1 ? 'other rating' : 'other ratings'})
@@ -104,20 +111,12 @@ export default function RatingSummary({
                 )}
                 <span className="flex items-center gap-1 text-star">
                   {r.rating.toFixed(1)}
-                  <StarGlyph />
+                  <StarGlyph size={14} />
                 </span>
               </li>
             ))}
         </motion.ul>
       )}
     </div>
-  )
-}
-
-function StarGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--color-star)">
-      <path d="M12 2.5l2.9 6.15 6.6.72-4.95 4.6 1.3 6.53L12 17.3l-5.85 3.2 1.3-6.53-4.95-4.6 6.6-.72L12 2.5z" />
-    </svg>
   )
 }

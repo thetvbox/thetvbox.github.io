@@ -9,6 +9,10 @@ interface StarRatingProps {
   size?: 'sm' | 'md' | 'lg'
   readOnly?: boolean
   className?: string
+  /** Screen-reader label for the interactive case, e.g. "Rate this show" --
+   * this component has no idea what it's rating on its own, so the caller
+   * (RatingSummary) always supplies one rather than this guessing wrong. */
+  label?: string
 }
 
 const SIZE_MAP: Record<NonNullable<StarRatingProps['size']>, number> = {
@@ -62,6 +66,7 @@ export default function StarRating({
   size = 'md',
   readOnly = false,
   className = '',
+  label = 'Rate this',
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -151,7 +156,7 @@ export default function StarRating({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       role={interactive ? 'radiogroup' : undefined}
-      aria-label={interactive ? 'Rate this episode' : `Rated ${value} out of 5 stars`}
+      aria-label={interactive ? label : `Rated ${value} out of 5 stars`}
     >
       {[1, 2, 3, 4, 5].map((starIndex) => {
         const fillForStar = Math.max(0, Math.min(1, displayValue - (starIndex - 1)))

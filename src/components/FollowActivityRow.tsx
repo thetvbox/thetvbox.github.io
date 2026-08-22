@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
 import type { FollowActivityEvent } from '../lib/showActivity'
+import Avatar from './Avatar'
 
 /** One "X started following Y" row -- same layout language as ActivityRow
  * (avatar, thumbnail slot, text block, right-aligned bit) but the thumbnail
@@ -13,9 +14,7 @@ export default function FollowActivityRow({ event }: { event: FollowActivityEven
       to={`/u/${event.followedUsername}`}
       className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-300 ring-1 ring-accent-500/20">
-        {event.followerUsername.slice(0, 2).toUpperCase()}
-      </div>
+      <Avatar username={event.followerUsername} size="sm" />
       <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-md bg-base-800 text-accent-400">
         <FollowGlyph />
       </div>

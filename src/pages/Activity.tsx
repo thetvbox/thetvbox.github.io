@@ -184,7 +184,7 @@ export default function Activity() {
                 onClick={() => setScope('everyone')}
                 className="text-xs text-accent-400 hover:underline"
               >
-                See everyone's activity
+                See everyone&apos;s activity
               </button>
               {followingIds.size === 0 && (
                 <Link to="/members" className="text-xs text-accent-400 hover:underline">
@@ -226,6 +226,7 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
         active
           ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
@@ -250,6 +251,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
         active
           ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
