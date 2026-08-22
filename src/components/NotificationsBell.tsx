@@ -12,11 +12,13 @@ import type { RecentFollowerNotification } from '../lib/follows'
 import { formatShortDate } from '../lib/date'
 
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
- * dropdown of recent "X followed you" events. Placed last in the header
- * (after ReportBugButton) for the same reason ReportBugButton is last: its
- * panel is `absolute right-0` off its own trigger, so the trigger needs to
- * be the header's actual rightmost element for that math to land inside the
- * viewport on narrow screens -- see Navbar.tsx and ReportBugButton.tsx. */
+ * dropdown of recent "X followed you" events. Panel is `absolute right-0`
+ * off its own trigger with a fixed, modest width
+ * (`w-72 max-w-[calc(100vw-2rem)]`) rather than a viewport-relative one, so
+ * it stays fully on-screen regardless of where this icon lands among the
+ * other top-bar icons -- see ReportBugButton.tsx, which uses the same
+ * pattern (a stale version of this comment used to claim both needed to be
+ * the header's rightmost icon; that's no longer true for either). */
 export default function NotificationsBell() {
   const { user: me } = useAuth()
   const [open, setOpen] = useState(false)

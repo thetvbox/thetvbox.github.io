@@ -214,11 +214,6 @@ export default function Navbar() {
             </nav>
             <ThemeToggle />
             <ReportBugButton />
-            {/* Last in this row on purpose, same reasoning as ReportBugButton
-                above: NotificationsPanel also anchors itself with right-0 off
-                its own trigger, so whichever of these two is actually last
-                needs to be the header's rightmost element for that math to
-                land inside the viewport instead of clipping on phone widths. */}
             <NotificationsBell />
           </div>
         </div>

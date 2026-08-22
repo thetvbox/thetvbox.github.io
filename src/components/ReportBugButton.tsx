@@ -10,7 +10,13 @@ import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 
 /** Small persistent trigger in the top bar (every page, not tied to any one
  * section) -- opens a dropdown-style panel instead of a true modal, same as
- * everything else in this app (see useEscapeAndFocusReturn). */
+ * everything else in this app (see useEscapeAndFocusReturn). The panel is
+ * `absolute right-0` off its own trigger with a fixed, modest width
+ * (`w-72 max-w-[calc(100vw-2rem)]`) -- deliberately NOT a viewport-relative
+ * width like `calc(100vw-2rem)` on its own, which only stays on-screen if
+ * this happens to be the header's rightmost icon. A fixed width keeps this
+ * safe regardless of where it sits among the other top-bar icons (see
+ * NotificationsBell, which uses the same pattern). */
 export default function ReportBugButton() {
   const [open, setOpen] = useState(false)
 
@@ -98,7 +104,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20">
+    <div className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20">
       {status === 'success' && result ? (
         <div>
           <p className="text-sm text-base-200">Thanks — filed as issue #{result.number}.</p>

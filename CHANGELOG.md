@@ -35,6 +35,10 @@ All notable changes to TV Box are documented here. Format loosely follows
 - Login no longer hard-crashes if the browser blocks local storage access
   (e.g. some private-browsing modes) -- it now just falls back to a
   logged-out state.
+- The "Report a bug" dropdown on mobile web no longer gets squeezed into
+  the corner -- it was sized to only look right as the rightmost icon in
+  the top bar, which stopped being true once the notifications bell was
+  added after it.
 
 ## [1.0.0] - 2026-08-22
 
