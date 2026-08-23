@@ -7,6 +7,7 @@ import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
 import { staggerDelay } from '../lib/motion'
 import CenteredMessage from '../components/CenteredMessage'
+import EmptyState from '../components/EmptyState'
 import StatCard from '../components/StatCard'
 import type { AppUser, ShowRating } from '../types'
 
@@ -127,9 +128,11 @@ export default function Compare() {
       {error && <p className="mb-4 text-sm text-danger">{error}</p>}
 
       {shared.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-base-500">
-          No overlap yet — you haven&apos;t rated any of the same shows.
-        </p>
+        <EmptyState icon="🤝">
+          <p className="max-w-xs text-sm text-base-500">
+            No overlap yet — you haven&apos;t rated any of the same shows.
+          </p>
+        </EmptyState>
       ) : (
         <>
           <div className="mb-8 grid grid-cols-2 gap-3">

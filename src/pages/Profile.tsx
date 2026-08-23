@@ -22,7 +22,7 @@ export default function Profile() {
               @{user?.username}
             </h1>
             <p className="text-xs text-base-500">{user?.email}</p>
-            {user && <ProfileFollowSection profileId={user.id} isMe />}
+            {user && <ProfileFollowSection profileId={user.id} username={user.username} isMe />}
           </div>
         </div>
         <div className="flex items-center gap-2">

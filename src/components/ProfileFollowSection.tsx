@@ -1,23 +1,28 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchFollowCounts, followUser, isFollowingUser, unfollowUser } from '../lib/follows'
+import { useToast } from '../hooks/useToast'
 import FollowButton from './FollowButton'
 import FollowListPanel from './FollowListPanel'
+import Toast from './Toast'
 
 interface ProfileFollowSectionProps {
   profileId: string
+  /** For the unfollow toast's message -- optional since it's never used on
+   * your own profile (no follow button renders there). */
+  username?: string
   isMe: boolean
 }
 
 /** Follower/following counts (clickable, opening FollowListPanel) plus a
  * Follow/Unfollow button, shared between Profile.tsx and PublicProfile.tsx. */
-export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowSectionProps) {
+export default function ProfileFollowSection({ profileId, username, isMe }: ProfileFollowSectionProps) {
   const { user: me } = useAuth()
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
   const [isFollowing, setIsFollowing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [panel, setPanel] = useState<'followers' | 'following' | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { toast, showUndo, showError, dismiss } = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -42,7 +47,6 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
   async function handleFollow() {
     if (!me) return
     setSaving(true)
-    setError(null)
     setIsFollowing(true)
     setCounts((c) => ({ ...c, followers: c.followers + 1 }))
     try {
@@ -50,7 +54,7 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
     } catch {
       setIsFollowing(false)
       setCounts((c) => ({ ...c, followers: Math.max(0, c.followers - 1) }))
-      setError('Failed to follow. Try again.')
+      showError('Failed to follow. Try again.')
     } finally {
       setSaving(false)
     }
@@ -59,7 +63,6 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
   async function handleUnfollow() {
     if (!me) return
     setSaving(true)
-    setError(null)
     setIsFollowing(false)
     setCounts((c) => ({ ...c, followers: Math.max(0, c.followers - 1) }))
     try {
@@ -67,10 +70,22 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
     } catch {
       setIsFollowing(true)
       setCounts((c) => ({ ...c, followers: c.followers + 1 }))
-      setError('Failed to unfollow. Try again.')
+      showError('Failed to unfollow. Try again.')
+      return
     } finally {
       setSaving(false)
     }
+    showUndo(username ? `Unfollowed @${username}` : 'Unfollowed', async () => {
+      setIsFollowing(true)
+      setCounts((c) => ({ ...c, followers: c.followers + 1 }))
+      try {
+        await followUser(me.id, profileId)
+      } catch {
+        setIsFollowing(false)
+        setCounts((c) => ({ ...c, followers: Math.max(0, c.followers - 1) }))
+        showError('Failed to undo. Try following again.')
+      }
+    })
   }
 
   // Only meaningful on your own profile: the only count that can change from
@@ -103,7 +118,6 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
           <FollowButton isFollowing={isFollowing} saving={saving} onFollow={handleFollow} onUnfollow={handleUnfollow} />
         )}
       </div>
-      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
       {panel && (
         <FollowListPanel
           userId={profileId}
@@ -112,6 +126,7 @@ export default function ProfileFollowSection({ profileId, isMe }: ProfileFollowS
           onMyFollowingCountChange={isMe ? handlePanelFollowingCountChange : undefined}
         />
       )}
+      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
     </div>
   )
 }

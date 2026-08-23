@@ -78,6 +78,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const [savingRating, setSavingRating] = useState(false)
   const [savingSeasonRating, setSavingSeasonRating] = useState(false)
   const [providers, setProviders] = useState<TmdbWatchProviders | null>(null)
+  const [loadingProviders, setLoadingProviders] = useState(true)
   const [override, setOverride] = useState<StreamingOverride | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [savingNowWatching, setSavingNowWatching] = useState(false)
@@ -180,12 +181,16 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   useEffect(() => {
     if (Number.isNaN(showId)) return
     let cancelled = false
+    setLoadingProviders(true)
     getWatchProviders(showId)
       .then((data) => {
         if (!cancelled) setProviders(data)
       })
       .catch(() => {
         // Silently skip the section rather than surfacing an error for this.
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProviders(false)
       })
     fetchStreamingOverride(showId)
       .then((data) => {
@@ -782,6 +787,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     region,
     regionProviders,
     effectiveProvider,
+    loadingProviders,
     override,
     pickerOpen,
     setPickerOpen,

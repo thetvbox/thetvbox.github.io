@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
 import { fetchFollowerIds, fetchFollowingIds, followUser, unfollowUser } from '../lib/follows'
 import { staggerDelay } from '../lib/motion'
+import { useToast } from '../hooks/useToast'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
+import EmptyState from '../components/EmptyState'
+import Toast from '../components/Toast'
 import type { AppUser } from '../types'
 
 /** People directory: every row gets a Follow/Following button and a "Follows
@@ -17,9 +20,26 @@ export default function Members() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())
   const [savingId, setSavingId] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  // Kept in the URL (not just component state) so the search survives
+  // navigating to a profile and back -- Members otherwise fully remounts on
+  // return, losing whatever was typed.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = searchParams.get('q') ?? ''
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { toast, showUndo, showError, dismiss } = useToast()
+
+  function setQuery(next: string) {
+    setSearchParams(
+      (prev) => {
+        const nextParams = new URLSearchParams(prev)
+        if (next) nextParams.set('q', next)
+        else nextParams.delete('q')
+        return nextParams
+      },
+      { replace: true },
+    )
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -66,7 +86,7 @@ export default function Members() {
         next.delete(targetId)
         return next
       })
-      setError('Failed to follow. Try again.')
+      showError('Failed to follow. Try again.')
     } finally {
       setSavingId(null)
     }
@@ -74,6 +94,7 @@ export default function Members() {
 
   async function handleUnfollow(targetId: string) {
     if (!me) return
+    const target = users.find((u) => u.id === targetId)
     setSavingId(targetId)
     setFollowingIds((prev) => {
       const next = new Set(prev)
@@ -84,10 +105,27 @@ export default function Members() {
       await unfollowUser(me.id, targetId)
     } catch {
       setFollowingIds((prev) => new Set(prev).add(targetId))
-      setError('Failed to unfollow. Try again.')
+      showError('Failed to unfollow. Try again.')
+      return
     } finally {
       setSavingId(null)
     }
+    // The row-level Follow/Following button already reflects the new state,
+    // but every other removal in the app gets a toast+undo -- unfollow was
+    // the one silent exception.
+    showUndo(target ? `Unfollowed @${target.username}` : 'Unfollowed', async () => {
+      setFollowingIds((prev) => new Set(prev).add(targetId))
+      try {
+        await followUser(me.id, targetId)
+      } catch {
+        setFollowingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(targetId)
+          return next
+        })
+        showError('Failed to undo. Try following again.')
+      }
+    })
   }
 
   return (
@@ -132,9 +170,11 @@ export default function Members() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-base-500">
-          {users.length === 0 ? 'No one has registered yet.' : `No one matches “${query}”.`}
-        </p>
+        <EmptyState icon="🔍">
+          <p className="max-w-xs text-sm text-base-500">
+            {users.length === 0 ? 'No one has registered yet.' : `No one matches “${query}”.`}
+          </p>
+        </EmptyState>
       ) : (
         <ul className="space-y-2">
           {filtered.map((u, i) => (
@@ -178,6 +218,8 @@ export default function Members() {
           ))}
         </ul>
       )}
+
+      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
     </div>
   )
 }

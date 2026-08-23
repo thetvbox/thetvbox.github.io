@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -43,6 +43,9 @@ export default function Activity() {
   const [filterUsername, setFilterUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Once someone deliberately picks a scope, that choice sticks -- this only
+  // steers the *default* for a first-time visitor with nothing to see yet.
+  const scopeTouched = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -76,6 +79,20 @@ export default function Activity() {
       cancelled = true
     }
   }, [me])
+
+  // A brand-new user following nobody would otherwise land on an empty
+  // "Following" feed by default -- steer them to "Everyone" instead, unless
+  // they've already touched the toggle themselves.
+  useEffect(() => {
+    if (!loading && !scopeTouched.current && followingIds.size === 0) {
+      setScope('everyone')
+    }
+  }, [loading, followingIds])
+
+  function handleSetScope(next: Scope) {
+    scopeTouched.current = true
+    setScope(next)
+  }
 
   const usernameToId = useMemo(() => new Map(members.map((u) => [u.username, u.id])), [members])
 
@@ -142,10 +159,10 @@ export default function Activity() {
       </motion.div>
 
       <div className="mb-3 flex gap-1.5">
-        <ScopeChip active={scope === 'following'} onClick={() => setScope('following')}>
+        <ScopeChip active={scope === 'following'} onClick={() => handleSetScope('following')}>
           Following
         </ScopeChip>
-        <ScopeChip active={scope === 'everyone'} onClick={() => setScope('everyone')}>
+        <ScopeChip active={scope === 'everyone'} onClick={() => handleSetScope('everyone')}>
           Everyone
         </ScopeChip>
       </div>
@@ -182,7 +199,7 @@ export default function Activity() {
             <div className="mt-3 flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setScope('everyone')}
+                onClick={() => handleSetScope('everyone')}
                 className="text-xs text-accent-400 hover:underline"
               >
                 See everyone&apos;s activity

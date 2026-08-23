@@ -55,7 +55,7 @@ export default function PublicProfile() {
                 @{profile.username}
               </h1>
             )}
-            {profile && <ProfileFollowSection profileId={profile.id} isMe={isMe} />}
+            {profile && <ProfileFollowSection profileId={profile.id} username={profile.username} isMe={isMe} />}
           </div>
         </div>
         {isMe ? (

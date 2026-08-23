@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentWatched } from '../lib/watched'
@@ -34,11 +34,32 @@ interface DiaryDayGroup {
 }
 
 type Tab = 'diary' | 'history' | 'watchlist' | 'lists'
+const TABS: Tab[] = ['diary', 'history', 'watchlist', 'lists']
 
 export default function ProfileActivity({ userId, username }: ProfileActivityProps) {
   const { user: me } = useAuth()
   const isMe = me?.id === userId
-  const [tab, setTab] = useState<Tab>('diary')
+  // Kept in the URL (not just component state) so linking straight to a tab
+  // (see ListDetail's back link) and returning via the browser's back button
+  // both land you on the tab you actually meant, instead of always Diary.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const [tab, setTabState] = useState<Tab>(
+    tabParam && TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'diary',
+  )
+
+  function setTab(next: Tab) {
+    setTabState(next)
+    setSearchParams(
+      (prev) => {
+        const nextParams = new URLSearchParams(prev)
+        if (next === 'diary') nextParams.delete('tab')
+        else nextParams.set('tab', next)
+        return nextParams
+      },
+      { replace: true },
+    )
+  }
   const [ratings, setRatings] = useState<ShowRating[]>([])
   const [watched, setWatched] = useState<EpisodeWatched[]>([])
   const [rewatches, setRewatches] = useState<ShowRewatch[]>([])
@@ -215,7 +236,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                 </h3>
                 <ul className="space-y-2">
                   {group.entries.map((entry, i) => (
-                    <DiaryRow key={entry.id} entry={entry} index={i} />
+                    <DiaryRow key={entry.id} entry={entry} index={i} username={username} />
                   ))}
                 </ul>
               </div>
@@ -228,7 +249,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                 </h3>
                 <ul className="space-y-2">
                   {undatedDiaryEntries.map((entry, i) => (
-                    <DiaryRow key={entry.id} entry={entry} index={i} />
+                    <DiaryRow key={entry.id} entry={entry} index={i} username={username} />
                   ))}
                 </ul>
               </div>
@@ -335,9 +356,10 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
                 <button
                   type="button"
                   onClick={() => setCreatingList(true)}
-                  className="text-xs text-accent-400 hover:underline"
+                  className="flex items-center gap-1.5 rounded-lg bg-accent-500/15 px-3 py-1.5 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 transition-colors duration-200 hover:bg-accent-500/25"
                 >
-                  + New list
+                  <PlusGlyph />
+                  New list
                 </button>
               )}
             </div>
@@ -406,18 +428,19 @@ function TabButton({
 }
 
 /** One row in the diary -- shape (poster, name, link) is shared across all
- * three entry kinds; only the subtitle and the right-side badge differ. */
-function DiaryRow({ entry, index }: { entry: DiaryEntry; index: number }) {
+ * three entry kinds; only the subtitle and the right-side badge differ. The
+ * row's main body links to the show itself; the small icon on the end is a
+ * separate link to this show's own diary (the aggregate feed here has no
+ * other way to reach it) -- two siblings, not nested anchors. */
+function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number; username: string }) {
   return (
     <motion.li
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: staggerDelay(index, 8) }}
+      className="flex items-center gap-1.5 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
-      <Link
-        to={`/show/${entry.showId}`}
-        className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
-      >
+      <Link to={`/show/${entry.showId}`} className="flex min-w-0 flex-1 items-center gap-3">
         <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
           {entry.showPosterPath && (
             <img
@@ -461,6 +484,14 @@ function DiaryRow({ entry, index }: { entry: DiaryEntry; index: number }) {
           </div>
         )}
       </Link>
+      <Link
+        to={`/u/${username}/shows/${entry.showId}`}
+        title="View this show's full diary"
+        aria-label="View this show's full diary"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base-500 transition-colors duration-200 hover:bg-hover hover:text-accent-400"
+      >
+        <HistoryGlyph />
+      </Link>
     </motion.li>
   )
 }
@@ -498,6 +529,24 @@ function RewatchGlyph() {
     >
       <path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" />
       <path d="M18 4v4h-4M6 20v-4h4" />
+    </svg>
+  )
+}
+
+function HistoryGlyph() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 8v4l3 2" />
+    </svg>
+  )
+}
+
+function PlusGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <path d="M12 5v14M5 12h14" />
     </svg>
   )
 }

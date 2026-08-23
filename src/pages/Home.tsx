@@ -7,6 +7,7 @@ import { fetchRecentWatched } from '../lib/watched'
 import { fetchStartedForUser } from '../lib/showStarted'
 import { fetchDismissedForUser } from '../lib/showDismissed'
 import { fetchWatchlist } from '../lib/watchlist'
+import { fetchListsForUser } from '../lib/lists'
 import { summarizeShowActivity, nowWatching } from '../lib/showActivity'
 import { computeSeasonProgress, fetchNextEpisode, fetchSeasonBreakdowns } from '../lib/seasonProgress'
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
@@ -20,7 +21,14 @@ import type { UpcomingItem } from '../components/UpcomingRow'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
-import type { EpisodeWatched, ShowRating, ShowStarted, ShowWatchingDismissed, WatchlistItem } from '../types'
+import type {
+  EpisodeWatched,
+  ShowListWithCount,
+  ShowRating,
+  ShowStarted,
+  ShowWatchingDismissed,
+  WatchlistItem,
+} from '../types'
 
 function greeting(): string {
   const hour = new Date().getHours()
@@ -37,6 +45,7 @@ export default function Home() {
   const [started, setStarted] = useState<ShowStarted[]>([])
   const [dismissed, setDismissed] = useState<ShowWatchingDismissed[]>([])
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
+  const [lists, setLists] = useState<ShowListWithCount[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,14 +60,16 @@ export default function Home() {
       fetchStartedForUser(user.id),
       fetchDismissedForUser(user.id),
       fetchWatchlist(user.id),
+      fetchListsForUser(user.id),
     ])
-      .then(([ratingRows, watchedRows, startedRows, dismissedRows, watchlistRows]) => {
+      .then(([ratingRows, watchedRows, startedRows, dismissedRows, watchlistRows, listRows]) => {
         if (!cancelled) {
           setRatings(ratingRows)
           setWatched(watchedRows)
           setStarted(startedRows)
           setDismissed(dismissedRows)
           setWatchlist(watchlistRows)
+          setLists(listRows)
         }
       })
       .catch((err) => {
@@ -197,12 +208,17 @@ export default function Home() {
           <p className="max-w-xs text-sm text-base-500">
             Nothing in progress. Mark an episode watched on any show and it&apos;ll show up here.
           </p>
-          <Link
-            to="/search"
-            className="mt-4 rounded-lg border border-hairline-strong px-4 py-2 text-sm text-base-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
-          >
-            Find a show
-          </Link>
+          <div className="mt-4 flex items-center gap-3">
+            <Link
+              to="/search"
+              className="rounded-lg border border-hairline-strong px-4 py-2 text-sm text-base-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+            >
+              Find a show
+            </Link>
+            <Link to="/members" className="text-sm text-accent-400 hover:underline">
+              Find people to follow
+            </Link>
+          </div>
         </EmptyState>
       ) : (
         <div className={POSTER_GRID_CLASSES}>
@@ -302,6 +318,32 @@ export default function Home() {
                   <p className="text-xs text-base-400">Added {formatShortDate(w.added_at)}</p>
                 </Link>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lists teaser -- Lists otherwise only surface a few taps deep on
+          Profile's Lists tab, easy to forget exist. A compact row here (not
+          full poster grids, just names + counts) is enough to remind you
+          they're there without competing with Now Watching for attention. */}
+      {!loading && lists.length > 0 && (
+        <div className="mt-12">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-base-100">Your Lists</h2>
+            <Link to="/profile?tab=lists" className="text-xs font-medium text-accent-400 hover:underline">
+              See all &rarr;
+            </Link>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {lists.map((l) => (
+              <Link
+                key={l.id}
+                to={`/u/${user?.username}/lists/${l.id}`}
+                className="rounded-full border border-hairline-strong bg-base-850/60 px-3.5 py-2 text-sm text-base-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+              >
+                {l.name} <span className="text-base-500">· {l.itemCount}</span>
+              </Link>
             ))}
           </div>
         </div>

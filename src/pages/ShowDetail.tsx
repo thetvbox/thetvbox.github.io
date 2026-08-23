@@ -102,6 +102,7 @@ export default function ShowDetail() {
 
         <ShowDetailStreaming
           effectiveProvider={d.effectiveProvider}
+          loading={d.loadingProviders}
           override={d.override}
           regionProviders={d.regionProviders}
           region={d.region}

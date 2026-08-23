@@ -4,6 +4,10 @@ import type { StreamingOverride, TmdbProviderListItem, TmdbWatchProviderRegion }
 
 interface ShowDetailStreamingProps {
   effectiveProvider: { provider_name: string; logo_path: string | null } | null
+  /** True while the initial watch-providers fetch is still in flight --
+   * distinct from "loaded but genuinely empty," which now gets its own
+   * message instead of silently rendering nothing. */
+  loading: boolean
   override: StreamingOverride | null
   regionProviders: TmdbWatchProviderRegion | null
   region: string
@@ -17,6 +21,7 @@ interface ShowDetailStreamingProps {
 /** "Where to watch" -- the group's resolved answer, correctable by anyone. */
 export default function ShowDetailStreaming({
   effectiveProvider,
+  loading,
   override,
   regionProviders,
   region,
@@ -26,7 +31,7 @@ export default function ShowDetailStreaming({
   onPickProvider,
   onClearOverride,
 }: ShowDetailStreamingProps) {
-  if (!effectiveProvider && !regionProviders) return null
+  if (loading) return null
 
   return (
     <div className="mt-6 max-w-md rounded-2xl border border-hairline bg-base-850/40 p-4">
@@ -51,8 +56,10 @@ export default function ShowDetailStreaming({
             {override && <p className="text-[11px] text-base-500">Set manually</p>}
           </div>
         </div>
-      ) : (
+      ) : regionProviders ? (
         <p className="text-sm text-base-500">Not free to stream in your region right now.</p>
+      ) : (
+        <p className="text-sm text-base-500">Streaming info isn&apos;t available for this show yet.</p>
       )}
 
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
