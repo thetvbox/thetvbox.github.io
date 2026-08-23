@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
 export const TOAST_SECONDS = 8
 export const NOTIFICATIONS_POLL_MS = 60_000
 export const SEARCH_DEBOUNCE_MS = 350
+export const FILTER_DEBOUNCE_MS = 350
 
 export const USERNAME_MIN_LENGTH = 3
 export const USERNAME_MAX_LENGTH = 20

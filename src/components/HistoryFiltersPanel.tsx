@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import { FILTER_DEBOUNCE_MS } from '../lib/constants'
 import {
   emptyHistoryFilters,
   isHistoryFiltersActive,
@@ -115,37 +117,13 @@ export default function HistoryFiltersPanel({
 
       {facets.minYear !== null && facets.maxYear !== null && (
         <FilterSection title="Year">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              aria-label="From year"
-              min={facets.minYear}
-              max={facets.maxYear}
-              placeholder={String(facets.minYear)}
-              value={filters.yearFrom ?? ''}
-              onChange={(e) => {
-                const v = e.target.value.trim()
-                onChange({ ...filters, yearFrom: v === '' ? null : Number(v) })
-              }}
-              className="w-20 rounded-lg border border-hairline-strong bg-base-950 px-2 py-1 text-xs text-base-200"
-            />
-            <span className="text-xs text-base-500">to</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              aria-label="To year"
-              min={facets.minYear}
-              max={facets.maxYear}
-              placeholder={String(facets.maxYear)}
-              value={filters.yearTo ?? ''}
-              onChange={(e) => {
-                const v = e.target.value.trim()
-                onChange({ ...filters, yearTo: v === '' ? null : Number(v) })
-              }}
-              className="w-20 rounded-lg border border-hairline-strong bg-base-950 px-2 py-1 text-xs text-base-200"
-            />
-          </div>
+          <YearRangeFilter
+            minYear={facets.minYear}
+            maxYear={facets.maxYear}
+            yearFrom={filters.yearFrom}
+            yearTo={filters.yearTo}
+            onChange={(next) => onChange({ ...filters, ...next })}
+          />
         </FilterSection>
       )}
 
@@ -188,6 +166,85 @@ export default function HistoryFiltersPanel({
       )}
 
       {loadingDetails && <p className="mt-3 text-[11px] text-base-600">Loading more filter options…</p>}
+    </div>
+  )
+}
+
+/** Free-typed year bounds, committed to the real filter (and the list it
+ * re-filters) only after a pause in typing -- typing "2020" straight into
+ * the live filter re-ran it against "2", "20", "202" first. */
+function YearRangeFilter({
+  minYear,
+  maxYear,
+  yearFrom,
+  yearTo,
+  onChange,
+}: {
+  minYear: number
+  maxYear: number
+  yearFrom: number | null
+  yearTo: number | null
+  onChange: (next: { yearFrom: number | null; yearTo: number | null }) => void
+}) {
+  const [fromText, setFromText] = useState(yearFrom === null ? '' : String(yearFrom))
+  const [toText, setToText] = useState(yearTo === null ? '' : String(yearTo))
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Only overwrite what's on screen when the committed value actually
+  // diverges from it -- otherwise this would fight the user's own typing
+  // every time our own debounced commit below lands.
+  useEffect(() => {
+    setFromText((prev) => (Number(prev) === yearFrom || (prev === '' && yearFrom === null) ? prev : String(yearFrom ?? '')))
+  }, [yearFrom])
+  useEffect(() => {
+    setToText((prev) => (Number(prev) === yearTo || (prev === '' && yearTo === null) ? prev : String(yearTo ?? '')))
+  }, [yearTo])
+
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+  }, [])
+
+  function scheduleCommit(nextFromText: string, nextToText: string) {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onChange({
+        yearFrom: nextFromText.trim() === '' ? null : Number(nextFromText),
+        yearTo: nextToText.trim() === '' ? null : Number(nextToText),
+      })
+    }, FILTER_DEBOUNCE_MS)
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        inputMode="numeric"
+        aria-label="From year"
+        min={minYear}
+        max={maxYear}
+        placeholder={String(minYear)}
+        value={fromText}
+        onChange={(e) => {
+          setFromText(e.target.value)
+          scheduleCommit(e.target.value, toText)
+        }}
+        className="w-20 rounded-lg border border-hairline-strong bg-base-950 px-2 py-1 text-xs text-base-200"
+      />
+      <span className="text-xs text-base-500">to</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        aria-label="To year"
+        min={minYear}
+        max={maxYear}
+        placeholder={String(maxYear)}
+        value={toText}
+        onChange={(e) => {
+          setToText(e.target.value)
+          scheduleCommit(fromText, e.target.value)
+        }}
+        className="w-20 rounded-lg border border-hairline-strong bg-base-950 px-2 py-1 text-xs text-base-200"
+      />
     </div>
   )
 }

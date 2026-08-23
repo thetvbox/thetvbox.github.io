@@ -89,6 +89,22 @@ export default function Compare() {
     return { shared: rows, matchPercent: match }
   }, [myRatings, theirRatings])
 
+  // Checked before the not-found/self-compare branches below: `them` and
+  // `username` can briefly hold a previous lookup's result right after the
+  // route param changes (the effect that resets them hasn't committed yet),
+  // which without this guard flashed the wrong message instead of a skeleton.
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (them === null) {
     return <CenteredMessage message={`No one found with username “${username}”.`} />
   }
@@ -110,13 +126,7 @@ export default function Compare() {
 
       {error && <p className="mb-4 text-sm text-danger">{error}</p>}
 
-      {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
-      ) : shared.length === 0 ? (
+      {shared.length === 0 ? (
         <p className="mt-10 text-center text-sm text-base-500">
           No overlap yet — you haven&apos;t rated any of the same shows.
         </p>
