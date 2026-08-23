@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { checkPasscode, markGatePassed } from '../lib/siteGate'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import AppLogo from './AppLogo'
+import PrimaryButton from './PrimaryButton'
 
 export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
   const [code, setCode] = useState('')
@@ -61,13 +62,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
             />
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
-          <button
-            type="submit"
-            disabled={busy || code.length === 0}
-            className="w-full rounded-lg bg-accent-500 py-2.5 text-sm font-semibold text-white shadow-sm shadow-accent-500/30 transition-all duration-200 hover:bg-accent-600 hover:shadow-accent-500/40 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-          >
-            Continue
-          </button>
+          <PrimaryButton disabled={busy || code.length === 0}>Continue</PrimaryButton>
         </form>
       </motion.div>
     </div>

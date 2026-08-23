@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { UNKNOWN_WATCHED_AT } from '../lib/watched'
-import { todayLocalDateInput } from '../lib/date'
+import { dateInputToNoonIso, todayLocalDateInput } from '../lib/date'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import InlineConfirmCancel from './InlineConfirmCancel'
 
 /** Text trigger that expands into a date picker + confirm, so any "mark
  * watched" action can land on the right date in History instead of
@@ -53,14 +54,14 @@ export default function DateMarkControl({
           onChange={(e) => setDate(e.target.value)}
           className="rounded-lg border border-hairline-strong bg-base-900 px-2 py-1 text-xs text-base-200 disabled:opacity-40"
         />
-        <button
-          type="button"
-          disabled={saving}
-          onClick={async () => {
+        <InlineConfirmCancel
+          saving={saving}
+          savingLabel="Marking…"
+          onConfirm={async () => {
             setSaving(true)
             try {
               await onConfirm({
-                watchedAt: unknownDate ? UNKNOWN_WATCHED_AT : new Date(`${date}T12:00:00`).toISOString(),
+                watchedAt: unknownDate ? UNKNOWN_WATCHED_AT : dateInputToNoonIso(date),
                 unknownDate,
               })
               setOpen(false)
@@ -68,17 +69,8 @@ export default function DateMarkControl({
               setSaving(false)
             }
           }}
-          className="rounded-lg bg-accent-500/15 px-2.5 py-1 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-60"
-        >
-          {saving ? 'Marking…' : 'Confirm'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="text-xs text-base-500 hover:text-base-300"
-        >
-          Cancel
-        </button>
+          onCancel={() => setOpen(false)}
+        />
       </div>
       <label className="flex items-center gap-1.5 text-[11px] text-base-500">
         <input

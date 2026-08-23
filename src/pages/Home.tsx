@@ -9,12 +9,17 @@ import { fetchDismissedForUser } from '../lib/showDismissed'
 import { fetchWatchlist } from '../lib/watchlist'
 import { fetchListsForUser } from '../lib/lists'
 import { summarizeShowActivity, nowWatching } from '../lib/showActivity'
-import { computeSeasonProgress, fetchNextEpisode, fetchSeasonBreakdowns } from '../lib/seasonProgress'
+import {
+  computeSeasonProgress,
+  countWatchedBySeason,
+  fetchNextEpisode,
+  fetchSeasonBreakdowns,
+} from '../lib/seasonProgress'
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
-import { ACTIVITY_FETCH_LIMIT } from '../lib/constants'
+import { ACTIVITY_FETCH_LIMIT, PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
 import SeasonProgressBar from '../components/SeasonProgressBar'
 import StreamingBadge from '../components/StreamingBadge'
 import UpcomingRow from '../components/UpcomingRow'
@@ -93,13 +98,13 @@ export default function Home() {
   // Per-season watched counts for everything in progress -- lets the card
   // below say "Season 4 · 2/10" instead of a flat, hard-to-parse "10/44".
   const watchedBySeasonByShow = useMemo(() => {
-    const map = new Map<number, Record<number, number>>()
+    const byShow = new Map<number, EpisodeWatched[]>()
     for (const w of watched) {
-      const bucket = map.get(w.show_id) ?? {}
-      bucket[w.season_number] = (bucket[w.season_number] ?? 0) + 1
-      map.set(w.show_id, bucket)
+      const rows = byShow.get(w.show_id)
+      if (rows) rows.push(w)
+      else byShow.set(w.show_id, [w])
     }
-    return map
+    return new Map(Array.from(byShow, ([showId, rows]) => [showId, countWatchedBySeason(rows)]))
   }, [watched])
 
   const [seasonProgress, setSeasonProgress] = useState<Map<number, SeasonProgress>>(new Map())
@@ -298,7 +303,10 @@ export default function Home() {
         <div className="mt-12">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-base-100">Your Watchlist</h2>
-            <Link to="/profile" className="text-xs font-medium text-accent-400 hover:underline">
+            <Link
+              to="/profile"
+              className="inline-flex min-h-11 items-center text-xs font-medium text-accent-400 hover:underline"
+            >
               See all &rarr;
             </Link>
           </div>
@@ -324,7 +332,10 @@ export default function Home() {
         <div className="mt-12">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-base-100">Your Lists</h2>
-            <Link to="/profile?tab=lists" className="text-xs font-medium text-accent-400 hover:underline">
+            <Link
+              to={`/profile?${PROFILE_LISTS_TAB_QUERY}`}
+              className="inline-flex min-h-11 items-center text-xs font-medium text-accent-400 hover:underline"
+            >
               See all &rarr;
             </Link>
           </div>

@@ -7,10 +7,10 @@ import { fetchRecentWatched } from '../lib/watched'
 import { fetchRecentRewatches } from '../lib/rewatches'
 import { summarizeShowActivity } from '../lib/showActivity'
 import { availableRecapYears, buildYearRecap } from '../lib/recap'
-import { posterUrl } from '../lib/tmdb'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
-import { LARGE_ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE } from '../lib/constants'
+import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
 import EmptyState from '../components/EmptyState'
+import PosterThumb from '../components/PosterThumb'
 import StarGlyph from '../components/StarGlyph'
 import StatCard from '../components/StatCard'
 import type { EpisodeWatched, ShowRating, ShowRewatch } from '../types'
@@ -93,7 +93,7 @@ export default function Recap() {
 
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS_WIDE }).map((_, i) => (
             <div key={i} className="h-20 animate-pulse rounded-xl bg-base-850/70" />
           ))}
         </div>
@@ -137,15 +137,7 @@ export default function Recap() {
                 to={`/show/${recap.topRated.showId}`}
                 className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
               >
-                <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-base-800">
-                  {recap.topRated.showPosterPath && (
-                    <img
-                      src={posterUrl(recap.topRated.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                </div>
+                <PosterThumb posterPath={recap.topRated.showPosterPath} size="lg" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-base-100">{recap.topRated.showName}</p>
                 </div>

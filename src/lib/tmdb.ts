@@ -62,13 +62,8 @@ export async function getShowDetail(showId: number): Promise<TmdbShowDetail> {
   return detail
 }
 
-/** Batched version of getShowDetail, for the History filters (genre, year,
- * country, language, status all come from this) -- each individual call is
- * already cached, so revisiting a profile after the shows have been
- * fetched once (e.g. from their own ShowDetail pages) is free. A show that
- * fails to fetch is just missing from the returned map rather than failing
- * the whole batch -- one bad TMDB lookup shouldn't block filtering on
- * everything else. */
+/** Batched, cached getShowDetail for History filters -- a show that fails to
+ * fetch is just missing from the map, not a failure of the whole batch. */
 export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number, TmdbShowDetail>> {
   const uniqueIds = [...new Set(showIds)]
   const results = await Promise.all(

@@ -61,7 +61,7 @@ export interface ResolvedProvider {
 
 /** The group's resolved "where to watch" answer for one show: a manual
  * override always wins, otherwise the best automatic free guess. */
-export async function resolveShowPlatform(showId: number, region: string): Promise<ResolvedProvider | null> {
+async function resolveShowPlatform(showId: number, region: string): Promise<ResolvedProvider | null> {
   const [providers, override] = await Promise.all([
     getWatchProviders(showId).catch(() => null),
     fetchStreamingOverride(showId).catch(() => null),

@@ -17,6 +17,13 @@ export interface SeasonProgress {
   currentSeasonTotal: number
 }
 
+/** Tally of watched-episode counts per season, from a flat list of watched rows. */
+export function countWatchedBySeason(rows: { season_number: number }[]): Record<number, number> {
+  const counts: Record<number, number> = {}
+  for (const row of rows) counts[row.season_number] = (counts[row.season_number] ?? 0) + 1
+  return counts
+}
+
 /** Turns "10/44 watched" into which season is in progress. "Current" is the
  * first not-fully-watched real season, falling back to the last one if all
  * are somehow complete (stale TMDB episode counts). */

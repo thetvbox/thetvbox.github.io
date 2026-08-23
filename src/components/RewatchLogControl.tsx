@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { todayLocalDateInput } from '../lib/date'
+import { dateInputToNoonIso, todayLocalDateInput } from '../lib/date'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import InlineConfirmCancel from './InlineConfirmCancel'
 
 /** Expand-to-confirm control for logging a rewatch -- same shape as
  * DateMarkControl (no native confirm(): opening it and tapping Confirm *is*
@@ -49,29 +50,20 @@ export default function RewatchLogControl({
         onChange={(e) => setDate(e.target.value)}
         className="rounded-lg border border-hairline-strong bg-base-900 px-2 py-1 text-xs text-base-200"
       />
-      <button
-        type="button"
-        disabled={saving}
-        onClick={async () => {
+      <InlineConfirmCancel
+        saving={saving}
+        savingLabel="Logging…"
+        onConfirm={async () => {
           setSaving(true)
           try {
-            await onConfirm(new Date(`${date}T12:00:00`).toISOString())
+            await onConfirm(dateInputToNoonIso(date))
           } finally {
             setSaving(false)
             setOpen(false)
           }
         }}
-        className="rounded-lg bg-accent-500/15 px-2.5 py-1 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-60"
-      >
-        {saving ? 'Logging…' : 'Confirm'}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen(false)}
-        className="text-xs text-base-500 hover:text-base-300"
-      >
-        Cancel
-      </button>
+        onCancel={() => setOpen(false)}
+      />
     </div>
   )
 }

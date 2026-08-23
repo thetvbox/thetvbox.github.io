@@ -23,7 +23,7 @@ import { fetchStartedItem, startShow } from '../lib/showStarted'
 import { dismissShow, fetchDismissedItem, undismissShow } from '../lib/showDismissed'
 import { deleteRewatch, fetchRewatchesForShow, logRewatch, restoreRewatch, sortRewatchesDesc } from '../lib/rewatches'
 import { fetchListMembershipForShow } from '../lib/lists'
-import { computeSeasonProgress } from '../lib/seasonProgress'
+import { computeSeasonProgress, countWatchedBySeason } from '../lib/seasonProgress'
 import { getCorrectedAirDates, tvmazeEpisodeKey } from '../lib/tvmaze'
 import { isFutureDate } from '../lib/date'
 import { useToast } from './useToast'
@@ -134,10 +134,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         // Default to whichever season you're actually on (same "current
         // season" logic as Home's Now Watching card), not always Season 1.
         const firstRealSeason = showData.seasons.find((s) => s.season_number > 0) ?? showData.seasons[0]
-        const watchedBySeasonCount: Record<number, number> = {}
-        for (const row of Object.values(watchedMap)) {
-          watchedBySeasonCount[row.season_number] = (watchedBySeasonCount[row.season_number] ?? 0) + 1
-        }
+        const watchedBySeasonCount = countWatchedBySeason(Object.values(watchedMap))
         const progress = computeSeasonProgress(showData.seasons, watchedBySeasonCount)
         const defaultSeason = progress?.currentSeasonNumber ?? firstRealSeason?.season_number ?? null
         setActiveSeason(defaultSeason)

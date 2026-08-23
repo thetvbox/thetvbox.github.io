@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT } from './constants'
 import type { EpisodeWatched, EpisodeWatchedWithUser, WatchedMap } from '../types'
 
 export function watchedKey(seasonNumber: number, episodeNumber: number): string {
@@ -40,7 +41,10 @@ export async function fetchWatchedForShow(userId: string, showId: number): Promi
   return map
 }
 
-export async function fetchRecentWatched(userId: string, limit = 2000): Promise<EpisodeWatched[]> {
+export async function fetchRecentWatched(
+  userId: string,
+  limit = ACTIVITY_FETCH_LIMIT,
+): Promise<EpisodeWatched[]> {
   const { data, error } = await supabase
     .from('episode_watched')
     .select('*')
@@ -54,7 +58,9 @@ export async function fetchRecentWatched(userId: string, limit = 2000): Promise<
 
 /** Most recent watched-episode rows across the whole group, for the group
  * Activity feed to work out who just finished a show. */
-export async function fetchRecentWatchedAllUsers(limit = 1500): Promise<EpisodeWatchedWithUser[]> {
+export async function fetchRecentWatchedAllUsers(
+  limit = GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
+): Promise<EpisodeWatchedWithUser[]> {
   const { data, error } = await supabase
     .from('episode_watched')
     .select('*, users(username)')

@@ -47,6 +47,13 @@ export function todayLocalDateInput(): string {
   return `${y}-${m}-${day}`
 }
 
+/** Converts a `<input type="date">` value to an ISO timestamp anchored at
+ * local noon, not midnight -- avoids UTC conversion rolling it back a
+ * calendar day west of UTC. */
+export function dateInputToNoonIso(dateInput: string): string {
+  return new Date(`${dateInput}T12:00:00`).toISOString()
+}
+
 /** Whether a TMDB date-only string is still ahead of today, by the viewer's
  * local calendar day -- not `new Date(dateStr) > new Date()`, which compares
  * against UTC midnight and flips episodes to "aired" hours early west of UTC. */

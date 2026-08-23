@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
 import type { SeasonRating, SeasonRatingWithUser } from '../types'
 
 /** Every season rating (every user, every season) for a show, joined with
@@ -17,7 +18,9 @@ export async function fetchAllSeasonRatingsForShow(showId: number): Promise<Seas
 /** Most recent season ratings across the whole group (every user), for the
  * group Activity feed -- same shape/purpose as fetchRecentShowRatingsAllUsers
  * in lib/showRatings.ts, just for the season-level table. */
-export async function fetchRecentSeasonRatingsAllUsers(limit = 500): Promise<SeasonRatingWithUser[]> {
+export async function fetchRecentSeasonRatingsAllUsers(
+  limit = GROUP_ACTIVITY_FETCH_LIMIT,
+): Promise<SeasonRatingWithUser[]> {
   const { data, error } = await supabase
     .from('season_ratings')
     .select('*, users(username)')

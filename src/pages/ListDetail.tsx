@@ -11,6 +11,7 @@ import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
+import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
 export default function ListDetail() {
@@ -115,7 +116,10 @@ export default function ListDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <Link to={`/u/${username}?tab=lists`} className="mb-4 inline-block text-xs text-base-500 hover:text-base-300">
+      <Link
+        to={`/u/${username}?${PROFILE_LISTS_TAB_QUERY}`}
+        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
+      >
         &larr; {isMine ? 'Your' : `@${username}'s`} lists
       </Link>
 

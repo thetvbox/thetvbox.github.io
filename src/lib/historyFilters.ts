@@ -64,12 +64,7 @@ export interface HistoryFilterFacets {
   statuses: string[]
 }
 
-/** Which options to actually offer per facet -- computed from what's present
- * in this specific list (not every genre/country TMDB knows about), so the
- * panel never offers a choice that would zero out the results. Deliberately
- * built from the *full*, unfiltered list rather than narrowing as filters
- * are applied -- keeps the available chips stable while someone's mid-
- * selection instead of options disappearing out from under them. */
+/** Built from the full, unfiltered list so chips stay stable while filtering. */
 export function buildHistoryFilterFacets(
   activity: ShowActivity[],
   details: Map<number, TmdbShowDetail>,
@@ -85,10 +80,10 @@ export function buildHistoryFilterFacets(
   for (const s of activity) {
     const d = details.get(s.showId)
     if (d) {
-      for (const g of d.genres) genres.add(g.name)
+      for (const g of d.genres ?? []) genres.add(g.name)
       const year = firstAirYear(d)
       if (year) years.push(year)
-      for (const c of d.origin_country) countries.add(c)
+      for (const c of d.origin_country ?? []) countries.add(c)
       if (d.original_language) languages.add(d.original_language)
       if (d.status) statuses.add(d.status)
     }
@@ -120,12 +115,10 @@ export function filterHistory(
     if (filters.rated === 'unrated' && s.rating !== null) return false
     if (filters.minRating !== null && (s.rating === null || s.rating < filters.minRating)) return false
 
-    // Every facet below needs TMDB show details -- a show whose details
-    // haven't loaded (or failed to) can't match any of them, so it drops
-    // out rather than silently ignoring the filter.
+    // Facets below need show details; a show still loading them can't match.
     const d = details.get(s.showId)
 
-    if (filters.genres.size > 0 && !(d && d.genres.some((g) => filters.genres.has(g.name)))) {
+    if (filters.genres.size > 0 && !(d && d.genres?.some((g) => filters.genres.has(g.name)))) {
       return false
     }
     if (filters.yearFrom !== null || filters.yearTo !== null) {
@@ -134,7 +127,7 @@ export function filterHistory(
       if (filters.yearFrom !== null && year < filters.yearFrom) return false
       if (filters.yearTo !== null && year > filters.yearTo) return false
     }
-    if (filters.countries.size > 0 && !(d && d.origin_country.some((c) => filters.countries.has(c)))) {
+    if (filters.countries.size > 0 && !(d && d.origin_country?.some((c) => filters.countries.has(c)))) {
       return false
     }
     if (filters.languages.size > 0 && !(d && filters.languages.has(d.original_language))) {

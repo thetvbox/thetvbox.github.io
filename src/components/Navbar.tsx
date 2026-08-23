@@ -190,7 +190,11 @@ export default function Navbar() {
           height reserves space in normal flow. */}
       <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <NavLink to="/home" onClick={() => handleNavClick('/home')} className="flex items-center gap-2">
+          <NavLink
+            to="/home"
+            onClick={() => handleNavClick('/home')}
+            className="flex min-h-11 items-center gap-2"
+          >
             <AppLogo size={24} />
             <span className="font-display text-lg font-semibold tracking-tight text-base-100">
               TV Box

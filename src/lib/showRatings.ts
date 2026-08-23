@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
 import type { ShowRating, ShowRatingWithUser } from '../types'
 
 /** One user's rating for one show, or null if they haven't rated it. */
@@ -25,7 +26,10 @@ export async function fetchAllShowRatings(showId: number): Promise<ShowRatingWit
   return (data ?? []) as unknown as ShowRatingWithUser[]
 }
 
-export async function fetchRecentShowRatings(userId: string, limit = 2000): Promise<ShowRating[]> {
+export async function fetchRecentShowRatings(
+  userId: string,
+  limit = ACTIVITY_FETCH_LIMIT,
+): Promise<ShowRating[]> {
   const { data, error } = await supabase
     .from('show_ratings')
     .select('*')
@@ -38,7 +42,9 @@ export async function fetchRecentShowRatings(userId: string, limit = 2000): Prom
 }
 
 /** Most recent ratings across the whole group (every user), for the group Activity feed. */
-export async function fetchRecentShowRatingsAllUsers(limit = 500): Promise<ShowRatingWithUser[]> {
+export async function fetchRecentShowRatingsAllUsers(
+  limit = GROUP_ACTIVITY_FETCH_LIMIT,
+): Promise<ShowRatingWithUser[]> {
   const { data, error } = await supabase
     .from('show_ratings')
     .select('*, users(username)')

@@ -4,11 +4,11 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
-import { posterUrl } from '../lib/tmdb'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
-import { LARGE_ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE, SKELETON_ROWS } from '../lib/constants'
+import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
+import PosterThumb from '../components/PosterThumb'
 import StatCard from '../components/StatCard'
 import type { AppUser, ShowRating } from '../types'
 
@@ -147,17 +147,7 @@ export default function Compare() {
                   to={`/show/${r.showId}`}
                   className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
                 >
-                  <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
-                    {r.showPosterPath && (
-                      <img
-                        src={posterUrl(r.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
+                  <PosterThumb posterPath={r.showPosterPath} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-base-100">{r.showName}</p>
                   </div>

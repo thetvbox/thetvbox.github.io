@@ -1,11 +1,6 @@
 import type { ReactNode } from 'react'
 
-/**
- * The shared "nothing here yet" card shell -- icon + bordered panel -- reused
- * for every empty list/search-result/activity-feed state in the app.
- * Content (message text, optional CTA link) is passed as children since it
- * varies per caller.
- */
+/** Shared "nothing here yet" card shell -- icon + bordered panel -- reused for every empty state in the app. */
 export default function EmptyState({
   icon,
   className = 'mt-10',

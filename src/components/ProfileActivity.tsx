@@ -1,25 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentWatched } from '../lib/watched'
 import { fetchRecentRewatches } from '../lib/rewatches'
 import { buildDiaryEntries, buildUndatedDiaryEntries, summarizeShowActivity, watchHistory } from '../lib/showActivity'
-import type { DiaryEntry } from '../lib/showActivity'
 import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watchlist'
 import { createList, fetchListsForUser } from '../lib/lists'
-import { posterUrl } from '../lib/tmdb'
-import { dayKey, formatDiaryHeading, formatShortDate } from '../lib/date'
-import { staggerRowMotion } from '../lib/motion'
-import { ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE, SKELETON_ROWS } from '../lib/constants'
+import { dayKey, formatDiaryHeading } from '../lib/date'
+import { ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
 import { useAuth } from '../contexts/AuthContext'
 import HistorySection from './HistorySection'
 import RatingDistribution from './RatingDistribution'
 import Toast from './Toast'
-import StarGlyph from './StarGlyph'
 import StatCard from './StatCard'
-import EmptyState from './EmptyState'
+import DiaryTab from './profileActivity/DiaryTab'
+import type { DiaryDayGroup } from './profileActivity/DiaryTab'
+import WatchlistTab from './profileActivity/WatchlistTab'
+import ListsTab from './profileActivity/ListsTab'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { EpisodeWatched, ShowListWithCount, ShowRating, ShowRewatch, WatchlistItem } from '../types'
@@ -27,11 +25,6 @@ import type { EpisodeWatched, ShowListWithCount, ShowRating, ShowRewatch, Watchl
 interface ProfileActivityProps {
   userId: string
   username: string
-}
-
-interface DiaryDayGroup {
-  heading: string
-  entries: DiaryEntry[]
 }
 
 type Tab = 'diary' | 'history' | 'watchlist' | 'lists'
@@ -218,45 +211,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
           ))}
         </div>
       ) : tab === 'diary' ? (
-        diaryGroups.length === 0 && undatedDiaryEntries.length === 0 ? (
-          <EmptyState icon="📔">
-            <p className="max-w-xs text-sm text-base-500">
-              Nothing logged yet. Mark an episode watched or rate a show, and it&apos;ll show up here.{' '}
-              <Link to="/search" className="text-accent-400 hover:underline">
-                Find a show
-              </Link>{' '}
-              to get started.
-            </p>
-          </EmptyState>
-        ) : (
-          <div className="space-y-6">
-            {diaryGroups.map((group) => (
-              <div key={group.heading + group.entries[0].id}>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">
-                  {group.heading}
-                </h3>
-                <ul className="space-y-2">
-                  {group.entries.map((entry, i) => (
-                    <DiaryRow key={entry.id} entry={entry} index={i} username={username} />
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {undatedDiaryEntries.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">
-                  Date unknown
-                </h3>
-                <ul className="space-y-2">
-                  {undatedDiaryEntries.map((entry, i) => (
-                    <DiaryRow key={entry.id} entry={entry} index={i} username={username} />
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )
+        <DiaryTab groups={diaryGroups} undatedEntries={undatedDiaryEntries} username={username} />
       ) : tab === 'history' ? (
         <HistorySection
           activity={history}
@@ -264,133 +219,20 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
           emptyMessage="Nothing finished yet. Shows show up here once every episode is watched, or once they're rated."
         />
       ) : tab === 'watchlist' ? (
-        watchlist.length === 0 ? (
-          <EmptyState icon="🔖">
-            <p className="max-w-xs text-sm text-base-500">
-              {isMe ? 'Nothing on your watchlist yet. ' : 'Nothing here yet. '}
-              {isMe && (
-                <>
-                  <Link to="/search" className="text-accent-400 hover:underline">
-                    Find a show
-                  </Link>{' '}
-                  to save one for later.
-                </>
-              )}
-            </p>
-          </EmptyState>
-        ) : (
-          <ul className="space-y-2">
-            {watchlist.map((w, i) => (
-              <motion.li
-                key={w.id}
-                {...staggerRowMotion(i, 8)}
-                className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5"
-              >
-                <Link to={`/show/${w.show_id}`} className="flex min-w-0 flex-1 items-center gap-3">
-                  <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
-                    {w.show_poster_path && (
-                      <img
-                        src={posterUrl(w.show_poster_path, POSTER_THUMB_SIZE) ?? undefined}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-base-100">{w.show_name}</p>
-                    <p className="text-xs text-base-400">Added {formatShortDate(w.added_at)}</p>
-                  </div>
-                </Link>
-                {isMe && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFromWatchlist(w)}
-                    className="shrink-0 text-xs text-base-500 hover:text-danger"
-                  >
-                    Remove
-                  </button>
-                )}
-              </motion.li>
-            ))}
-          </ul>
-        )
+        <WatchlistTab items={watchlist} isMe={isMe} onRemove={handleRemoveFromWatchlist} />
       ) : (
-        <div>
-          {isMe && (
-            <div className="mb-4">
-              {creatingList ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleCreateList()
-                  }}
-                  className="flex items-center gap-1.5"
-                >
-                  <input
-                    autoFocus
-                    type="text"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                    placeholder="List name"
-                    className="w-full max-w-xs rounded-lg border border-hairline-strong bg-base-900 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newListName.trim() || savingList}
-                    className="shrink-0 rounded-lg bg-accent-500/15 px-2.5 py-1.5 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 disabled:opacity-50"
-                  >
-                    Create
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCreatingList(false)}
-                    className="shrink-0 text-xs text-base-500 hover:text-base-300"
-                  >
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setCreatingList(true)}
-                  className="flex items-center gap-1.5 rounded-lg bg-accent-500/15 px-3 py-1.5 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 transition-colors duration-200 hover:bg-accent-500/25"
-                >
-                  <PlusGlyph />
-                  New list
-                </button>
-              )}
-            </div>
-          )}
-
-          {lists.length === 0 ? (
-            <EmptyState icon="📋" className="mt-6">
-              <p className="text-sm text-base-500">No lists yet.</p>
-            </EmptyState>
-          ) : (
-            <ul className="space-y-2">
-              {lists.map((l, i) => (
-                <motion.li key={l.id} {...staggerRowMotion(i, 8)}>
-                  <Link
-                    to={`/u/${username}/lists/${l.id}`}
-                    className="flex items-center justify-between rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-base-100">{l.name}</p>
-                      {l.description && (
-                        <p className="truncate text-xs text-base-500">{l.description}</p>
-                      )}
-                    </div>
-                    <span className="shrink-0 text-xs text-base-500">
-                      {l.itemCount} show{l.itemCount === 1 ? '' : 's'}
-                    </span>
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <ListsTab
+          lists={lists}
+          isMe={isMe}
+          username={username}
+          creatingList={creatingList}
+          newListName={newListName}
+          onNewListNameChange={setNewListName}
+          savingList={savingList}
+          onStartCreating={() => setCreatingList(true)}
+          onCancelCreating={() => setCreatingList(false)}
+          onCreateList={handleCreateList}
+        />
       )}
 
       <Toast toast={toast} onDismiss={dismiss} />
@@ -418,127 +260,5 @@ function TabButton({
     >
       {children}
     </button>
-  )
-}
-
-/** One row in the diary -- shape (poster, name, link) is shared across all
- * three entry kinds; only the subtitle and the right-side badge differ. The
- * row's main body links to the show itself; the small icon on the end is a
- * separate link to this show's own diary (the aggregate feed here has no
- * other way to reach it) -- two siblings, not nested anchors. */
-function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number; username: string }) {
-  return (
-    <motion.li
-      {...staggerRowMotion(index, 8)}
-      className="flex items-center gap-1.5 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
-    >
-      <Link to={`/show/${entry.showId}`} className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
-          {entry.showPosterPath && (
-            <img
-              src={posterUrl(entry.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-base-100">{entry.showName}</p>
-          <p className="flex items-center gap-1 text-xs text-base-400">
-            {entry.kind === 'rated' && 'Rated'}
-            {entry.kind === 'rewatched' && (
-              <>
-                <RewatchGlyph />
-                Rewatched
-              </>
-            )}
-            {entry.kind === 'watched' && (
-              <>
-                <WatchedGlyph />
-                {entry.episodeLabel ? (
-                  <>Watched {entry.episodeLabel}</>
-                ) : (
-                  <>
-                    Watched {entry.episodeCount} episode{entry.episodeCount === 1 ? '' : 's'}
-                    {entry.seasonLabel ? ` · ${entry.seasonLabel}` : ''}
-                  </>
-                )}
-              </>
-            )}
-          </p>
-        </div>
-        {entry.rating != null && (
-          <div className="flex shrink-0 items-center gap-1 text-sm font-semibold text-star">
-            {entry.rating.toFixed(1)}
-            <StarGlyph />
-          </div>
-        )}
-      </Link>
-      <Link
-        to={`/u/${username}/shows/${entry.showId}`}
-        title="View this show's full diary"
-        aria-label="View this show's full diary"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base-500 transition-colors duration-200 hover:bg-hover hover:text-accent-400"
-      >
-        <HistoryGlyph />
-      </Link>
-    </motion.li>
-  )
-}
-
-function WatchedGlyph() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="var(--color-accent-400)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0"
-    >
-      <path d="M5 12.5l4.5 4.5L19 7" />
-    </svg>
-  )
-}
-
-function RewatchGlyph() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="var(--color-accent-400)"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0"
-    >
-      <path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" />
-      <path d="M18 4v4h-4M6 20v-4h4" />
-    </svg>
-  )
-}
-
-function HistoryGlyph() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-      <path d="M12 8v4l3 2" />
-    </svg>
-  )
-}
-
-function PlusGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
   )
 }

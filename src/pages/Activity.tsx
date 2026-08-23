@@ -11,6 +11,7 @@ import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
+import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
@@ -52,9 +53,9 @@ export default function Activity() {
     setLoading(true)
     setError(null)
     Promise.all([
-      fetchRecentShowRatingsAllUsers(500),
-      fetchRecentWatchedAllUsers(1500),
-      fetchRecentSeasonRatingsAllUsers(500),
+      fetchRecentShowRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
+      fetchRecentWatchedAllUsers(GROUP_ACTIVITY_WATCHED_FETCH_LIMIT),
+      fetchRecentSeasonRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
       fetchAllUsers(),
       fetchAllFollows(),
       me ? fetchFollowingIds(me.id) : Promise.resolve(new Set<string>()),
@@ -188,7 +189,7 @@ export default function Activity() {
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS_WIDE }).map((_, i) => (
             <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
           ))}
         </div>

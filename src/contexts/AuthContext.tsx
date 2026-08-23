@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import { STORAGE_KEYS } from '../lib/constants'
+import { STORAGE_KEYS, TABLE_USERS } from '../lib/constants'
 import type { AppUser } from '../types'
 
 // localStorage access can throw (Safari private browsing, storage
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       async findByEmail(email: string) {
         const { data, error } = await supabase
-          .from('users')
+          .from(TABLE_USERS)
           .select('*')
           .eq('email', email.toLowerCase().trim())
           .maybeSingle()
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async register(email: string, username: string) {
         const { data, error } = await supabase
-          .from('users')
+          .from(TABLE_USERS)
           .insert({ email: email.toLowerCase().trim(), username: username.trim() })
           .select()
           .single()

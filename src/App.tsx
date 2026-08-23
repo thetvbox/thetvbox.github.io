@@ -73,121 +73,126 @@ function AppShell() {
     <div className="min-h-dvh bg-base-950">
       {showNav && <Navbar />}
       <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Home />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/activity"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Activity />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Search />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/show/:id"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <ShowDetail />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Profile />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/members"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Members />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/u/:username"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <PublicProfile />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/u/:username/shows/:showId"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <ShowDiary />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/compare/:username"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Compare />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/u/:username/lists/:listId"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <ListDetail />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/recap"
-            element={
-              <ProtectedRoute>
-                <Page>
-                  <Recap />
-                </Page>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to={user ? '/home' : '/login'} replace />} />
-          <Route path="*" element={<Navigate to={user ? '/home' : '/login'} replace />} />
-        </Routes>
+        {/* Keyed on pathname so a crash on one route doesn't strand later
+            navigation -- HashRouter never remounts the app, so this key is
+            what resets ErrorBoundary's state each time the route changes. */}
+        <ErrorBoundary key={location.pathname}>
+          <Routes location={location}>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Home />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/activity"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Activity />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Search />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/show/:id"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <ShowDetail />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Profile />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/members"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Members />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/u/:username"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <PublicProfile />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/u/:username/shows/:showId"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <ShowDiary />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/compare/:username"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Compare />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/u/:username/lists/:listId"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <ListDetail />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recap"
+              element={
+                <ProtectedRoute>
+                  <Page>
+                    <Recap />
+                  </Page>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to={user ? '/home' : '/login'} replace />} />
+            <Route path="*" element={<Navigate to={user ? '/home' : '/login'} replace />} />
+          </Routes>
+        </ErrorBoundary>
       </AnimatePresence>
     </div>
   )

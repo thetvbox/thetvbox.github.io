@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_USERS } from './constants'
 import type { AppUser, Follow } from '../types'
 
 /** Every id current user follows -- powers "Following" scope filters and
@@ -65,7 +66,7 @@ export async function unfollowUser(followerId: string, followedId: string): Prom
  * `users`, and PostgREST needs a constraint-name hint to disambiguate that. */
 async function resolveUsersInOrder(ids: string[]): Promise<AppUser[]> {
   if (ids.length === 0) return []
-  const { data, error } = await supabase.from('users').select('*').in('id', ids)
+  const { data, error } = await supabase.from(TABLE_USERS).select('*').in('id', ids)
   if (error) throw error
   const byId = new Map((data ?? []).map((u) => [(u as AppUser).id, u as AppUser]))
   // .in() doesn't preserve input order -- re-sort to match the caller's
@@ -101,7 +102,7 @@ export async function fetchFollowingWithUsers(userId: string): Promise<AppUser[]
 
 /** Every follow edge across the group -- powers the Activity feed's "X
  * started following Y" events, same idea as fetchRecentShowRatingsAllUsers. */
-export async function fetchAllFollows(limit = 500): Promise<Follow[]> {
+export async function fetchAllFollows(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<Follow[]> {
   const { data, error } = await supabase
     .from('follows')
     .select('*')
@@ -116,7 +117,7 @@ export async function fetchAllFollows(limit = 500): Promise<Follow[]> {
  * notifications -- powers NotificationsBell's unread dot. */
 export async function fetchNewFollowerCount(userId: string): Promise<number> {
   const { data: userRow, error: userError } = await supabase
-    .from('users')
+    .from(TABLE_USERS)
     .select('notifications_seen_at')
     .eq('id', userId)
     .single()
@@ -138,7 +139,7 @@ export async function fetchNewFollowerCount(userId: string): Promise<number> {
  * panel opens, clearing the unread dot. */
 export async function markFollowNotificationsSeen(userId: string): Promise<void> {
   const { error } = await supabase
-    .from('users')
+    .from(TABLE_USERS)
     .update({ notifications_seen_at: new Date().toISOString() })
     .eq('id', userId)
 
