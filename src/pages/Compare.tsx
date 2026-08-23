@@ -5,7 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
-import { staggerDelay } from '../lib/motion'
+import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
+import { LARGE_ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE, SKELETON_ROWS } from '../lib/constants'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import StatCard from '../components/StatCard'
@@ -41,8 +42,8 @@ export default function Compare() {
         setThem(found)
         if (found) {
           const [mine, theirs] = await Promise.all([
-            fetchRecentShowRatings(me.id, 5000),
-            fetchRecentShowRatings(found.id, 5000),
+            fetchRecentShowRatings(me.id, LARGE_ACTIVITY_FETCH_LIMIT),
+            fetchRecentShowRatings(found.id, LARGE_ACTIVITY_FETCH_LIMIT),
           ])
           if (!cancelled) {
             setMyRatings(mine)
@@ -98,7 +99,7 @@ export default function Compare() {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
             <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
           ))}
         </div>
@@ -116,11 +117,7 @@ export default function Compare() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <motion.h1
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="font-display mb-1 text-2xl font-semibold text-base-100"
-      >
+      <motion.h1 {...PAGE_HEADER_MOTION} className="font-display mb-1 text-2xl font-semibold text-base-100">
         You vs @{username}
       </motion.h1>
       <p className="mb-6 text-sm text-base-500">How your ratings stack up on shows you&apos;ve both rated.</p>
@@ -145,12 +142,7 @@ export default function Compare() {
           </h2>
           <ul className="space-y-2">
             {shared.map((r, i) => (
-              <motion.li
-                key={r.showId}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: staggerDelay(i) }}
-              >
+              <motion.li key={r.showId} {...staggerRowMotion(i)}>
                 <Link
                   to={`/show/${r.showId}`}
                   className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
@@ -158,7 +150,7 @@ export default function Compare() {
                   <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
                     {r.showPosterPath && (
                       <img
-                        src={posterUrl(r.showPosterPath, 'w185') ?? undefined}
+                        src={posterUrl(r.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
                         alt=""
                         loading="lazy"
                         decoding="async"

@@ -11,7 +11,8 @@ import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watc
 import { createList, fetchListsForUser } from '../lib/lists'
 import { posterUrl } from '../lib/tmdb'
 import { dayKey, formatDiaryHeading, formatShortDate } from '../lib/date'
-import { staggerDelay } from '../lib/motion'
+import { staggerRowMotion } from '../lib/motion'
+import { ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE, SKELETON_ROWS } from '../lib/constants'
 import { useAuth } from '../contexts/AuthContext'
 import HistorySection from './HistorySection'
 import RatingDistribution from './RatingDistribution'
@@ -39,17 +40,17 @@ const TABS: Tab[] = ['diary', 'history', 'watchlist', 'lists']
 export default function ProfileActivity({ userId, username }: ProfileActivityProps) {
   const { user: me } = useAuth()
   const isMe = me?.id === userId
-  // Kept in the URL (not just component state) so linking straight to a tab
-  // (see ListDetail's back link) and returning via the browser's back button
-  // both land you on the tab you actually meant, instead of always Diary.
+  // The URL is the source of truth for the active tab (not component state)
+  // so linking straight to a tab (see ListDetail's back link) and returning
+  // via the browser's back button both land you on the tab you actually
+  // meant, instead of always Diary -- and switching to a different profile
+  // (this component doesn't remount between two `/u/:username` routes)
+  // can't leave a stale tab behind, since there's no local copy to go stale.
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
-  const [tab, setTabState] = useState<Tab>(
-    tabParam && TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'diary',
-  )
+  const tab: Tab = tabParam && TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'diary'
 
   function setTab(next: Tab) {
-    setTabState(next)
     setSearchParams(
       (prev) => {
         const nextParams = new URLSearchParams(prev)
@@ -79,9 +80,9 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     setLoading(true)
     setError(null)
     Promise.all([
-      fetchRecentShowRatings(userId, 2000),
-      fetchRecentWatched(userId, 2000),
-      fetchRecentRewatches(userId, 2000),
+      fetchRecentShowRatings(userId, ACTIVITY_FETCH_LIMIT),
+      fetchRecentWatched(userId, ACTIVITY_FETCH_LIMIT),
+      fetchRecentRewatches(userId, ACTIVITY_FETCH_LIMIT),
       fetchWatchlist(userId),
       fetchListsForUser(userId),
     ])
@@ -212,7 +213,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
             <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
           ))}
         </div>
@@ -282,16 +283,14 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
             {watchlist.map((w, i) => (
               <motion.li
                 key={w.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: staggerDelay(i, 8) }}
+                {...staggerRowMotion(i, 8)}
                 className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5"
               >
                 <Link to={`/show/${w.show_id}`} className="flex min-w-0 flex-1 items-center gap-3">
                   <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
                     {w.show_poster_path && (
                       <img
-                        src={posterUrl(w.show_poster_path, 'w185') ?? undefined}
+                        src={posterUrl(w.show_poster_path, POSTER_THUMB_SIZE) ?? undefined}
                         alt=""
                         loading="lazy"
                         decoding="async"
@@ -372,12 +371,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
           ) : (
             <ul className="space-y-2">
               {lists.map((l, i) => (
-                <motion.li
-                  key={l.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: staggerDelay(i, 8) }}
-                >
+                <motion.li key={l.id} {...staggerRowMotion(i, 8)}>
                   <Link
                     to={`/u/${username}/lists/${l.id}`}
                     className="flex items-center justify-between rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
@@ -399,7 +393,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         </div>
       )}
 
-      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )
 }
@@ -435,16 +429,14 @@ function TabButton({
 function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number; username: string }) {
   return (
     <motion.li
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: staggerDelay(index, 8) }}
+      {...staggerRowMotion(index, 8)}
       className="flex items-center gap-1.5 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
       <Link to={`/show/${entry.showId}`} className="flex min-w-0 flex-1 items-center gap-3">
         <div className="h-14 w-10 shrink-0 overflow-hidden rounded-md bg-base-800">
           {entry.showPosterPath && (
             <img
-              src={posterUrl(entry.showPosterPath, 'w185') ?? undefined}
+              src={posterUrl(entry.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
               alt=""
               loading="lazy"
               decoding="async"

@@ -7,6 +7,7 @@ import { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { searchShows, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
+import { PAGE_HEADER_MOTION } from '../lib/motion'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
@@ -69,11 +70,7 @@ export default function Search() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <motion.h1
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="font-display mb-5 text-2xl font-semibold text-base-100"
-      >
+      <motion.h1 {...PAGE_HEADER_MOTION} className="font-display mb-5 text-2xl font-semibold text-base-100">
         Find a show
       </motion.h1>
 

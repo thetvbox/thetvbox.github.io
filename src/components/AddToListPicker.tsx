@@ -199,7 +199,7 @@ export default function AddToListPicker({
           </button>
         )}
       </div>
-      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </>
   )
 }

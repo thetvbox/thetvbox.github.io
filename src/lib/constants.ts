@@ -17,3 +17,19 @@ export const USERNAME_MIN_LENGTH = 3
 export const USERNAME_MAX_LENGTH = 20
 export const USERNAME_PATTERN = new RegExp(`^[a-zA-Z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`)
 export const EMAIL_PATTERN = /^\S+@\S+\.\S+$/
+
+/** Row count for a full-page loading skeleton (Members, Compare, History,
+ * ProfileActivity) vs. a compact dropdown one (FollowListPanel, NotificationsBell). */
+export const SKELETON_ROWS = 5
+export const SKELETON_ROWS_COMPACT = 3
+
+/** TMDB poster width for small list-row thumbnails (diary/watchlist/compare
+ * rows) -- distinct from the larger sizes used by full poster grids. */
+export const POSTER_THUMB_SIZE = 'w185'
+
+/** "Give me basically everything" fetch caps -- no real pagination exists
+ * yet, so these just need to be comfortably above any one user's activity.
+ * The larger cap is for pages pulling two users' full history at once
+ * (Compare) or ranking a whole year of it (Recap). */
+export const ACTIVITY_FETCH_LIMIT = 2000
+export const LARGE_ACTIVITY_FETCH_LIMIT = 5000

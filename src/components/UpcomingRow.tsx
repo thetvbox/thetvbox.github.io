@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
+import { POSTER_THUMB_SIZE } from '../lib/constants'
 
 export interface UpcomingItem {
   showId: number
@@ -23,7 +24,7 @@ export default function UpcomingRow({ item }: { item: UpcomingItem }) {
       <div className="h-12 w-9 shrink-0 overflow-hidden rounded-md bg-base-800">
         {item.showPosterPath && (
           <img
-            src={posterUrl(item.showPosterPath, 'w185') ?? undefined}
+            src={posterUrl(item.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
             alt=""
             loading="lazy"
             decoding="async"

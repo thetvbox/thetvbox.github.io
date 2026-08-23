@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
 export default function ListDetail() {
@@ -128,11 +129,7 @@ export default function ListDetail() {
           <>
             <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <motion.h1
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="font-display text-xl font-semibold text-base-100 sm:text-2xl"
-                >
+                <motion.h1 {...PAGE_HEADER_MOTION} className="font-display text-xl font-semibold text-base-100 sm:text-2xl">
                   {list.name}
                 </motion.h1>
                 {list.description && <p className="mt-1 text-sm text-base-400">{list.description}</p>}
@@ -180,8 +177,8 @@ export default function ListDetail() {
               </EmptyState>
             ) : (
               <div className={POSTER_GRID_CLASSES}>
-                {items.map((item) => (
-                  <div key={item.id} className="group relative">
+                {items.map((item, i) => (
+                  <motion.div key={item.id} {...staggerTileMotion(i)} className="group relative">
                     <Link to={`/show/${item.show_id}`} className="block">
                       <PosterTile posterPath={item.show_poster_path} name={item.show_name} />
                       <p className="mt-2 truncate text-sm font-medium text-base-100">{item.show_name}</p>
@@ -197,7 +194,7 @@ export default function ListDetail() {
                         ×
                       </button>
                     )}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -205,7 +202,7 @@ export default function ListDetail() {
         )
       )}
 
-      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )
 }

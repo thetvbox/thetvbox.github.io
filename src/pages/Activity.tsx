@@ -10,7 +10,7 @@ import type { ActivityFeedItem } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
-import { staggerDelay } from '../lib/motion'
+import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
@@ -151,7 +151,7 @@ export default function Activity() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+      <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
         <h1 className="font-display text-xl font-semibold text-base-100 sm:text-2xl">Activity</h1>
         <p className="mt-1 text-sm text-base-500">
           {scope === 'following' ? "What people you follow have been up to." : 'What the group has been up to.'}
@@ -221,12 +221,7 @@ export default function Activity() {
               </h3>
               <div className="space-y-2">
                 {group.items.map((item, i) => (
-                  <motion.div
-                    key={item.key}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: staggerDelay(i) }}
-                  >
+                  <motion.div key={item.key} {...staggerRowMotion(i)}>
                     {item.kind === 'follow' ? <FollowActivityRow event={item} /> : <ActivityRow event={item} />}
                   </motion.div>
                 ))}

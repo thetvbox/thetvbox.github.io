@@ -17,7 +17,7 @@ import {
   DROPDOWN_PANEL_INITIAL,
   DROPDOWN_PANEL_TRANSITION,
 } from '../lib/motion'
-import { NOTIFICATIONS_POLL_MS } from '../lib/constants'
+import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
 import Avatar from './Avatar'
 
 interface NotificationsBellProps {
@@ -26,11 +26,9 @@ interface NotificationsBellProps {
 }
 
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
- * dropdown of recent "X followed you" events. Panel is `absolute right-0`
- * off its own trigger with a fixed, modest width so it stays fully on-screen
- * regardless of where this icon lands among the other top-bar icons -- see
- * ReportBugButton.tsx, which uses the same pattern. Controlled by Navbar so
- * opening this closes ReportBugButton's panel and vice versa. */
+ * dropdown of recent "X followed you" events (fixed-width panel, same
+ * reasoning as ReportBugButton.tsx). Controlled by Navbar so opening this
+ * closes ReportBugButton's panel and vice versa. */
 export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
   const { user: me } = useAuth()
   const [unread, setUnread] = useState(0)
@@ -170,7 +168,7 @@ function NotificationsPanel({
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
             <div key={i} className="h-10 animate-pulse rounded-lg bg-base-850/70" />
           ))}
         </div>

@@ -11,6 +11,7 @@
    - `VITE_SITE_PASSCODE` — optional; leave unset to disable the passcode gate.
 3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables and RLS policies.
 4. `npm run dev`
+5. Optional: the in-app "Report a bug" button needs the `report-bug` edge function deployed — see [supabase/functions/report-bug/README.md](./supabase/functions/report-bug/README.md). The app works fine without it; that button just won't file anything.
 
 ## Scripts
 

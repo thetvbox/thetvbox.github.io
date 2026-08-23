@@ -8,6 +8,8 @@ import { fetchRecentRewatches } from '../lib/rewatches'
 import { summarizeShowActivity } from '../lib/showActivity'
 import { availableRecapYears, buildYearRecap } from '../lib/recap'
 import { posterUrl } from '../lib/tmdb'
+import { PAGE_HEADER_MOTION } from '../lib/motion'
+import { LARGE_ACTIVITY_FETCH_LIMIT, POSTER_THUMB_SIZE } from '../lib/constants'
 import EmptyState from '../components/EmptyState'
 import StarGlyph from '../components/StarGlyph'
 import StatCard from '../components/StatCard'
@@ -28,9 +30,9 @@ export default function Recap() {
     setLoading(true)
     setError(null)
     Promise.all([
-      fetchRecentShowRatings(user.id, 5000),
-      fetchRecentWatched(user.id, 5000),
-      fetchRecentRewatches(user.id, 5000),
+      fetchRecentShowRatings(user.id, LARGE_ACTIVITY_FETCH_LIMIT),
+      fetchRecentWatched(user.id, LARGE_ACTIVITY_FETCH_LIMIT),
+      fetchRecentRewatches(user.id, LARGE_ACTIVITY_FETCH_LIMIT),
     ])
       .then(([r, w, rw]) => {
         if (cancelled) return
@@ -65,11 +67,7 @@ export default function Recap() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="font-display text-xl font-semibold text-base-100 sm:text-2xl"
-        >
+        <motion.h1 {...PAGE_HEADER_MOTION} className="font-display text-xl font-semibold text-base-100 sm:text-2xl">
           Your year in TV
         </motion.h1>
         {years.length > 1 && (
@@ -142,7 +140,7 @@ export default function Recap() {
                 <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-base-800">
                   {recap.topRated.showPosterPath && (
                     <img
-                      src={posterUrl(recap.topRated.showPosterPath, 'w185') ?? undefined}
+                      src={posterUrl(recap.topRated.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
                       alt=""
                       className="h-full w-full object-cover"
                     />

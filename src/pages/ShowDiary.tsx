@@ -8,7 +8,7 @@ import { fetchRewatchesForShow } from '../lib/rewatches'
 import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
-import { staggerDelay } from '../lib/motion'
+import { staggerRowMotion } from '../lib/motion'
 import CenteredMessage from '../components/CenteredMessage'
 import StarGlyph from '../components/StarGlyph'
 import type { AppUser, EpisodeWatched, ShowRating, ShowRewatch } from '../types'
@@ -165,9 +165,7 @@ export default function ShowDiary() {
                 {watched.map((w, i) => (
                   <motion.li
                     key={w.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: staggerDelay(i) }}
+                    {...staggerRowMotion(i)}
                     className="flex items-center justify-between rounded-xl border border-hairline bg-base-850/60 p-3"
                   >
                     <div className="min-w-0">

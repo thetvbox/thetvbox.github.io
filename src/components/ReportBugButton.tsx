@@ -15,15 +15,9 @@ import {
   DROPDOWN_PANEL_TRANSITION,
 } from '../lib/motion'
 
-/** Small persistent trigger in the top bar (every page, not tied to any one
- * section) -- opens a dropdown-style panel instead of a true modal, same as
- * everything else in this app (see useEscapeAndFocusReturn). The panel is
- * `absolute right-0` off its own trigger with a fixed, modest width
- * (`w-72 max-w-[calc(100vw-2rem)]`) -- deliberately NOT a viewport-relative
- * width like `calc(100vw-2rem)` on its own, which only stays on-screen if
- * this happens to be the header's rightmost icon. A fixed width keeps this
- * safe regardless of where it sits among the other top-bar icons (see
- * NotificationsBell, which uses the same pattern). */
+/** Top-bar trigger for a dropdown-style panel, `absolute right-0` with a
+ * fixed `w-72` width so it stays on-screen regardless of where this icon
+ * sits in the header -- NotificationsBell uses the same pattern. */
 interface ReportBugButtonProps {
   open: boolean
   onOpenChange: (open: boolean) => void

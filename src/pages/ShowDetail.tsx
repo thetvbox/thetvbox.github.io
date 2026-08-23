@@ -137,7 +137,7 @@ export default function ShowDetail() {
         )}
       </div>
 
-      {d.toast && <Toast message={d.toast.message} tone={d.toast.tone} action={d.toast.action} onDismiss={d.dismissToast} />}
+      <Toast toast={d.toast} onDismiss={d.dismissToast} />
     </div>
   )
 }

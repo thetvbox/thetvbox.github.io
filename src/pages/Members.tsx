@@ -3,9 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
-import { fetchFollowerIds, fetchFollowingIds, followUser, unfollowUser } from '../lib/follows'
-import { staggerDelay } from '../lib/motion'
-import { useToast } from '../hooks/useToast'
+import { fetchFollowerIds, fetchFollowingIds } from '../lib/follows'
+import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
+import { SKELETON_ROWS } from '../lib/constants'
+import { useFollowActions } from '../hooks/useFollowActions'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
@@ -19,7 +20,9 @@ export default function Members() {
   const [users, setUsers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())
-  const [savingId, setSavingId] = useState<string | null>(null)
+  // Set, not a single id -- following/unfollowing two different rows at once
+  // shouldn't have the one that resolves first clear the other's spinner.
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   // Kept in the URL (not just component state) so the search survives
   // navigating to a profile and back -- Members otherwise fully remounts on
   // return, losing whatever was typed.
@@ -27,7 +30,7 @@ export default function Members() {
   const query = searchParams.get('q') ?? ''
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { toast, showUndo, showError, dismiss } = useToast()
+  const { follow, unfollow, toast, dismiss } = useFollowActions()
 
   function setQuery(next: string) {
     setSearchParams(
@@ -74,67 +77,39 @@ export default function Members() {
     return users.filter((u) => u.username.toLowerCase().includes(q))
   }, [users, query])
 
-  async function handleFollow(targetId: string) {
-    if (!me) return
-    setSavingId(targetId)
-    setFollowingIds((prev) => new Set(prev).add(targetId))
-    try {
-      await followUser(me.id, targetId)
-    } catch {
-      setFollowingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(targetId)
-        return next
-      })
-      showError('Failed to follow. Try again.')
-    } finally {
-      setSavingId(null)
-    }
+  function applyFollowing(targetId: string, following: boolean) {
+    setFollowingIds((prev) => {
+      const next = new Set(prev)
+      if (following) next.add(targetId)
+      else next.delete(targetId)
+      return next
+    })
   }
 
-  async function handleUnfollow(targetId: string) {
-    if (!me) return
-    const target = users.find((u) => u.id === targetId)
-    setSavingId(targetId)
-    setFollowingIds((prev) => {
+  async function handleFollow(targetId: string) {
+    setSavingIds((prev) => new Set(prev).add(targetId))
+    await follow(targetId, (following) => applyFollowing(targetId, following))
+    setSavingIds((prev) => {
       const next = new Set(prev)
       next.delete(targetId)
       return next
     })
-    try {
-      await unfollowUser(me.id, targetId)
-    } catch {
-      setFollowingIds((prev) => new Set(prev).add(targetId))
-      showError('Failed to unfollow. Try again.')
-      return
-    } finally {
-      setSavingId(null)
-    }
-    // The row-level Follow/Following button already reflects the new state,
-    // but every other removal in the app gets a toast+undo -- unfollow was
-    // the one silent exception.
-    showUndo(target ? `Unfollowed @${target.username}` : 'Unfollowed', async () => {
-      setFollowingIds((prev) => new Set(prev).add(targetId))
-      try {
-        await followUser(me.id, targetId)
-      } catch {
-        setFollowingIds((prev) => {
-          const next = new Set(prev)
-          next.delete(targetId)
-          return next
-        })
-        showError('Failed to undo. Try following again.')
-      }
+  }
+
+  async function handleUnfollow(targetId: string) {
+    const target = users.find((u) => u.id === targetId)
+    setSavingIds((prev) => new Set(prev).add(targetId))
+    await unfollow(targetId, target?.username, (following) => applyFollowing(targetId, following))
+    setSavingIds((prev) => {
+      const next = new Set(prev)
+      next.delete(targetId)
+      return next
     })
   }
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <motion.h1
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="font-display mb-5 text-2xl font-semibold text-base-100"
-      >
+      <motion.h1 {...PAGE_HEADER_MOTION} className="font-display mb-5 text-2xl font-semibold text-base-100">
         People
       </motion.h1>
 
@@ -165,7 +140,7 @@ export default function Members() {
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
             <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
           ))}
         </div>
@@ -180,9 +155,7 @@ export default function Members() {
           {filtered.map((u, i) => (
             <motion.li
               key={u.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: staggerDelay(i) }}
+              {...staggerRowMotion(i)}
               className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
             >
               <Link to={`/u/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -209,7 +182,7 @@ export default function Members() {
               {me && me.id !== u.id && (
                 <FollowButton
                   isFollowing={followingIds.has(u.id)}
-                  saving={savingId === u.id}
+                  saving={savingIds.has(u.id)}
                   onFollow={() => handleFollow(u.id)}
                   onUnfollow={() => handleUnfollow(u.id)}
                 />
@@ -219,7 +192,7 @@ export default function Members() {
         </ul>
       )}
 
-      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )
 }

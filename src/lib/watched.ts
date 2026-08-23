@@ -11,24 +11,10 @@ export function watchedKey(seasonNumber: number, episodeNumber: number): string 
  * which is what the UI checks before rendering a date. */
 export const UNKNOWN_WATCHED_AT = new Date(0).toISOString()
 
-/** All of one user's watched episodes for a show (every season), keyed for quick lookup. */
-export async function fetchWatchedForShow(userId: string, showId: number): Promise<WatchedMap> {
-  const { data, error } = await supabase
-    .from('episode_watched')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('show_id', showId)
-
-  if (error) throw error
-  const rows = (data ?? []) as EpisodeWatched[]
-  const map: WatchedMap = {}
-  for (const row of rows) map[watchedKey(row.season_number, row.episode_number)] = row
-  return map
-}
-
-/** Same as fetchWatchedForShow but ordered, for the per-show watch-history view.
- * Bulk actions stamp a whole batch with the same watched_at, so season/episode
- * number (descending) breaks ties deterministically. */
+/** One user's watched episodes for a show (every season), ordered for the
+ * per-show watch-history view. Bulk actions stamp a whole batch with the
+ * same watched_at, so season/episode number (descending) breaks ties
+ * deterministically. */
 export async function fetchWatchedForUserAndShow(
   userId: string,
   showId: number,
@@ -44,6 +30,14 @@ export async function fetchWatchedForUserAndShow(
 
   if (error) throw error
   return (data ?? []) as EpisodeWatched[]
+}
+
+/** Same rows as fetchWatchedForUserAndShow, keyed by season/episode for quick lookup. */
+export async function fetchWatchedForShow(userId: string, showId: number): Promise<WatchedMap> {
+  const rows = await fetchWatchedForUserAndShow(userId, showId)
+  const map: WatchedMap = {}
+  for (const row of rows) map[watchedKey(row.season_number, row.episode_number)] = row
+  return map
 }
 
 export async function fetchRecentWatched(userId: string, limit = 2000): Promise<EpisodeWatched[]> {

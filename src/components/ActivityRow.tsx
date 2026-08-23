@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
+import { POSTER_THUMB_SIZE } from '../lib/constants'
 import type { GroupActivityEvent } from '../lib/showActivity'
 import Avatar from './Avatar'
 import StarGlyph from './StarGlyph'
@@ -16,7 +17,7 @@ export default function ActivityRow({ event }: { event: GroupActivityEvent }) {
       <div className="h-12 w-9 shrink-0 overflow-hidden rounded-md bg-base-800">
         {event.showPosterPath && (
           <img
-            src={posterUrl(event.showPosterPath, 'w185') ?? undefined}
+            src={posterUrl(event.showPosterPath, POSTER_THUMB_SIZE) ?? undefined}
             alt=""
             loading="lazy"
             decoding="async"

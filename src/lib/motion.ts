@@ -35,9 +35,40 @@ export const DROPDOWN_PANEL_TRANSITION = {
 } as const
 
 const STAGGER_STEP_SECONDS = 0.02
+const STAGGER_ROW_DURATION = 0.25
 
 /** Per-item entrance delay for a staggered list/grid, capped so a long list
  * doesn't take ages to finish animating in. */
 export function staggerDelay(index: number, cap = 10): number {
   return Math.min(index, cap) * STAGGER_STEP_SECONDS
+}
+
+/** Every page's `<h1>`/header block fades and rises in the same way --
+ * spread directly onto the motion element: `<motion.div {...PAGE_HEADER_MOTION}>`. */
+export const PAGE_HEADER_MOTION = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, ease: EASE_OUT_EXPO },
+} as const
+
+/** Per-row entrance for a staggered list -- spread directly:
+ * `<motion.li {...staggerRowMotion(i)}>`. `cap` matches staggerDelay's. */
+export function staggerRowMotion(index: number, cap = 10) {
+  return {
+    initial: { opacity: 0, y: 6 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: STAGGER_ROW_DURATION, delay: staggerDelay(index, cap), ease: EASE_OUT_EXPO },
+  } as const
+}
+
+const STAGGER_TILE_DURATION = 0.3
+
+/** Same idea as staggerRowMotion, for a poster grid tile -- a bigger element
+ * gets a slightly larger rise and duration. */
+export function staggerTileMotion(index: number, cap = 12) {
+  return {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: STAGGER_TILE_DURATION, delay: staggerDelay(index, cap), ease: EASE_OUT_EXPO },
+  } as const
 }

@@ -1,6 +1,6 @@
 import { POSTER_GRID_CLASSES } from './PosterTile'
 
-export function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
+function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
   return (
     <div className="animate-pulse">
       <div className="aspect-[2/3] rounded-2xl bg-base-800" />

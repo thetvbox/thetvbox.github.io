@@ -2,15 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
-import { useToast } from '../hooks/useToast'
-import {
-  fetchFollowerIds,
-  fetchFollowersWithUsers,
-  fetchFollowingIds,
-  fetchFollowingWithUsers,
-  followUser,
-  unfollowUser,
-} from '../lib/follows'
+import { useFollowActions } from '../hooks/useFollowActions'
+import { fetchFollowerIds, fetchFollowersWithUsers, fetchFollowingIds, fetchFollowingWithUsers } from '../lib/follows'
+import { SKELETON_ROWS_COMPACT } from '../lib/constants'
 import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
@@ -35,10 +29,10 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
   const [people, setPeople] = useState<AppUser[]>([])
   const [myFollowingIds, setMyFollowingIds] = useState<Set<string>>(new Set())
   const [myFollowerIds, setMyFollowerIds] = useState<Set<string>>(new Set())
-  const [savingId, setSavingId] = useState<string | null>(null)
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { toast, showUndo, showError, dismiss } = useToast()
+  const { follow, unfollow, toast, dismiss } = useFollowActions()
 
   useEscapeAndFocusReturn(true, onClose)
 
@@ -70,60 +64,34 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
     }
   }, [userId, mode, me])
 
-  async function handleFollow(targetId: string) {
-    if (!me) return
-    setSavingId(targetId)
-    setMyFollowingIds((prev) => new Set(prev).add(targetId))
-    onMyFollowingCountChange?.(1)
-    try {
-      await followUser(me.id, targetId)
-    } catch {
-      setMyFollowingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(targetId)
-        return next
-      })
-      onMyFollowingCountChange?.(-1)
-      showError('Failed to follow. Try again.')
-    } finally {
-      setSavingId(null)
-    }
+  function applyFollowing(targetId: string, following: boolean) {
+    setMyFollowingIds((prev) => {
+      const next = new Set(prev)
+      if (following) next.add(targetId)
+      else next.delete(targetId)
+      return next
+    })
+    onMyFollowingCountChange?.(following ? 1 : -1)
   }
 
-  async function handleUnfollow(targetId: string) {
-    if (!me) return
-    const target = people.find((p) => p.id === targetId)
-    setSavingId(targetId)
-    setMyFollowingIds((prev) => {
+  async function handleFollow(targetId: string) {
+    setSavingIds((prev) => new Set(prev).add(targetId))
+    await follow(targetId, (following) => applyFollowing(targetId, following))
+    setSavingIds((prev) => {
       const next = new Set(prev)
       next.delete(targetId)
       return next
     })
-    onMyFollowingCountChange?.(-1)
-    try {
-      await unfollowUser(me.id, targetId)
-    } catch {
-      setMyFollowingIds((prev) => new Set(prev).add(targetId))
-      onMyFollowingCountChange?.(1)
-      showError('Failed to unfollow. Try again.')
-      return
-    } finally {
-      setSavingId(null)
-    }
-    showUndo(target ? `Unfollowed @${target.username}` : 'Unfollowed', async () => {
-      setMyFollowingIds((prev) => new Set(prev).add(targetId))
-      onMyFollowingCountChange?.(1)
-      try {
-        await followUser(me.id, targetId)
-      } catch {
-        setMyFollowingIds((prev) => {
-          const next = new Set(prev)
-          next.delete(targetId)
-          return next
-        })
-        onMyFollowingCountChange?.(-1)
-        showError('Failed to undo. Try following again.')
-      }
+  }
+
+  async function handleUnfollow(targetId: string) {
+    const target = people.find((p) => p.id === targetId)
+    setSavingIds((prev) => new Set(prev).add(targetId))
+    await unfollow(targetId, target?.username, (following) => applyFollowing(targetId, following))
+    setSavingIds((prev) => {
+      const next = new Set(prev)
+      next.delete(targetId)
+      return next
     })
   }
 
@@ -142,7 +110,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
             <div key={i} className="h-12 animate-pulse rounded-lg bg-base-850/70" />
           ))}
         </div>
@@ -165,7 +133,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
                 <FollowButton
                   size="sm"
                   isFollowing={myFollowingIds.has(p.id)}
-                  saving={savingId === p.id}
+                  saving={savingIds.has(p.id)}
                   onFollow={() => handleFollow(p.id)}
                   onUnfollow={() => handleUnfollow(p.id)}
                 />
@@ -175,7 +143,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
         </ul>
       )}
 
-      {toast && <Toast message={toast.message} tone={toast.tone} action={toast.action} onDismiss={dismiss} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )
 }

@@ -21,7 +21,8 @@ import EmptyState from './EmptyState'
 import StarGlyph from './StarGlyph'
 import PosterTile, { POSTER_GRID_CLASSES } from './PosterTile'
 import { formatShortDate } from '../lib/date'
-import { staggerDelay } from '../lib/motion'
+import { staggerTileMotion } from '../lib/motion'
+import { SKELETON_ROWS } from '../lib/constants'
 
 const SORT_LABELS: Record<HistorySort, string> = {
   recent: 'Recent',
@@ -169,7 +170,7 @@ export default function HistorySection({
       ) : sort === 'platform' ? (
         loadingPlatforms && platforms.size === 0 ? (
           <div className={POSTER_GRID_CLASSES}>
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[2/3] rounded-2xl bg-base-800" />
                 <div className="mt-2 h-3.5 w-3/4 rounded bg-base-800" />
@@ -232,11 +233,7 @@ function HistoryCard({
   provider?: ResolvedProvider | null
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: staggerDelay(index, 12) }}
-    >
+    <motion.div {...staggerTileMotion(index)}>
       <Link to={`/u/${username}/shows/${s.showId}`} className="group block">
         <PosterTile posterPath={s.showPosterPath} name={s.showName}>
           <StreamingBadge provider={provider} />

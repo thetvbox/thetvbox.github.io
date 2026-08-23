@@ -13,7 +13,8 @@ import { computeSeasonProgress, fetchNextEpisode, fetchSeasonBreakdowns } from '
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
-import { staggerDelay } from '../lib/motion'
+import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
+import { ACTIVITY_FETCH_LIMIT } from '../lib/constants'
 import SeasonProgressBar from '../components/SeasonProgressBar'
 import StreamingBadge from '../components/StreamingBadge'
 import UpcomingRow from '../components/UpcomingRow'
@@ -55,8 +56,8 @@ export default function Home() {
     setLoading(true)
     setError(null)
     Promise.all([
-      fetchRecentShowRatings(user.id, 2000),
-      fetchRecentWatched(user.id, 2000),
+      fetchRecentShowRatings(user.id, ACTIVITY_FETCH_LIMIT),
+      fetchRecentWatched(user.id, ACTIVITY_FETCH_LIMIT),
       fetchStartedForUser(user.id),
       fetchDismissedForUser(user.id),
       fetchWatchlist(user.id),
@@ -157,6 +158,8 @@ export default function Home() {
         if (next) map.set(showId, next)
       }
       setNextEpisodes(map)
+    }).catch(() => {
+      // Nice-to-have -- the badge just doesn't show up.
     })
     return () => {
       cancelled = true
@@ -186,7 +189,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+      <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
         <p className="text-sm font-medium text-accent-400">
           {greeting()}
           {user ? `, @${user.username}` : ''}
@@ -229,12 +232,7 @@ export default function Home() {
             const totalNum = isMultiSeason ? progress!.currentSeasonTotal : s.totalEpisodes
             const nextEpisode = nextEpisodes.get(s.showId)
             return (
-              <motion.div
-                key={s.showId}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: staggerDelay(i, 12) }}
-              >
+              <motion.div key={s.showId} {...staggerTileMotion(i)}>
                 <Link
                   to={`/show/${s.showId}`}
                   state={{ jumpToProgress: true }}
@@ -306,12 +304,7 @@ export default function Home() {
           </div>
           <div className={POSTER_GRID_CLASSES}>
             {watchlist.map((w, i) => (
-              <motion.div
-                key={w.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: staggerDelay(i, 12) }}
-              >
+              <motion.div key={w.id} {...staggerTileMotion(i)}>
                 <Link to={`/show/${w.show_id}`} className="group block">
                   <PosterTile posterPath={w.show_poster_path} name={w.show_name} />
                   <p className="mt-2 truncate text-sm font-medium text-base-100">{w.show_name}</p>
