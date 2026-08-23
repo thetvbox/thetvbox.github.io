@@ -52,6 +52,21 @@ All notable changes to TV Box are documented here. Format loosely follows
   of the star icon, and three copies of the stat-card tile into shared
   `Avatar`/`StarGlyph`/`StatCard` components -- same look everywhere, one
   place to change it.
+- Switching profiles without a specific tab in the URL no longer gets stuck
+  showing whatever tab the previous profile was on.
+- Toast notifications now reset their auto-dismiss timer when a new one
+  replaces a still-visible one, and animate out instead of disappearing
+  instantly.
+- Fixed a race condition where following/unfollowing two people back-to-back
+  on Members or a followers list could leave the wrong row's saving spinner
+  stuck.
+- A show with unexpectedly incomplete data from TMDB (missing genre or
+  country info) no longer crashes the whole app when you open History's
+  filters -- and if something similar ever does slip through, navigating to
+  a different page now recovers instead of staying stuck on the error
+  screen.
+- Bumped a couple of undersized tap targets (the "See all" links on Home,
+  the logo in the top bar) up to the app's usual minimum.
 
 ## [1.0.0] - 2026-08-22
 
