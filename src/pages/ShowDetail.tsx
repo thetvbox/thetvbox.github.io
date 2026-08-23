@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import Toast from '../components/Toast'
 import ShowDetailHero from '../components/showDetail/ShowDetailHero'
 import ShowDetailQuickActions from '../components/showDetail/ShowDetailQuickActions'
@@ -14,6 +14,10 @@ export default function ShowDetail() {
   const showId = Number(id)
   const { user } = useAuth()
   const d = useShowDetail(showId, user)
+  const location = useLocation()
+  // Set by Home's Now Watching card (see Home.tsx) so a click there jumps
+  // straight to the next unwatched episode instead of landing at the top.
+  const jumpToProgress = Boolean((location.state as { jumpToProgress?: boolean } | null)?.jumpToProgress)
 
   if (Number.isNaN(showId)) {
     return <p className="p-8 text-center text-sm text-danger">Invalid show.</p>
@@ -127,6 +131,7 @@ export default function ShowDetail() {
             effectiveAirDate={d.effectiveAirDate}
             onToggleWatched={d.handleToggleWatched}
             onMarkWatchedWithDate={d.handleMarkWatchedWithDate}
+            jumpToProgress={jumpToProgress}
           />
         )}
       </div>

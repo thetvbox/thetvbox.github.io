@@ -1,9 +1,11 @@
+import { useEffect, useRef } from 'react'
 import SeasonTabs from '../SeasonTabs'
 import RatingSummary from '../RatingSummary'
 import DateMarkControl from '../DateMarkControl'
 import EpisodeRow from '../EpisodeRow'
 import { EpisodeRowSkeleton } from '../Skeletons'
-import { formatShortDate } from '../../lib/date'
+import { formatShortDate, isFutureDate } from '../../lib/date'
+import { scrollBehavior } from '../../lib/motion'
 import { watchedKey } from '../../lib/watched'
 import type { SeasonRatingWithUser, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
@@ -30,6 +32,9 @@ interface ShowDetailSeasonsProps {
     runtimeMinutes: number | null,
     input: { watchedAt: string; unknownDate: boolean },
   ) => Promise<void>
+  /** True when this page was opened from Home's Now Watching card -- scrolls
+   * straight to the next-unwatched episode once, instead of landing at the top. */
+  jumpToProgress?: boolean
 }
 
 /** Season tabs, the "next episode airs" banner, the per-season rating, and
@@ -52,7 +57,32 @@ export default function ShowDetailSeasons({
   effectiveAirDate,
   onToggleWatched,
   onMarkWatchedWithDate,
+  jumpToProgress,
 }: ShowDetailSeasonsProps) {
+  const nextUpRef = useRef<HTMLDivElement>(null)
+  // Guards against re-firing on every re-render (marking an episode watched
+  // changes `watched`, which would otherwise recompute nextUpEpisode and
+  // yank the page back down) -- only the first landing after navigating in
+  // from Now Watching should scroll.
+  const hasJumpedRef = useRef(false)
+
+  // First episode in the active season that's actually ready to watch (aired,
+  // not yet marked watched) -- the "next up" row jumpToProgress scrolls to.
+  const nextUpEpisode = season?.episodes.find(
+    (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
+  )
+
+  useEffect(() => {
+    if (!jumpToProgress || hasJumpedRef.current || loadingSeason || !nextUpEpisode) return
+    hasJumpedRef.current = true
+    // Season loads right after mount -- wait a frame so layout has settled
+    // before measuring where to scroll to.
+    const raf = requestAnimationFrame(() => {
+      nextUpRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'center' })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [jumpToProgress, loadingSeason, nextUpEpisode])
+
   return (
     <div className="mt-8 border-t border-hairline pt-6">
       {nextUpcomingEpisode && (
@@ -111,6 +141,7 @@ export default function ShowDetailSeasons({
                 watchedAtUnknown={Boolean(watched[watchedKey(ep.season_number, ep.episode_number)]?.watched_at_unknown)}
                 onToggleWatched={() => onToggleWatched(ep.episode_number, ep.name, ep.runtime)}
                 onMarkWatchedWithDate={(input) => onMarkWatchedWithDate(ep.episode_number, ep.name, ep.runtime, input)}
+                rootRef={ep.episode_number === nextUpEpisode?.episode_number ? nextUpRef : undefined}
               />
             ))}
       </div>

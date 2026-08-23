@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Ref } from 'react'
 import { motion } from 'framer-motion'
 import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
@@ -14,6 +15,9 @@ interface EpisodeRowProps {
   onToggleWatched: () => Promise<void>
   /** The slower path: pick a specific date (or "don't remember"). */
   onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
+  /** Set on whichever row is the season's next-unwatched episode, so
+   * ShowDetailSeasons can scroll straight to it -- see jumpToProgress. */
+  rootRef?: Ref<HTMLDivElement>
 }
 
 export default function EpisodeRow({
@@ -23,6 +27,7 @@ export default function EpisodeRow({
   watchedAtUnknown,
   onToggleWatched,
   onMarkWatchedWithDate,
+  rootRef,
 }: EpisodeRowProps) {
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -53,6 +58,7 @@ export default function EpisodeRow({
 
   return (
     <motion.div
+      ref={rootRef}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}

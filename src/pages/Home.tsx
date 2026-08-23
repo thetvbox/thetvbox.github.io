@@ -219,7 +219,11 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: staggerDelay(i, 12) }}
               >
-                <Link to={`/show/${s.showId}`} className="group block">
+                <Link
+                  to={`/show/${s.showId}`}
+                  state={{ jumpToProgress: true }}
+                  className="group block"
+                >
                   <PosterTile posterPath={s.showPosterPath} name={s.showName}>
                     <StreamingBadge provider={platforms.get(s.showId)} />
                   </PosterTile>
