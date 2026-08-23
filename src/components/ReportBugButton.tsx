@@ -8,7 +8,12 @@ import { appVersion } from '../lib/changelog'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import {
+  DROPDOWN_PANEL_ANIMATE,
+  DROPDOWN_PANEL_EXIT,
+  DROPDOWN_PANEL_INITIAL,
+  DROPDOWN_PANEL_TRANSITION,
+} from '../lib/motion'
 
 /** Small persistent trigger in the top bar (every page, not tied to any one
  * section) -- opens a dropdown-style panel instead of a true modal, same as
@@ -19,25 +24,31 @@ import { EASE_OUT_EXPO } from '../lib/motion'
  * this happens to be the header's rightmost icon. A fixed width keeps this
  * safe regardless of where it sits among the other top-bar icons (see
  * NotificationsBell, which uses the same pattern). */
-export default function ReportBugButton() {
-  const [open, setOpen] = useState(false)
+interface ReportBugButtonProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
+/** Controlled by Navbar so opening this closes NotificationsBell's panel and
+ * vice versa -- see Navbar's `openPanel` state. */
+export default function ReportBugButton({ open, onOpenChange }: ReportBugButtonProps) {
   // Navbar never unmounts across route changes -- without this, tapping a
   // nav link while this panel is open leaves it floating over the new page.
-  useCloseOnNavigate(() => setOpen(false))
+  useCloseOnNavigate(() => onOpenChange(false))
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => onOpenChange(!open)}
         aria-label="Report a bug"
+        aria-expanded={open}
         title="Report a bug"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
       >
         <BugGlyph />
       </button>
-      <AnimatePresence>{open && <ReportBugPanel onClose={() => setOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{open && <ReportBugPanel onClose={() => onOpenChange(false)} />}</AnimatePresence>
     </div>
   )
 }
@@ -45,8 +56,8 @@ export default function ReportBugButton() {
 function BugGlyph() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -107,10 +118,11 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.94, y: -6 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96, y: -4 }}
-      transition={{ duration: 0.16, ease: EASE_OUT_EXPO }}
+      layout
+      initial={DROPDOWN_PANEL_INITIAL}
+      animate={DROPDOWN_PANEL_ANIMATE}
+      exit={DROPDOWN_PANEL_EXIT}
+      transition={DROPDOWN_PANEL_TRANSITION}
       className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
     >
       {status === 'success' && result ? (

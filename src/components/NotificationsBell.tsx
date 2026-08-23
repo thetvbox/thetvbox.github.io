@@ -11,26 +11,33 @@ import {
 } from '../lib/follows'
 import type { RecentFollowerNotification } from '../lib/follows'
 import { formatShortDate } from '../lib/date'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import {
+  DROPDOWN_PANEL_ANIMATE,
+  DROPDOWN_PANEL_EXIT,
+  DROPDOWN_PANEL_INITIAL,
+  DROPDOWN_PANEL_TRANSITION,
+} from '../lib/motion'
 import { NOTIFICATIONS_POLL_MS } from '../lib/constants'
 import Avatar from './Avatar'
 
+interface NotificationsBellProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
  * dropdown of recent "X followed you" events. Panel is `absolute right-0`
- * off its own trigger with a fixed, modest width
- * (`w-72 max-w-[calc(100vw-2rem)]`) rather than a viewport-relative one, so
- * it stays fully on-screen regardless of where this icon lands among the
- * other top-bar icons -- see ReportBugButton.tsx, which uses the same
- * pattern (a stale version of this comment used to claim both needed to be
- * the header's rightmost icon; that's no longer true for either). */
-export default function NotificationsBell() {
+ * off its own trigger with a fixed, modest width so it stays fully on-screen
+ * regardless of where this icon lands among the other top-bar icons -- see
+ * ReportBugButton.tsx, which uses the same pattern. Controlled by Navbar so
+ * opening this closes ReportBugButton's panel and vice versa. */
+export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
   const { user: me } = useAuth()
-  const [open, setOpen] = useState(false)
   const [unread, setUnread] = useState(0)
 
   // Navbar never unmounts across route changes -- without this, tapping a
   // nav link while this panel is open leaves it floating over the new page.
-  useCloseOnNavigate(() => setOpen(false))
+  useCloseOnNavigate(() => onOpenChange(false))
 
   useEffect(() => {
     if (!me) return
@@ -66,18 +73,21 @@ export default function NotificationsBell() {
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => onOpenChange(!open)}
         aria-label={unread > 0 ? `Notifications, ${unread} new` : 'Notifications'}
+        aria-expanded={open}
         title="Notifications"
-        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
       >
         <BellGlyph />
         {unread > 0 && (
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent-400 ring-2 ring-base-950" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-400 ring-2 ring-base-950" />
         )}
       </button>
       <AnimatePresence>
-        {open && <NotificationsPanel userId={me.id} onSeen={() => setUnread(0)} onClose={() => setOpen(false)} />}
+        {open && (
+          <NotificationsPanel userId={me.id} onSeen={() => setUnread(0)} onClose={() => onOpenChange(false)} />
+        )}
       </AnimatePresence>
     </div>
   )
@@ -86,8 +96,8 @@ export default function NotificationsBell() {
 function BellGlyph() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -142,10 +152,11 @@ function NotificationsPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.94, y: -6 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96, y: -4 }}
-      transition={{ duration: 0.16, ease: EASE_OUT_EXPO }}
+      layout
+      initial={DROPDOWN_PANEL_INITIAL}
+      animate={DROPDOWN_PANEL_ANIMATE}
+      exit={DROPDOWN_PANEL_EXIT}
+      transition={DROPDOWN_PANEL_TRANSITION}
       className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
     >
       <div className="mb-3 flex items-center justify-between gap-2">

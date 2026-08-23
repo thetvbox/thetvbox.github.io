@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
@@ -102,7 +103,7 @@ function UserIcon({ active }: { active: boolean }) {
 
 function SunIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <circle cx="12" cy="12" r="4.5" />
       <path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8" />
     </svg>
@@ -111,7 +112,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" stroke="none">
       <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a.6.6 0 0 0-.76-.76A9.7 9.7 0 1 0 21.26 15.26a.6.6 0 0 0-.76-.76Z" />
     </svg>
   )
@@ -127,7 +128,7 @@ function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -153,8 +154,12 @@ const NAV_ITEMS = [
   { to: '/profile', label: 'Profile', Icon: UserIcon },
 ] as const
 
+type UtilityPanel = 'bug' | 'notifications'
+
 export default function Navbar() {
   const location = useLocation()
+  const [openPanel, setOpenPanel] = useState<UtilityPanel | null>(null)
+  const utilityRef = useRef<HTMLDivElement>(null)
 
   // React Router fires no navigation when a Link targets the current route,
   // so "tap the tab you're already on to scroll to top" needs explicit handling.
@@ -163,6 +168,20 @@ export default function Navbar() {
       window.scrollTo({ top: 0, left: 0, behavior: scrollBehavior() })
     }
   }
+
+  // Tapping outside either panel closes it, the standard dismiss gesture for
+  // an inline dropdown -- Escape (see useEscapeAndFocusReturn) covers desktop
+  // keyboard users, but touch has no equivalent without this.
+  useEffect(() => {
+    if (!openPanel) return
+    function handlePointerDown(e: PointerEvent) {
+      if (utilityRef.current && !utilityRef.current.contains(e.target as Node)) {
+        setOpenPanel(null)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [openPanel])
 
   return (
     <>
@@ -202,9 +221,17 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            <ThemeToggle />
-            <ReportBugButton />
-            <NotificationsBell />
+            <div ref={utilityRef} className="flex items-center gap-1">
+              <ThemeToggle />
+              <ReportBugButton
+                open={openPanel === 'bug'}
+                onOpenChange={(isOpen) => setOpenPanel(isOpen ? 'bug' : null)}
+              />
+              <NotificationsBell
+                open={openPanel === 'notifications'}
+                onOpenChange={(isOpen) => setOpenPanel(isOpen ? 'notifications' : null)}
+              />
+            </div>
           </div>
         </div>
       </header>
