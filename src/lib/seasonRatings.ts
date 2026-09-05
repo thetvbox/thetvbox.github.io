@@ -23,13 +23,13 @@ export async function fetchRecentSeasonRatingsAllUsers(
   limit = GROUP_ACTIVITY_FETCH_LIMIT,
 ): Promise<SeasonRatingWithUser[]> {
   return fetchPaginated<SeasonRatingWithUser>(async (from, to) => {
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('season_ratings')
-      .select('*, users(username)')
+      .select('*, users(username)', { count: 'exact' })
       .order('rated_at', { ascending: false })
       .order('id')
       .range(from, to)
-    return { data: data as unknown as SeasonRatingWithUser[] | null, error }
+    return { data: data as unknown as SeasonRatingWithUser[] | null, error, count }
   }, limit)
 }
 

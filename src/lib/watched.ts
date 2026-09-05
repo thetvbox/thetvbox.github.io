@@ -50,7 +50,7 @@ export async function fetchRecentWatched(
     (from, to) =>
       supabase
         .from('episode_watched')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('watched_at', { ascending: false })
         .order('id')
@@ -65,13 +65,13 @@ export async function fetchRecentWatchedAllUsers(
   limit = GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
 ): Promise<EpisodeWatchedWithUser[]> {
   return fetchPaginated<EpisodeWatchedWithUser>(async (from, to) => {
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('episode_watched')
-      .select('*, users(username)')
+      .select('*, users(username)', { count: 'exact' })
       .order('watched_at', { ascending: false })
       .order('id')
       .range(from, to)
-    return { data: data as unknown as EpisodeWatchedWithUser[] | null, error }
+    return { data: data as unknown as EpisodeWatchedWithUser[] | null, error, count }
   }, limit)
 }
 

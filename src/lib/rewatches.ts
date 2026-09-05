@@ -30,7 +30,7 @@ export async function fetchRecentRewatches(
     (from, to) =>
       supabase
         .from('show_rewatches')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('rewatched_at', { ascending: false })
         .order('id')

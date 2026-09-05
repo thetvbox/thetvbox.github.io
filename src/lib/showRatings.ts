@@ -35,7 +35,7 @@ export async function fetchRecentShowRatings(
     (from, to) =>
       supabase
         .from('show_ratings')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('rated_at', { ascending: false })
         .order('id')
@@ -49,13 +49,13 @@ export async function fetchRecentShowRatingsAllUsers(
   limit = GROUP_ACTIVITY_FETCH_LIMIT,
 ): Promise<ShowRatingWithUser[]> {
   return fetchPaginated<ShowRatingWithUser>(async (from, to) => {
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('show_ratings')
-      .select('*, users(username)')
+      .select('*, users(username)', { count: 'exact' })
       .order('rated_at', { ascending: false })
       .order('id')
       .range(from, to)
-    return { data: data as unknown as ShowRatingWithUser[] | null, error }
+    return { data: data as unknown as ShowRatingWithUser[] | null, error, count }
   }, limit)
 }
 

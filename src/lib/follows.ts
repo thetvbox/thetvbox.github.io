@@ -106,7 +106,12 @@ export async function fetchFollowingWithUsers(userId: string): Promise<AppUser[]
 export async function fetchAllFollows(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<Follow[]> {
   return fetchPaginated<Follow>(
     (from, to) =>
-      supabase.from('follows').select('*').order('created_at', { ascending: false }).order('id').range(from, to),
+      supabase
+        .from('follows')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, to),
     limit,
   )
 }
