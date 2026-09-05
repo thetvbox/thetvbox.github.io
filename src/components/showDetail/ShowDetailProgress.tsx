@@ -1,6 +1,8 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import DateMarkControl from '../DateMarkControl'
 import RewatchLogControl from '../RewatchLogControl'
 import { formatShortDate } from '../../lib/date'
+import { TRIGGER_SWAP_MOTION } from '../../lib/motion'
 import type { ShowRewatch } from '../../types'
 
 interface ShowDetailProgressProps {
@@ -38,45 +40,45 @@ export default function ShowDetailProgress({
           style={{ width: `${Math.min(100, (watchedCount / totalEpisodes) * 100)}%` }}
         />
       </div>
-      {!finished && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <DateMarkControl
-            label="Seen this before? Mark it all watched"
-            onConfirm={onMarkAllWatched}
-            confirmSummary={
-              watchedCount > 0
-                ? `This will overwrite the date on ${watchedCount} already-watched episode${watchedCount === 1 ? '' : 's'}.`
-                : undefined
-            }
-          />
-        </div>
-      )}
-
-      {finished && (
-        <div className="mt-2">
-          <RewatchLogControl count={rewatches.length} onConfirm={onLogRewatch} />
-          {rewatches.length > 0 && (
-            <ul className="mt-1.5 flex flex-wrap gap-1.5">
-              {rewatches.map((r) => (
-                <li
-                  key={r.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-hover-strong px-2 py-0.5 text-[11px] text-base-400"
-                >
-                  {formatShortDate(r.rewatched_at)}
-                  <button
-                    type="button"
-                    onClick={() => onDeleteRewatch(r.id)}
-                    className="text-base-500 hover:text-danger"
-                    aria-label="Remove this rewatch"
+      <AnimatePresence mode="wait" initial={false}>
+        {!finished ? (
+          <motion.div key="mark-all" className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5" {...TRIGGER_SWAP_MOTION}>
+            <DateMarkControl
+              label="Seen this before? Mark it all watched"
+              onConfirm={onMarkAllWatched}
+              confirmSummary={
+                watchedCount > 0
+                  ? `This will overwrite the date on ${watchedCount} already-watched episode${watchedCount === 1 ? '' : 's'}.`
+                  : undefined
+              }
+            />
+          </motion.div>
+        ) : (
+          <motion.div key="rewatch" className="mt-2" {...TRIGGER_SWAP_MOTION}>
+            <RewatchLogControl count={rewatches.length} onConfirm={onLogRewatch} />
+            {rewatches.length > 0 && (
+              <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                {rewatches.map((r) => (
+                  <li
+                    key={r.id}
+                    className="inline-flex items-center gap-1 rounded-full bg-hover-strong px-2 py-0.5 text-[11px] text-base-400"
                   >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+                    {formatShortDate(r.rewatched_at)}
+                    <button
+                      type="button"
+                      onClick={() => onDeleteRewatch(r.id)}
+                      className="text-base-500 hover:text-danger"
+                      aria-label="Remove this rewatch"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

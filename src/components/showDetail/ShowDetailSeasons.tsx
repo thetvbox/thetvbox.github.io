@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import SeasonTabs from '../SeasonTabs'
 import RatingSummary from '../RatingSummary'
 import DateMarkControl from '../DateMarkControl'
@@ -99,17 +100,20 @@ export default function ShowDetailSeasons({
             <span>
               {seasonWatchedCount}/{season.episodes.length} watched
             </span>
-            {seasonWatchedCount < season.episodes.length && (
-              <DateMarkControl
-                label="Mark season watched"
-                onConfirm={onMarkSeasonWatched}
-                confirmSummary={
-                  seasonWatchedCount > 0
-                    ? `This will overwrite the date on ${seasonWatchedCount} already-watched episode${seasonWatchedCount === 1 ? '' : 's'} in this season.`
-                    : undefined
-                }
-              />
-            )}
+            <AnimatePresence initial={false}>
+              {seasonWatchedCount < season.episodes.length && (
+                <DateMarkControl
+                  key="mark-season"
+                  label="Mark season watched"
+                  onConfirm={onMarkSeasonWatched}
+                  confirmSummary={
+                    seasonWatchedCount > 0
+                      ? `This will overwrite the date on ${seasonWatchedCount} already-watched episode${seasonWatchedCount === 1 ? '' : 's'} in this season.`
+                      : undefined
+                  }
+                />
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>

@@ -60,6 +60,14 @@ export default function DateMarkControl({
               saving={saving}
               savingLabel="Marking…"
               onConfirm={async () => {
+                // iOS Safari's native <input type="date"> wheel is still
+                // mid-dismiss when this fires (tapping Confirm doesn't blur
+                // the date input first) -- letting that settle before the
+                // parent's mark-watched state change collapses this form
+                // avoids two overlapping reflows landing on top of each
+                // other, which is what "screen offsetting" bug reports
+                // turned out to be.
+                ;(document.activeElement as HTMLElement | null)?.blur()
                 setSaving(true)
                 try {
                   await onConfirm({

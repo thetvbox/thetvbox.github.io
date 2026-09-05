@@ -56,6 +56,10 @@ export default function RewatchLogControl({
             saving={saving}
             savingLabel="Logging…"
             onConfirm={async () => {
+              // See DateMarkControl's identical blur -- lets iOS Safari's
+              // native date-picker finish dismissing before this form
+              // collapses, instead of both reflows landing at once.
+              ;(document.activeElement as HTMLElement | null)?.blur()
               setSaving(true)
               try {
                 await onConfirm(dateInputToNoonIso(date))
