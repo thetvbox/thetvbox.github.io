@@ -172,6 +172,11 @@ export interface EpisodeWatched {
   watched_at_unknown: boolean
   /** Snapshot of the episode's runtime (minutes) for the "hours watched" stat; null if unavailable. */
   runtime_minutes: number | null
+  /** Row-creation time (defaults to now() at insert) -- distinct from watched_at,
+   * which is the user-facing "when I watched this" date and may be a placeholder.
+   * Used only to order multiple undated ("watched a while ago") entries by the
+   * order they were actually added, never shown to the user. */
+  created_at: string
 }
 
 /** Keyed lookup: "season-episode" -> watched row, for one user's progress on one show. */

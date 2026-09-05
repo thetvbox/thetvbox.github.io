@@ -298,7 +298,11 @@ export function buildDiaryEntries(
 }
 
 /** Watched episodes with no real date ("watched a while ago") -- grouped by
- * show only, surfaced separately instead of vanishing from the diary. */
+ * show only, surfaced separately instead of vanishing from the diary. Ordered
+ * by created_at (the order the rows were actually added), most recent first,
+ * matching the rest of the diary's reverse-chronological convention --
+ * falling back to show name only for rows old enough to share the same
+ * created_at (e.g. legacy rows backfilled before that column existed). */
 export function buildUndatedDiaryEntries(watched: EpisodeWatched[]): DiaryEntry[] {
   const groups = new Map<number, EpisodeWatched[]>()
   for (const w of watched) {
@@ -315,12 +319,14 @@ export function buildUndatedDiaryEntries(watched: EpisodeWatched[]): DiaryEntry[
       showName: rows[0].show_name,
       showPosterPath: rows[0].show_poster_path,
       at: '',
+      addedAt: rows.reduce((max, r) => (r.created_at > max ? r.created_at : max), rows[0].created_at),
       episodeCount: rows.length,
       seasonLabel: rows.length > 1 ? seasonLabelFor(rows.map((r) => r.season_number)) : undefined,
       episodeLabel:
         rows.length === 1 ? `S${rows[0].season_number}E${rows[0].episode_number}` : undefined,
     }))
-    .sort((a, b) => a.showName.localeCompare(b.showName))
+    .sort((a, b) => b.addedAt.localeCompare(a.addedAt) || a.showName.localeCompare(b.showName))
+    .map(({ addedAt: _addedAt, ...entry }) => entry)
 }
 
 // --- Group activity feed (every member's ratings/finishes, merged) ---

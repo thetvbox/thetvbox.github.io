@@ -362,6 +362,14 @@ create policy "Anyone can delete rewatches"
 alter table public.episode_watched
   add column if not exists runtime_minutes integer;
 
+-- Row-creation time, distinct from watched_at (the user-facing "when I
+-- watched this" date, which may be a placeholder -- see watched_at_unknown
+-- above). Lets multiple undated ("watched a while ago") entries be ordered
+-- by the order they were actually added instead of arbitrarily -- see
+-- buildUndatedDiaryEntries in showActivity.ts. Never shown to the user.
+alter table public.episode_watched
+  add column if not exists created_at timestamptz not null default now();
+
 -- User-curated lists of shows (e.g. "Comfort shows"). "Shareable" is close
 -- to free here since every table in this app is already fully readable by
 -- anyone (no real per-user privacy) -- a list just needs a clean URL, not a

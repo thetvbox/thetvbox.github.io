@@ -318,6 +318,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       watched_at: new Date().toISOString(),
       watched_at_unknown: false,
       runtime_minutes: runtimeMinutes,
+      created_at: new Date().toISOString(),
     }
     setWatched((prev) => ({ ...prev, [key]: optimisticRow }))
 
