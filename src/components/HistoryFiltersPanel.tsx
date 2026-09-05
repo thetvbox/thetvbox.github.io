@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import InlinePanel from './InlinePanel'
 import { FILTER_DEBOUNCE_MS } from '../lib/constants'
 import {
   emptyHistoryFilters,
@@ -62,7 +63,7 @@ export default function HistoryFiltersPanel({
   }
 
   return (
-    <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-xl border border-hairline-strong bg-base-900 p-3.5">
+    <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-base-500">Filters</p>
         <div className="flex items-center gap-3">
@@ -166,7 +167,7 @@ export default function HistoryFiltersPanel({
       )}
 
       {loadingDetails && <p className="mt-3 text-[11px] text-base-600">Loading more filter options…</p>}
-    </div>
+    </InlinePanel>
   )
 }
 

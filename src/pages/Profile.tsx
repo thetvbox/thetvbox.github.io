@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
@@ -58,7 +59,9 @@ export default function Profile() {
         >
           TV Box v{appVersion} · What&apos;s new
         </button>
-        {changelogOpen && <ChangelogPanel onClose={() => setChangelogOpen(false)} />}
+        <AnimatePresence>
+          {changelogOpen && <ChangelogPanel key="changelog" onClose={() => setChangelogOpen(false)} />}
+        </AnimatePresence>
       </div>
     </div>
   )

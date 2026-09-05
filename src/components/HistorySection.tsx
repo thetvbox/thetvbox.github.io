@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { HistorySort, ShowActivity } from '../lib/showActivity'
 import { sortHistory } from '../lib/showActivity'
 import {
@@ -146,15 +146,18 @@ export default function HistorySection({
         </button>
       </div>
 
-      {filtersOpen && (
-        <HistoryFiltersPanel
-          facets={facets}
-          filters={filters}
-          onChange={setFilters}
-          loadingDetails={loadingDetails}
-          onClose={() => setFiltersOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {filtersOpen && (
+          <HistoryFiltersPanel
+            key="history-filters"
+            facets={facets}
+            filters={filters}
+            onChange={setFilters}
+            loadingDetails={loadingDetails}
+            onClose={() => setFiltersOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {filteredActivity.length === 0 ? (
         <EmptyState icon="🔍" className="mt-4">

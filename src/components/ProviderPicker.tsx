@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getAllTvProviders, providerLogoUrl } from '../lib/tmdb'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import InlinePanel from './InlinePanel'
 import type { TmdbProviderListItem } from '../types'
 
 /** Searchable panel for manually correcting "where to watch" -- backed by
@@ -48,7 +49,7 @@ export default function ProviderPicker({
   }, [allProviders, query])
 
   return (
-    <div className="mt-2 rounded-xl border border-hairline-strong bg-base-900 p-3">
+    <InlinePanel className="p-3">
       <div className="flex items-center justify-between gap-2">
         <input
           autoFocus
@@ -105,6 +106,6 @@ export default function ProviderPicker({
           </div>
         )}
       </div>
-    </div>
+    </InlinePanel>
   )
 }

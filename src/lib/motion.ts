@@ -34,6 +34,37 @@ export const DROPDOWN_PANEL_TRANSITION = {
   layout: { duration: 0.22, ease: EASE_OUT_EXPO },
 } as const
 
+/** Shared open/close motion for this app's inline panels (no true modals --
+ * see InlinePanel.tsx, used by ChangelogPanel, ProviderPicker,
+ * AddToListPicker, HistoryFiltersPanel, FollowListPanel). A softer fade+rise
+ * than DROPDOWN_PANEL_*'s scale -- these expand in the page's normal flow
+ * rather than popping out from a small corner trigger, so a scale read as
+ * springing from the wrong place. */
+export const INLINE_PANEL_INITIAL = { opacity: 0, y: -6 } as const
+export const INLINE_PANEL_ANIMATE = { opacity: 1, y: 0 } as const
+export const INLINE_PANEL_EXIT = {
+  opacity: 0,
+  y: -4,
+  transition: { duration: 0.12, ease: EASE_OUT_EXPO },
+} as const
+export const INLINE_PANEL_TRANSITION = {
+  opacity: { duration: 0.2, ease: EASE_OUT_EXPO },
+  y: { duration: 0.2, ease: EASE_OUT_EXPO },
+  layout: { duration: 0.22, ease: EASE_OUT_EXPO },
+} as const
+
+/** Crossfade for a text trigger swapping to its expanded form and back
+ * (DateMarkControl, RewatchLogControl) -- spread onto the motion.div wrapping
+ * each branch, keyed so AnimatePresence treats them as distinct: `<motion.div
+ * key="trigger" {...TRIGGER_SWAP_MOTION}>`. Replaces an instant DOM swap that
+ * read as an abrupt pop instead of one control opening. */
+export const TRIGGER_SWAP_MOTION = {
+  initial: { opacity: 0, y: -4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 4 },
+  transition: { duration: 0.15, ease: EASE_OUT_EXPO },
+} as const
+
 const STAGGER_STEP_SECONDS = 0.02
 const STAGGER_ROW_DURATION = 0.25
 

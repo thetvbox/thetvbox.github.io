@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { addShowToList, createList, deleteList, fetchListsForUser, removeShowFromList } from '../lib/lists'
 import Toast from './Toast'
+import InlinePanel from './InlinePanel'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { ShowListWithCount } from '../types'
@@ -128,7 +129,7 @@ export default function AddToListPicker({
 
   return (
     <>
-      <div className="mt-2 rounded-xl border border-hairline-strong bg-base-900 p-3">
+      <InlinePanel className="p-3">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold text-base-300">Add to a list</p>
           <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
@@ -198,7 +199,7 @@ export default function AddToListPicker({
             + New list
           </button>
         )}
-      </div>
+      </InlinePanel>
       <Toast toast={toast} onDismiss={dismiss} />
     </>
   )

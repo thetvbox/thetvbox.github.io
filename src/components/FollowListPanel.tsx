@@ -8,6 +8,7 @@ import { SKELETON_ROWS_COMPACT } from '../lib/constants'
 import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
+import InlinePanel from './InlinePanel'
 import type { AppUser } from '../types'
 
 interface FollowListPanelProps {
@@ -96,7 +97,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
   }
 
   return (
-    <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-xl border border-hairline-strong bg-base-900 p-3.5">
+    <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-base-500">
           {mode === 'followers' ? 'Followers' : 'Following'}
@@ -144,6 +145,6 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
       )}
 
       <Toast toast={toast} onDismiss={dismiss} />
-    </div>
+    </InlinePanel>
   )
 }

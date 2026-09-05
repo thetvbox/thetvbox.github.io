@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchFollowCounts, isFollowingUser } from '../lib/follows'
 import { useFollowActions } from '../hooks/useFollowActions'
@@ -91,14 +92,17 @@ export default function ProfileFollowSection({ profileId, username, isMe }: Prof
           <FollowButton isFollowing={isFollowing} saving={saving} onFollow={handleFollow} onUnfollow={handleUnfollow} />
         )}
       </div>
-      {panel && (
-        <FollowListPanel
-          userId={profileId}
-          mode={panel}
-          onClose={() => setPanel(null)}
-          onMyFollowingCountChange={isMe ? handlePanelFollowingCountChange : undefined}
-        />
-      )}
+      <AnimatePresence>
+        {panel && (
+          <FollowListPanel
+            key="follow-list"
+            userId={profileId}
+            mode={panel}
+            onClose={() => setPanel(null)}
+            onMyFollowingCountChange={isMe ? handlePanelFollowingCountChange : undefined}
+          />
+        )}
+      </AnimatePresence>
       <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )

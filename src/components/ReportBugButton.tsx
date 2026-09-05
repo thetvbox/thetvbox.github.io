@@ -15,9 +15,12 @@ import {
   DROPDOWN_PANEL_TRANSITION,
 } from '../lib/motion'
 
-/** Top-bar trigger for a dropdown-style panel, `absolute right-0` with a
- * fixed `w-72` width so it stays on-screen regardless of where this icon
- * sits in the header -- NotificationsBell uses the same pattern. */
+/** Top-bar trigger for a dropdown-style panel. The panel is `absolute
+ * right-0`, but positioned relative to Navbar's shared utility-cluster
+ * container (not this component's own root) -- this icon sits in the middle
+ * of that cluster, so anchoring to its own 44px box would let the panel
+ * overlap ThemeToggle/NotificationsBell instead of just opening below the
+ * whole row. See Navbar.tsx's `utilityRef` div. */
 interface ReportBugButtonProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -31,27 +34,27 @@ export default function ReportBugButton({ open, onOpenChange }: ReportBugButtonP
   useCloseOnNavigate(() => onOpenChange(false))
 
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-label="Report a bug"
         aria-expanded={open}
         title="Report a bug"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
       >
         <BugGlyph />
       </button>
       <AnimatePresence>{open && <ReportBugPanel onClose={() => onOpenChange(false)} />}</AnimatePresence>
-    </div>
+    </>
   )
 }
 
 function BugGlyph() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="22"
+      height="22"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

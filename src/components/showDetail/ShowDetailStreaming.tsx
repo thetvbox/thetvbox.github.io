@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion'
 import ProviderPicker from '../ProviderPicker'
 import { providerLogoUrl } from '../../lib/tmdb'
 import type { StreamingOverride, TmdbProviderListItem, TmdbWatchProviderRegion } from '../../types'
@@ -83,7 +84,11 @@ export default function ShowDetailStreaming({
         )}
       </div>
 
-      {pickerOpen && <ProviderPicker region={region} onPick={onPickProvider} onClose={onClosePicker} />}
+      <AnimatePresence>
+        {pickerOpen && (
+          <ProviderPicker key="provider-picker" region={region} onPick={onPickProvider} onClose={onClosePicker} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

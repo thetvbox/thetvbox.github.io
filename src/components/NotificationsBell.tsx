@@ -26,8 +26,9 @@ interface NotificationsBellProps {
 }
 
 /** Bell icon in the top bar -- unread dot for new followers, opens an inline
- * dropdown of recent "X followed you" events (fixed-width panel, same
- * reasoning as ReportBugButton.tsx). Controlled by Navbar so opening this
+ * dropdown of recent "X followed you" events. The panel anchors to Navbar's
+ * shared utility-cluster container, not this component's own root -- same
+ * reasoning as ReportBugButton.tsx. Controlled by Navbar so opening this
  * closes ReportBugButton's panel and vice versa. */
 export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
   const { user: me } = useAuth()
@@ -68,18 +69,18 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
   if (!me) return null
 
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-label={unread > 0 ? `Notifications, ${unread} new` : 'Notifications'}
         aria-expanded={open}
         title="Notifications"
-        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+        className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
       >
         <BellGlyph />
         {unread > 0 && (
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-400 ring-2 ring-base-950" />
+          <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-accent-400 ring-2 ring-base-950" />
         )}
       </button>
       <AnimatePresence>
@@ -87,15 +88,15 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
           <NotificationsPanel userId={me.id} onSeen={() => setUnread(0)} onClose={() => onOpenChange(false)} />
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }
 
 function BellGlyph() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="22"
+      height="22"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

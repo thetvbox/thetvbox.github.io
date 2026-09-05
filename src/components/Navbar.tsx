@@ -103,7 +103,7 @@ function UserIcon({ active }: { active: boolean }) {
 
 function SunIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <circle cx="12" cy="12" r="4.5" />
       <path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8" />
     </svg>
@@ -112,7 +112,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" stroke="none">
       <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a.6.6 0 0 0-.76-.76A9.7 9.7 0 1 0 21.26 15.26a.6.6 0 0 0-.76-.76Z" />
     </svg>
   )
@@ -128,7 +128,7 @@ function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition-colors duration-200 hover:bg-hover hover:text-base-100"
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -225,7 +225,14 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            <div ref={utilityRef} className="flex items-center gap-1">
+            {/* `relative` lives here, not on each individual button -- a
+                dropdown panel anchored to its own 44px trigger only avoids
+                overflowing the viewport when that trigger happens to be the
+                rightmost icon. ReportBugButton sits in the middle of this
+                row, so anchoring its panel to the shared cluster instead
+                guarantees it always opens flush with the true right edge,
+                never overlapping ThemeToggle or NotificationsBell. */}
+            <div ref={utilityRef} className="relative flex items-center gap-1.5">
               <ThemeToggle />
               <ReportBugButton
                 open={openPanel === 'bug'}

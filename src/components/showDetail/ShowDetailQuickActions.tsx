@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion'
 import AddToListPicker from '../AddToListPicker'
 import { ListGlyph, PlayGlyph, BookmarkGlyph } from '../ShowDetailGlyphs'
 import type { AppUser, ShowWatchingDismissed, TmdbShowDetail, WatchlistItem } from '../../types'
@@ -81,9 +82,10 @@ export default function ShowDetailQuickActions({
         </button>
       </div>
 
-      {listPickerOpen && user && (
-        <div className="max-w-md">
+      <AnimatePresence>
+        {listPickerOpen && user && (
           <AddToListPicker
+            key="list-picker"
             userId={user.id}
             showId={show.id}
             showName={show.name}
@@ -92,8 +94,8 @@ export default function ShowDetailQuickActions({
             onChange={onListMembershipChange}
             onClose={onCloseListPicker}
           />
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   )
 }

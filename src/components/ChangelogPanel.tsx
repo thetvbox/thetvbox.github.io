@@ -2,6 +2,7 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { changelogReleases } from '../lib/changelog'
 import type { ChangelogBlock } from '../lib/changelog'
 import { formatShortDate } from '../lib/date'
+import InlinePanel from './InlinePanel'
 
 /** Inline "What's new" panel -- same conditionally-mounted-panel shape as
  * ProviderPicker/AddToListPicker (this app has no true modals, see
@@ -10,7 +11,7 @@ export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
   useEscapeAndFocusReturn(true, onClose)
 
   return (
-    <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-xl border border-hairline-strong bg-base-900 p-4">
+    <InlinePanel className="max-h-[70vh] overflow-y-auto p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-base-500">What&apos;s new</p>
         <button
@@ -43,7 +44,7 @@ export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       )}
-    </div>
+    </InlinePanel>
   )
 }
 

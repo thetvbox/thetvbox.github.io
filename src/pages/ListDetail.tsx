@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchUserByUsername } from '../lib/users'
 import { addShowToList, deleteList, fetchList, fetchListItems, removeShowFromList } from '../lib/lists'
@@ -10,7 +10,7 @@ import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
-import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
+import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
@@ -141,36 +141,41 @@ export default function ListDetail() {
                   {items.length} show{items.length === 1 ? '' : 's'}
                 </p>
               </div>
-              {isMine &&
-                (confirmingDelete ? (
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <span className="text-xs text-base-500">Delete this list?</span>
-                    <button
+              {isMine && (
+                <AnimatePresence mode="wait" initial={false}>
+                  {confirmingDelete ? (
+                    <motion.div key="confirm" className="flex shrink-0 items-center gap-1.5" {...TRIGGER_SWAP_MOTION}>
+                      <span className="text-xs text-base-500">Delete this list?</span>
+                      <button
+                        type="button"
+                        disabled={deleting}
+                        onClick={handleDeleteList}
+                        className="rounded-lg bg-danger/15 px-2.5 py-1.5 text-xs font-medium text-danger ring-1 ring-danger/40 transition-opacity duration-150 disabled:opacity-60"
+                      >
+                        {deleting ? 'Deleting…' : 'Confirm'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deleting}
+                        onClick={() => setConfirmingDelete(false)}
+                        className="text-xs text-base-500 hover:text-base-300"
+                      >
+                        Cancel
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      key="trigger"
                       type="button"
-                      disabled={deleting}
-                      onClick={handleDeleteList}
-                      className="rounded-lg bg-danger/15 px-2.5 py-1.5 text-xs font-medium text-danger ring-1 ring-danger/40 transition-opacity duration-150 disabled:opacity-60"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="shrink-0 rounded-lg border border-hairline-strong px-3 py-1.5 text-xs text-base-400 transition-colors duration-200 hover:border-danger/40 hover:text-danger"
+                      {...TRIGGER_SWAP_MOTION}
                     >
-                      {deleting ? 'Deleting…' : 'Confirm'}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={deleting}
-                      onClick={() => setConfirmingDelete(false)}
-                      className="text-xs text-base-500 hover:text-base-300"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingDelete(true)}
-                    className="shrink-0 rounded-lg border border-hairline-strong px-3 py-1.5 text-xs text-base-400 transition-colors duration-200 hover:border-danger/40 hover:text-danger"
-                  >
-                    Delete list
-                  </button>
-                ))}
+                      Delete list
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              )}
             </div>
 
             {items.length === 0 ? (
