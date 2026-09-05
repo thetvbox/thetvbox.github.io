@@ -14,11 +14,10 @@ export function scrollBehavior(): ScrollBehavior {
  * and hero transition instead of being repeated as a raw array. */
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const
 
-/** Shared open/close motion for the inline top-bar dropdown panels
- * (NotificationsBell, ReportBugButton). `layout` is included so a panel
- * whose content changes height after mounting -- a loading skeleton
- * resolving to real content, a form swapping to a success message -- resizes
- * smoothly instead of snapping to the new height. */
+/** Shared open/close motion for the inline top-bar dropdown panel
+ * (NotificationsBell). `layout` is included so a panel whose content changes
+ * height after mounting -- a loading skeleton resolving to real content --
+ * resizes smoothly instead of snapping to the new height. */
 export const DROPDOWN_PANEL_INITIAL = { opacity: 0, scale: 0.95, y: -8 } as const
 export const DROPDOWN_PANEL_ANIMATE = { opacity: 1, scale: 1, y: 0 } as const
 export const DROPDOWN_PANEL_EXIT = {
@@ -33,6 +32,26 @@ export const DROPDOWN_PANEL_TRANSITION = {
   y: { duration: 0.18, ease: EASE_OUT_EXPO },
   layout: { duration: 0.22, ease: EASE_OUT_EXPO },
 } as const
+
+/** Backdrop + panel motion for this app's one true centered modal
+ * (ReportBugButton) -- unlike the dropdown/inline panel presets above, which
+ * pop out from a specific trigger corner, a centered dialog has no
+ * meaningful "origin," so it just fades the backdrop in behind a panel that
+ * scales and rises slightly into place. */
+export const MODAL_BACKDROP_INITIAL = { opacity: 0 } as const
+export const MODAL_BACKDROP_ANIMATE = { opacity: 1 } as const
+export const MODAL_BACKDROP_EXIT = { opacity: 0, transition: { duration: 0.15, ease: EASE_OUT_EXPO } } as const
+export const MODAL_BACKDROP_TRANSITION = { duration: 0.2, ease: EASE_OUT_EXPO } as const
+
+export const MODAL_PANEL_INITIAL = { opacity: 0, scale: 0.95, y: 12 } as const
+export const MODAL_PANEL_ANIMATE = { opacity: 1, scale: 1, y: 0 } as const
+export const MODAL_PANEL_EXIT = {
+  opacity: 0,
+  scale: 0.96,
+  y: 8,
+  transition: { duration: 0.15, ease: EASE_OUT_EXPO },
+} as const
+export const MODAL_PANEL_TRANSITION = { duration: 0.22, ease: EASE_OUT_EXPO } as const
 
 /** Shared open/close motion for this app's inline panels (no true modals --
  * see InlinePanel.tsx, used by ChangelogPanel, ProviderPicker,

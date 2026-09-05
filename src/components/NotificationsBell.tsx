@@ -263,42 +263,49 @@ function NotificationsPanel({
 
       {error && <p className="mb-2 text-xs text-danger">{error}</p>}
 
-      {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse rounded-lg bg-base-850/70" />
-          ))}
-        </div>
-      ) : notifications.length === 0 ? (
-        <p className="py-3 text-center text-xs text-base-500">
-          Nothing yet -- follow some people to see their activity here.
-        </p>
-      ) : (
-        <ul className="max-h-96 space-y-1 overflow-y-auto">
-          {notifications.map((n) => (
-            <li key={n.id}>
-              <Link
-                to={notificationHref(n)}
-                onClick={onClose}
-                className={`flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover ${
-                  n.seen_at ? '' : 'bg-accent-500/5'
-                }`}
-              >
-                <span className="relative shrink-0">
-                  <Avatar username={n.actor_username} size="xs" />
-                  <TypeBadge type={n.type} />
-                </span>
-                {n.type !== 'follow' && <PosterThumb posterPath={n.show_poster_path} size="sm" />}
-                <NotificationText n={n} />
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  {!n.seen_at && <span className="h-1.5 w-1.5 rounded-full bg-accent-400" aria-hidden="true" />}
-                  <span className="text-[10px] text-base-500">{formatShortDate(n.created_at)}</span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Fixed height regardless of loading/empty/loaded state -- content
+          swaps inside it instead of the panel itself growing or shrinking
+          right after opening, once the fetch above resolves. */}
+      <div className="h-64 overflow-y-auto">
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
+              <div key={i} className="h-10 animate-pulse rounded-lg bg-base-850/70" />
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-center text-xs text-base-500">
+              Nothing yet -- follow some people to see their activity here.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-1">
+            {notifications.map((n) => (
+              <li key={n.id}>
+                <Link
+                  to={notificationHref(n)}
+                  onClick={onClose}
+                  className={`flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover ${
+                    n.seen_at ? '' : 'bg-accent-500/5'
+                  }`}
+                >
+                  <span className="relative shrink-0">
+                    <Avatar username={n.actor_username} size="xs" />
+                    <TypeBadge type={n.type} />
+                  </span>
+                  {n.type !== 'follow' && <PosterThumb posterPath={n.show_poster_path} size="sm" />}
+                  <NotificationText n={n} />
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {!n.seen_at && <span className="h-1.5 w-1.5 rounded-full bg-accent-400" aria-hidden="true" />}
+                    <span className="text-[10px] text-base-500">{formatShortDate(n.created_at)}</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </motion.div>
   )
 }

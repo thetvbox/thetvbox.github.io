@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
@@ -9,18 +9,20 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import {
-  DROPDOWN_PANEL_ANIMATE,
-  DROPDOWN_PANEL_EXIT,
-  DROPDOWN_PANEL_INITIAL,
-  DROPDOWN_PANEL_TRANSITION,
+  MODAL_BACKDROP_ANIMATE,
+  MODAL_BACKDROP_EXIT,
+  MODAL_BACKDROP_INITIAL,
+  MODAL_BACKDROP_TRANSITION,
+  MODAL_PANEL_ANIMATE,
+  MODAL_PANEL_EXIT,
+  MODAL_PANEL_INITIAL,
+  MODAL_PANEL_TRANSITION,
 } from '../lib/motion'
 
-/** Top-bar trigger for a dropdown-style panel. The panel is `absolute
- * right-0`, but positioned relative to Navbar's shared utility-cluster
- * container (not this component's own root) -- this icon sits in the middle
- * of that cluster, so anchoring to its own 44px box would let the panel
- * overlap ThemeToggle/NotificationsBell instead of just opening below the
- * whole row. See Navbar.tsx's `utilityRef` div. */
+/** Top-bar trigger for a centered modal (this app's only one -- everything
+ * else toggled from the top bar is an inline dropdown anchored under its
+ * trigger, but a short bug-report form reads better as a proper dialog than
+ * a cramped corner popup). */
 interface ReportBugButtonProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -86,6 +88,17 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
 
   useEscapeAndFocusReturn(true, onClose)
 
+  // A background page scrolling behind a centered modal reads as broken --
+  // none of this app's other top-bar panels need this, since they're inline
+  // dropdowns that don't cover the page.
+  useEffect(() => {
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = original
+    }
+  }, [])
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     // The submit button is disabled while saving, but a native form still
@@ -114,71 +127,105 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <motion.div
-      layout
-      initial={DROPDOWN_PANEL_INITIAL}
-      animate={DROPDOWN_PANEL_ANIMATE}
-      exit={DROPDOWN_PANEL_EXIT}
-      transition={DROPDOWN_PANEL_TRANSITION}
-      className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
-    >
-      {status === 'success' && result ? (
-        <div>
-          <p className="text-sm text-base-200">Thanks — filed as issue #{result.number}.</p>
-          <div className="mt-3 flex items-center gap-3">
-            <a
-              href={result.url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-accent-400 hover:underline"
-            >
-              View on GitHub &rarr;
-            </a>
-            <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-              Close
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={MODAL_BACKDROP_INITIAL}
+        animate={MODAL_BACKDROP_ANIMATE}
+        exit={MODAL_BACKDROP_EXIT}
+        transition={MODAL_BACKDROP_TRANSITION}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Report a bug"
+        initial={MODAL_PANEL_INITIAL}
+        animate={MODAL_PANEL_ANIMATE}
+        exit={MODAL_PANEL_EXIT}
+        transition={MODAL_PANEL_TRANSITION}
+        className="relative z-10 w-full max-w-md rounded-2xl border border-hairline-strong bg-base-900 p-6 shadow-2xl shadow-black/40"
+      >
+        {status === 'success' && result ? (
+          <div>
+            <p className="font-display text-lg font-semibold text-base-100">Thanks for the report</p>
+            <p className="mt-1.5 text-sm text-base-400">Filed as issue #{result.number}.</p>
+            <div className="mt-5 flex items-center gap-4">
+              <a
+                href={result.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-accent-400 hover:underline"
+              >
+                View on GitHub &rarr;
+              </a>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-base-500">Report a bug</p>
-            <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-              Cancel
-            </button>
-          </div>
-          <input
-            ref={titleInputRef}
-            type="text"
-            aria-label="Bug title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What went wrong, in a few words"
-            maxLength={200}
-            className="rounded-lg border border-hairline-strong bg-base-950 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
-          />
-          <textarea
-            aria-label="Bug description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What happened, and what did you expect instead?"
-            rows={4}
-            maxLength={4000}
-            className="resize-none rounded-lg border border-hairline-strong bg-base-950 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
-          />
-          <p className="text-[11px] text-base-600">
-            Sent with the page you&apos;re on, your username, and the app version — no screenshot needed.
-          </p>
-          {error && <p className="text-xs text-danger">{error}</p>}
-          <button
-            type="submit"
-            disabled={status === 'saving' || !title.trim() || !description.trim()}
-            className="self-start rounded-lg bg-accent-500/15 px-3 py-1.5 text-xs font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-50"
-          >
-            {status === 'saving' ? 'Sending…' : 'Send report'}
-          </button>
-        </form>
-      )}
-    </motion.div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-display text-lg font-semibold text-base-100">Report a bug</p>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base-500 transition-colors duration-200 hover:bg-hover hover:text-base-200"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+            <input
+              ref={titleInputRef}
+              type="text"
+              aria-label="Bug title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What went wrong, in a few words"
+              maxLength={200}
+              className="rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
+            />
+            <textarea
+              aria-label="Bug description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What happened, and what did you expect instead?"
+              rows={5}
+              maxLength={4000}
+              className="resize-none rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
+            />
+            <p className="text-xs text-base-600">
+              Sent with the page you&apos;re on, your username, and the app version — no screenshot needed.
+            </p>
+            {error && <p className="text-xs text-danger">{error}</p>}
+            <div className="mt-1 flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={status === 'saving' || !title.trim() || !description.trim()}
+                className="rounded-lg bg-accent-500/15 px-4 py-2 text-sm font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-50"
+              >
+                {status === 'saving' ? 'Sending…' : 'Send report'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-sm text-base-500 hover:text-base-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </motion.div>
+    </div>
   )
 }

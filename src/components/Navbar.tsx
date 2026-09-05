@@ -225,13 +225,12 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            {/* `relative` lives here, not on each individual button -- a
-                dropdown panel anchored to its own 44px trigger only avoids
-                overflowing the viewport when that trigger happens to be the
-                rightmost icon. ReportBugButton sits in the middle of this
-                row, so anchoring its panel to the shared cluster instead
-                guarantees it always opens flush with the true right edge,
-                never overlapping ThemeToggle or NotificationsBell. */}
+            {/* `relative` lives here, not on NotificationsBell's own 44px
+                trigger -- it sits left of the rightmost icon, so anchoring
+                its dropdown to the shared cluster instead guarantees it
+                still opens flush with the true right edge. ReportBugButton
+                is a centered modal (see its own component), so it doesn't
+                need this anchor at all. */}
             <div ref={utilityRef} className="relative flex items-center gap-1.5">
               <ThemeToggle />
               <ReportBugButton
