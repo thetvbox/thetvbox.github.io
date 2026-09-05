@@ -1,4 +1,4 @@
-/** Small inline icons for ShowDetail's Quick Actions row (list, play/pause, bookmark). */
+/** Small inline icons for ShowDetail's Quick Actions row (list, play/pause, bookmark, drop). */
 
 export function ListGlyph() {
   return (
@@ -41,6 +41,29 @@ export function BookmarkGlyph({ filled }: { filled: boolean }) {
         fill={filled ? 'var(--color-accent-400)' : 'none'}
         stroke={filled ? 'var(--color-accent-400)' : 'currentColor'}
         strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** filled = currently dropped (renders an "x", offering to resume); unfilled
+ * = not dropped (renders a down-arrow into a tray, offering to drop it). */
+export function DropGlyph({ filled }: { filled: boolean }) {
+  if (filled) {
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
+      <path
+        d="M12 4v11m0 0l-4-4m4 4l4-4M4 18h16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

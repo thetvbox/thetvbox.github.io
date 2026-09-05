@@ -4,6 +4,7 @@ import type {
   EpisodeWatchedWithUser,
   Follow,
   SeasonRatingWithUser,
+  ShowDropped,
   ShowRating,
   ShowRatingWithUser,
   ShowRewatch,
@@ -38,6 +39,12 @@ export interface ShowActivity {
    * Doesn't affect watchedCount/finished/etc -- purely a Home display
    * suppression, see nowWatching() below. */
   dismissed: boolean
+  /** True if explicitly dropped (show_dropped) -- like dismissed, suppresses
+   * Now Watching, but also surfaces in Profile's own Dropped tab. Cleared
+   * automatically the moment new progress is logged; see clearDropped in
+   * useShowDetail.ts. */
+  dropped: boolean
+  droppedAt: string | null
 }
 
 /** A fresh, all-empty ShowActivity row -- shared starting point for both
@@ -61,17 +68,21 @@ function emptyShowActivity(showId: number, showName: string, showPosterPath: str
     started: false,
     startedAt: null,
     dismissed: false,
+    dropped: false,
+    droppedAt: null,
   }
 }
 
 /** Merges show_ratings + episode_watched (+ optional show_started,
- * show_watching_dismissed) rows for one user into one summary per show.
- * `started`/`dismissed` default to empty -- only Home's Now Watching needs them. */
+ * show_watching_dismissed, show_dropped) rows for one user into one summary
+ * per show. `started`/`dismissed`/`dropped` default to empty -- only Home's
+ * Now Watching needs them. */
 export function summarizeShowActivity(
   ratings: ShowRating[],
   watched: EpisodeWatched[],
   started: ShowStarted[] = [],
   dismissed: ShowWatchingDismissed[] = [],
+  dropped: ShowDropped[] = [],
 ): ShowActivity[] {
   const map = new Map<number, ShowActivity>()
 
@@ -132,6 +143,16 @@ export function summarizeShowActivity(
     if (entry) entry.dismissed = true
   }
 
+  // Same reasoning as dismissed above, plus the dropped_at needed to render
+  // Profile's Dropped tab.
+  for (const d of dropped) {
+    const entry = map.get(d.show_id)
+    if (entry) {
+      entry.dropped = true
+      entry.droppedAt = d.dropped_at
+    }
+  }
+
   return Array.from(map.values())
 }
 
@@ -175,10 +196,11 @@ export function summarizeFromWatchSummary(ratings: ShowRating[], summaries: Show
 }
 
 /** In-progress shows -- watched something, or explicitly started (0/x),
- * not finished, not dismissed -- most recently watched (or started) first. */
+ * not finished, not dismissed, not dropped -- most recently watched (or
+ * started) first. */
 export function nowWatching(summaries: ShowActivity[]): ShowActivity[] {
   return summaries
-    .filter((s) => (s.watchedCount > 0 || s.started) && !s.finished && !s.dismissed)
+    .filter((s) => (s.watchedCount > 0 || s.started) && !s.finished && !s.dismissed && !s.dropped)
     .sort((a, b) => (b.lastWatchedAt ?? b.startedAt ?? '').localeCompare(a.lastWatchedAt ?? a.startedAt ?? ''))
 }
 

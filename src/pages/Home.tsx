@@ -6,6 +6,7 @@ import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentWatched } from '../lib/watched'
 import { fetchStartedForUser } from '../lib/showStarted'
 import { fetchDismissedForUser } from '../lib/showDismissed'
+import { fetchDroppedForUser } from '../lib/showDropped'
 import { fetchWatchlist } from '../lib/watchlist'
 import { fetchListsForUser } from '../lib/lists'
 import { summarizeShowActivity, nowWatching } from '../lib/showActivity'
@@ -29,6 +30,7 @@ import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import type {
   EpisodeWatched,
+  ShowDropped,
   ShowListWithCount,
   ShowRating,
   ShowStarted,
@@ -50,6 +52,7 @@ export default function Home() {
   const [watched, setWatched] = useState<EpisodeWatched[]>([])
   const [started, setStarted] = useState<ShowStarted[]>([])
   const [dismissed, setDismissed] = useState<ShowWatchingDismissed[]>([])
+  const [dropped, setDropped] = useState<ShowDropped[]>([])
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
   const [lists, setLists] = useState<ShowListWithCount[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,15 +68,17 @@ export default function Home() {
       fetchRecentWatched(user.id, ACTIVITY_FETCH_LIMIT),
       fetchStartedForUser(user.id),
       fetchDismissedForUser(user.id),
+      fetchDroppedForUser(user.id),
       fetchWatchlist(user.id),
       fetchListsForUser(user.id),
     ])
-      .then(([ratingRows, watchedRows, startedRows, dismissedRows, watchlistRows, listRows]) => {
+      .then(([ratingRows, watchedRows, startedRows, dismissedRows, droppedRows, watchlistRows, listRows]) => {
         if (!cancelled) {
           setRatings(ratingRows)
           setWatched(watchedRows)
           setStarted(startedRows)
           setDismissed(dismissedRows)
+          setDropped(droppedRows)
           setWatchlist(watchlistRows)
           setLists(listRows)
         }
@@ -90,8 +95,8 @@ export default function Home() {
   }, [user])
 
   const activity = useMemo(
-    () => summarizeShowActivity(ratings, watched, started, dismissed),
-    [ratings, watched, started, dismissed],
+    () => summarizeShowActivity(ratings, watched, started, dismissed, dropped),
+    [ratings, watched, started, dismissed, dropped],
   )
   const watching = useMemo(() => nowWatching(activity), [activity])
 

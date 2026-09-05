@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import AddToListPicker from '../AddToListPicker'
-import { ListGlyph, PlayGlyph, BookmarkGlyph } from '../ShowDetailGlyphs'
-import type { AppUser, ShowWatchingDismissed, TmdbShowDetail, WatchlistItem } from '../../types'
+import { ListGlyph, PlayGlyph, BookmarkGlyph, DropGlyph } from '../ShowDetailGlyphs'
+import type { AppUser, ShowDropped, ShowWatchingDismissed, TmdbShowDetail, WatchlistItem } from '../../types'
 
 interface ShowDetailQuickActionsProps {
   show: TmdbShowDetail
@@ -11,6 +11,10 @@ interface ShowDetailQuickActionsProps {
   dismissedItem: ShowWatchingDismissed | null
   savingNowWatching: boolean
   onToggleNowWatching: () => void
+  canDropShow: boolean
+  droppedItem: ShowDropped | null
+  savingDropped: boolean
+  onToggleDropped: () => void
   watchlistItem: WatchlistItem | null
   savingWatchlist: boolean
   onToggleWatchlist: () => void
@@ -35,6 +39,10 @@ export default function ShowDetailQuickActions({
   dismissedItem,
   savingNowWatching,
   onToggleNowWatching,
+  canDropShow,
+  droppedItem,
+  savingDropped,
+  onToggleDropped,
   watchlistItem,
   savingWatchlist,
   onToggleWatchlist,
@@ -57,6 +65,19 @@ export default function ShowDetailQuickActions({
           >
             <PlayGlyph filled={inNowWatching} />
             {inNowWatching ? 'Remove from Now Watching' : dismissedItem ? 'Add to Now Watching' : 'Start watching'}
+          </button>
+        )}
+
+        {canDropShow && (
+          <button
+            type="button"
+            onClick={onToggleDropped}
+            disabled={savingDropped}
+            aria-pressed={Boolean(droppedItem)}
+            className={`${pillBase} disabled:opacity-60 ${droppedItem ? pillActive : pillInactive}`}
+          >
+            <DropGlyph filled={Boolean(droppedItem)} />
+            {droppedItem ? 'Resume watching' : 'Drop this show'}
           </button>
         )}
 

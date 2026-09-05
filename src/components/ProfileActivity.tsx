@@ -12,6 +12,7 @@ import {
   watchHistory,
 } from '../lib/showActivity'
 import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watchlist'
+import { dropShow, fetchDroppedForUser, undropShow } from '../lib/showDropped'
 import { createList, fetchListsForUser } from '../lib/lists'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
@@ -23,11 +24,13 @@ import StatCard from './StatCard'
 import DiaryTab from './profileActivity/DiaryTab'
 import type { DiaryDayGroup } from './profileActivity/DiaryTab'
 import WatchlistTab from './profileActivity/WatchlistTab'
+import DroppedTab from './profileActivity/DroppedTab'
 import ListsTab from './profileActivity/ListsTab'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type {
   EpisodeWatched,
+  ShowDropped,
   ShowListWithCount,
   ShowRating,
   ShowRewatch,
@@ -41,8 +44,8 @@ interface ProfileActivityProps {
   username: string
 }
 
-type Tab = 'diary' | 'history' | 'watchlist' | 'lists'
-const TABS: Tab[] = ['diary', 'history', 'watchlist', 'lists']
+type Tab = 'diary' | 'history' | 'watchlist' | 'dropped' | 'lists'
+const TABS: Tab[] = ['diary', 'history', 'watchlist', 'dropped', 'lists']
 
 export default function ProfileActivity({ userId, username }: ProfileActivityProps) {
   const { user: me } = useAuth()
@@ -79,6 +82,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
   const [undatedSummaries, setUndatedSummaries] = useState<UndatedShowWatchSummary[]>([])
   const [rewatches, setRewatches] = useState<ShowRewatch[]>([])
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
+  const [dropped, setDropped] = useState<ShowDropped[]>([])
   const [lists, setLists] = useState<ShowListWithCount[]>([])
   const [creatingList, setCreatingList] = useState(false)
   const [newListName, setNewListName] = useState('')
@@ -100,19 +104,32 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
       fetchUndatedShowWatchSummary(userId),
       fetchRecentRewatches(userId, ACTIVITY_FETCH_LIMIT),
       fetchWatchlist(userId),
+      fetchDroppedForUser(userId),
       fetchListsForUser(userId),
     ])
-      .then(([ratingRows, datedWatchedRows, showSummaryRows, undatedSummaryRows, rewatchRows, watchlistRows, listRows]) => {
-        if (!cancelled) {
-          setRatings(ratingRows)
-          setDatedWatched(datedWatchedRows)
-          setShowSummaries(showSummaryRows)
-          setUndatedSummaries(undatedSummaryRows)
-          setRewatches(rewatchRows)
-          setWatchlist(watchlistRows)
-          setLists(listRows)
-        }
-      })
+      .then(
+        ([
+          ratingRows,
+          datedWatchedRows,
+          showSummaryRows,
+          undatedSummaryRows,
+          rewatchRows,
+          watchlistRows,
+          droppedRows,
+          listRows,
+        ]) => {
+          if (!cancelled) {
+            setRatings(ratingRows)
+            setDatedWatched(datedWatchedRows)
+            setShowSummaries(showSummaryRows)
+            setUndatedSummaries(undatedSummaryRows)
+            setRewatches(rewatchRows)
+            setWatchlist(watchlistRows)
+            setDropped(droppedRows)
+            setLists(listRows)
+          }
+        },
+      )
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load activity.')
       })
@@ -144,6 +161,30 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         setWatchlist((prev) => [saved, ...prev])
       } catch {
         showError('Failed to undo. Try adding it back manually.')
+      }
+    })
+  }
+
+  async function handleResumeFromDropped(item: ShowDropped) {
+    setDropped((prev) => prev.filter((d) => d.show_id !== item.show_id))
+    try {
+      await undropShow(userId, item.show_id)
+    } catch {
+      setDropped((prev) => [item, ...prev])
+      showError(`Failed to resume ${item.show_name}. Try again.`)
+      return
+    }
+    showUndo(`Resumed ${item.show_name}`, async () => {
+      try {
+        const saved = await dropShow({
+          userId,
+          showId: item.show_id,
+          showName: item.show_name,
+          showPosterPath: item.show_poster_path,
+        })
+        setDropped((prev) => [saved, ...prev])
+      } catch {
+        showError('Failed to undo. Try dropping it again from the show page.')
       }
     })
   }
@@ -230,6 +271,9 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         <TabButton active={tab === 'watchlist'} onClick={() => setTab('watchlist')}>
           Watchlist
         </TabButton>
+        <TabButton active={tab === 'dropped'} onClick={() => setTab('dropped')}>
+          Dropped
+        </TabButton>
         <TabButton active={tab === 'lists'} onClick={() => setTab('lists')}>
           Lists
         </TabButton>
@@ -253,6 +297,8 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         />
       ) : tab === 'watchlist' ? (
         <WatchlistTab items={watchlist} isMe={isMe} onRemove={handleRemoveFromWatchlist} />
+      ) : tab === 'dropped' ? (
+        <DroppedTab items={dropped} isMe={isMe} onResume={handleResumeFromDropped} />
       ) : (
         <ListsTab
           lists={lists}

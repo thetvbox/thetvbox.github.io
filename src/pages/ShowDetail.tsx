@@ -66,6 +66,10 @@ export default function ShowDetail() {
             dismissedItem={d.dismissedItem}
             savingNowWatching={d.savingNowWatching}
             onToggleNowWatching={d.handleToggleNowWatching}
+            canDropShow={d.canDropShow}
+            droppedItem={d.droppedItem}
+            savingDropped={d.savingDropped}
+            onToggleDropped={d.handleToggleDropped}
             watchlistItem={d.watchlistItem}
             savingWatchlist={d.savingWatchlist}
             onToggleWatchlist={d.handleToggleWatchlist}

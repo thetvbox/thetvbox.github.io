@@ -541,6 +541,47 @@ create policy "Anyone can delete dismissed now-watching"
   on public.show_watching_dismissed for delete
   using (true);
 
+-- Explicit "I stopped watching this" status -- distinct from
+-- show_watching_dismissed above (a soft "hide this from Now Watching for
+-- now" that auto-clears the moment you resume). Dropping is a deliberate
+-- call: it also clears Now Watching, but only undoes itself when you
+-- either mark a new episode watched (resuming naturally, same auto-clear
+-- as dismissed) or explicitly hit "Resume watching" -- and unlike
+-- dismissed rows, these are surfaced in their own "Dropped" tab on
+-- Profile, so denormalized with show_name/poster the same way
+-- watchlist_items is, rather than needing a join to render that list.
+create table if not exists public.show_dropped (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+
+  show_id integer not null,
+  show_name text not null,
+  show_poster_path text,
+
+  dropped_at timestamptz not null default now(),
+
+  unique (user_id, show_id)
+);
+
+create index if not exists show_dropped_user_id_idx on public.show_dropped (user_id);
+
+alter table public.show_dropped enable row level security;
+
+drop policy if exists "Anyone can read dropped shows" on public.show_dropped;
+create policy "Anyone can read dropped shows"
+  on public.show_dropped for select
+  using (true);
+
+drop policy if exists "Anyone can insert dropped shows" on public.show_dropped;
+create policy "Anyone can insert dropped shows"
+  on public.show_dropped for insert
+  with check (true);
+
+drop policy if exists "Anyone can delete dropped shows" on public.show_dropped;
+create policy "Anyone can delete dropped shows"
+  on public.show_dropped for delete
+  using (true);
+
 create table if not exists public.show_list_items (
   id uuid primary key default gen_random_uuid(),
   list_id uuid not null references public.show_lists(id) on delete cascade,

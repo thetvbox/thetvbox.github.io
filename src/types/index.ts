@@ -270,6 +270,18 @@ export interface ShowWatchingDismissed {
   dismissed_at: string
 }
 
+/** An "I stopped watching this" marker -- see lib/showDropped.ts. Unlike
+ * ShowWatchingDismissed, this has its own visible list (Profile's Dropped
+ * tab), so it's denormalized with show_name/poster like WatchlistItem. */
+export interface ShowDropped {
+  id: string
+  user_id: string
+  show_id: number
+  show_name: string
+  show_poster_path: string | null
+  dropped_at: string
+}
+
 /** One "I rewatched this" log entry, independent of EpisodeWatched (first-time
  * progress only). Append-only: logging a rewatch never edits an earlier one. */
 export interface ShowRewatch {

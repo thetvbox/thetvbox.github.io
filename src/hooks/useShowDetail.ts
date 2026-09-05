@@ -21,6 +21,7 @@ import { invalidatePlatformCache, pickBestFreeProvider } from '../lib/streamingP
 import { addToWatchlist, fetchWatchlistItem, removeFromWatchlist } from '../lib/watchlist'
 import { fetchStartedItem, startShow } from '../lib/showStarted'
 import { dismissShow, fetchDismissedItem, undismissShow } from '../lib/showDismissed'
+import { dropShow, fetchDroppedItem, undropShow } from '../lib/showDropped'
 import { deleteRewatch, fetchRewatchesForShow, logRewatch, restoreRewatch, sortRewatchesDesc } from '../lib/rewatches'
 import { fetchListMembershipForShow } from '../lib/lists'
 import { computeSeasonProgress, countWatchedBySeason } from '../lib/seasonProgress'
@@ -31,6 +32,7 @@ import type {
   AppUser,
   EpisodeWatched,
   SeasonRatingWithUser,
+  ShowDropped,
   ShowRatingWithUser,
   ShowRewatch,
   ShowStarted,
@@ -84,6 +86,8 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const [savingNowWatching, setSavingNowWatching] = useState(false)
   const [started, setStarted] = useState<ShowStarted | null>(null)
   const [dismissedItem, setDismissedItem] = useState<ShowWatchingDismissed | null>(null)
+  const [droppedItem, setDroppedItem] = useState<ShowDropped | null>(null)
+  const [savingDropped, setSavingDropped] = useState(false)
   const { toast, showUndo, showError, dismiss } = useToast()
   const [watchlistItem, setWatchlistItem] = useState<WatchlistItem | null>(null)
   const [savingWatchlist, setSavingWatchlist] = useState(false)
@@ -110,6 +114,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
           listMembershipSet,
           startedRow,
           dismissedRow,
+          droppedRow,
         ] = await Promise.all([
           getShowDetail(showId),
           user ? fetchWatchedForShow(user.id, showId) : Promise.resolve({} as WatchedMap),
@@ -120,6 +125,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
           user ? fetchListMembershipForShow(user.id, showId) : Promise.resolve(new Set<string>()),
           user ? fetchStartedItem(user.id, showId) : Promise.resolve(null),
           user ? fetchDismissedItem(user.id, showId) : Promise.resolve(null),
+          user ? fetchDroppedItem(user.id, showId) : Promise.resolve(null),
         ])
         if (cancelled) return
         setShow(showData)
@@ -131,6 +137,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         setListMembership(listMembershipSet)
         setStarted(startedRow)
         setDismissedItem(dismissedRow)
+        setDroppedItem(droppedRow)
         // Default to whichever season you're actually on (same "current
         // season" logic as Home's Now Watching card), not always Season 1.
         const firstRealSeason = showData.seasons.find((s) => s.season_number > 0) ?? showData.seasons[0]
@@ -240,8 +247,12 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   // Mirrors nowWatching()'s own filter in lib/showActivity.ts -- kept as a
   // simple boolean here since this only ever needs the one show already loaded.
   const isFinished = totalEpisodes !== null && watchedCount >= totalEpisodes
-  const inNowWatching = (started !== null || watchedCount > 0) && !dismissedItem && !isFinished
+  const inNowWatching = (started !== null || watchedCount > 0) && !dismissedItem && !droppedItem && !isFinished
   const canTrackNowWatching = totalEpisodes !== null && totalEpisodes > 0 && !isFinished
+  // The Drop pill only makes sense once there's something to drop (real
+  // progress or a "started" declaration) or it's already dropped (so the
+  // pill can offer "Resume watching" instead).
+  const canDropShow = canTrackNowWatching && (started !== null || watchedCount > 0 || droppedItem !== null)
 
   const seasonWatchedCount = useMemo(() => {
     if (!season) return null
@@ -278,6 +289,18 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     if (!user || !show) return
     undismissShow(user.id, show.id)
       .then(() => setDismissedItem(null))
+      .catch(() => {
+        // Best-effort, see comment above -- fail silently.
+      })
+  }
+
+  /** Same idea as clearDismissed, but for Dropped -- new progress on a
+   * dropped show means you're back on it, so auto-resume it rather than
+   * leaving it stuck out of Now Watching until a separate manual tap. */
+  function clearDropped() {
+    if (!user || !show) return
+    undropShow(user.id, show.id)
+      .then(() => setDroppedItem(null))
       .catch(() => {
         // Best-effort, see comment above -- fail silently.
       })
@@ -336,6 +359,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
       setWatched((prev) => ({ ...prev, [key]: saved }))
       clearDismissed()
+      clearDropped()
     } catch {
       setWatched((prev) => {
         const next = { ...prev }
@@ -418,6 +442,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         return next
       })
       clearDismissed()
+      clearDropped()
       showUndo(
         previousRows.length > 0
           ? `Marked ${saved.length} episodes watched (${previousRows.length} overwritten)`
@@ -449,6 +474,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
       setStarted(row)
       clearDismissed()
+      clearDropped()
     } catch {
       showError('Failed to start watching. Try again.')
     } finally {
@@ -515,6 +541,69 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     else handleStartWatching()
   }
 
+  /** "Drop this show" -- a separate, deliberate pill from Now Watching (see
+   * ShowDetailQuickActions), not a rename of dismiss/remove. Same
+   * optimistic-update-then-undo shape as handleRemoveFromNowWatching. */
+  async function handleDropShow() {
+    if (!user || !show) return
+    setSavingDropped(true)
+    const previous = droppedItem
+    setDroppedItem({
+      id: `optimistic-${show.id}`,
+      user_id: user.id,
+      show_id: show.id,
+      show_name: show.name,
+      show_poster_path: show.poster_path,
+      dropped_at: new Date().toISOString(),
+    })
+    try {
+      const row = await dropShow({
+        userId: user.id,
+        showId: show.id,
+        showName: show.name,
+        showPosterPath: show.poster_path,
+      })
+      setDroppedItem(row)
+    } catch {
+      setDroppedItem(previous)
+      showError('Failed to drop this show. Try again.')
+      return
+    } finally {
+      setSavingDropped(false)
+    }
+    showUndo('Dropped this show', async () => {
+      try {
+        await undropShow(user.id, show.id)
+        setDroppedItem(null)
+      } catch {
+        showError('Failed to undo. Try again.')
+      }
+    })
+  }
+
+  /** Explicit "Resume watching" from the Dropped pill/tab -- deliberate user
+   * action, so unlike clearDropped this reports failure. */
+  async function handleResumeFromDropped() {
+    if (!user || !show) return
+    setSavingDropped(true)
+    const previous = droppedItem
+    setDroppedItem(null)
+    try {
+      await undropShow(user.id, show.id)
+    } catch {
+      setDroppedItem(previous)
+      showError('Failed to resume this show. Try again.')
+    } finally {
+      setSavingDropped(false)
+    }
+  }
+
+  /** Single entry point for the Drop pill -- mirrors handleToggleNowWatching. */
+  function handleToggleDropped() {
+    if (droppedItem) handleResumeFromDropped()
+    else handleDropShow()
+  }
+
   /** Same idea as handleToggleWatched, but for logging a single episode on a
    * specific past date instead of always stamping "now". */
   async function handleMarkWatchedWithDate(
@@ -539,6 +628,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       if (saved[0]) {
         setWatched((prev) => ({ ...prev, [key]: saved[0] }))
         clearDismissed()
+        clearDropped()
       }
     } catch {
       showError('Failed to mark this episode watched. Try again.')
@@ -574,6 +664,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         return next
       })
       clearDismissed()
+      clearDropped()
       showUndo(
         previousRows.length > 0
           ? `Marked ${saved.length} episodes watched (${previousRows.length} overwritten)`
@@ -800,6 +891,10 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     dismissedItem,
     savingNowWatching,
     handleToggleNowWatching,
+    canDropShow,
+    droppedItem,
+    savingDropped,
+    handleToggleDropped,
     handleToggleWatched,
     handleMarkWatchedWithDate,
     handleMarkAllWatched,
