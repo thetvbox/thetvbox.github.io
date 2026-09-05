@@ -109,8 +109,6 @@ export interface AppUser {
   email: string
   username: string
   created_at: string
-  /** Last time this person opened notifications -- powers the unread new-follower count. */
-  notifications_seen_at: string
 }
 
 /** One "follower_id follows followed_id" edge; see lib/follows.ts. */
@@ -119,6 +117,25 @@ export interface Follow {
   follower_id: string
   followed_id: string
   created_at: string
+}
+
+/** One entry in the notifications feed -- fanned out server-side by triggers
+ * on follow/show_ratings/episode_watched; see lib/notifications.ts. Fields
+ * beyond show_id are only populated for the notification types that need
+ * them (rating for 'show_rated', episode_count for 'show_finished'). */
+export interface Notification {
+  id: string
+  user_id: string
+  actor_id: string
+  actor_username: string
+  type: 'follow' | 'show_finished' | 'show_rated'
+  show_id: number | null
+  show_name: string | null
+  show_poster_path: string | null
+  rating: number | null
+  episode_count: number | null
+  created_at: string
+  seen_at: string | null
 }
 
 /** One person's single rating for an entire show (replaces per-episode rating). */

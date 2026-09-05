@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
 
 export const TOAST_SECONDS = 8
 export const NOTIFICATIONS_POLL_MS = 60_000
+/** A seen notification is pruned this many days after seen_at, so the feed
+ * never grows into a permanent scroll -- see lib/notifications.ts. */
+export const NOTIFICATIONS_STALE_SEEN_DAYS = 1
 export const SEARCH_DEBOUNCE_MS = 350
 export const FILTER_DEBOUNCE_MS = 350
 

@@ -558,3 +558,154 @@ drop policy if exists "Anyone can delete follows" on public.follows;
 create policy "Anyone can delete follows"
   on public.follows for delete
   using (true);
+
+-- Unified notification feed: follows, show finishes, and show ratings, all
+-- fanned out to the relevant recipient(s) at write-time via the triggers
+-- below rather than computed client-side (unlike the group Activity feed in
+-- showActivity.ts) -- a bell badge needs a cheap indexed count, not a full
+-- table scan across everyone you follow on every poll. Denormalizes
+-- actor_username/show_name/show_poster_path so the panel never needs a join.
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  actor_id uuid not null references public.users(id) on delete cascade,
+  actor_username text not null,
+  type text not null check (type in ('follow', 'show_finished', 'show_rated')),
+
+  show_id integer,
+  show_name text,
+  show_poster_path text,
+  rating numeric,
+  episode_count integer,
+
+  created_at timestamptz not null default now(),
+  -- NULL until the recipient opens the notifications panel. Rows get pruned
+  -- a day after being seen (see lib/notifications.ts), so this table never
+  -- grows into a permanent, ever-scrolling history. Supersedes
+  -- users.notifications_seen_at above, which is no longer read by the app.
+  seen_at timestamptz
+);
+
+create index if not exists notifications_user_created_idx on public.notifications (user_id, created_at desc);
+create index if not exists notifications_user_unseen_idx on public.notifications (user_id) where seen_at is null;
+
+alter table public.notifications enable row level security;
+
+drop policy if exists "Anyone can read notifications" on public.notifications;
+create policy "Anyone can read notifications"
+  on public.notifications for select
+  using (true);
+
+drop policy if exists "Anyone can insert notifications" on public.notifications;
+create policy "Anyone can insert notifications"
+  on public.notifications for insert
+  with check (true);
+
+drop policy if exists "Anyone can update notifications" on public.notifications;
+create policy "Anyone can update notifications"
+  on public.notifications for update
+  using (true)
+  with check (true);
+
+drop policy if exists "Anyone can delete notifications" on public.notifications;
+create policy "Anyone can delete notifications"
+  on public.notifications for delete
+  using (true);
+
+-- Follow: notify the person being followed.
+create or replace function public.notify_on_follow()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.notifications (user_id, actor_id, actor_username, type)
+  select new.followed_id, new.follower_id, u.username, 'follow'
+  from public.users u
+  where u.id = new.follower_id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notify_on_follow on public.follows;
+create trigger trg_notify_on_follow
+  after insert on public.follows
+  for each row execute function public.notify_on_follow();
+
+-- Show rated: notify the rater's current followers. Fires on INSERT only
+-- (not UPDATE) so editing an existing rating doesn't re-notify everyone --
+-- upsertShowRating's onConflict makes a changed rating an UPDATE, not a
+-- fresh INSERT.
+create or replace function public.notify_on_show_rating()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.notifications (user_id, actor_id, actor_username, type, show_id, show_name, show_poster_path, rating)
+  select f.follower_id, new.user_id, u.username, 'show_rated', new.show_id, new.show_name, new.show_poster_path, new.rating
+  from public.follows f
+  join public.users u on u.id = new.user_id
+  where f.followed_id = new.user_id
+    and f.follower_id <> new.user_id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notify_on_show_rating on public.show_ratings;
+create trigger trg_notify_on_show_rating
+  after insert on public.show_ratings
+  for each row execute function public.notify_on_show_rating();
+
+-- Show finished: notify the watcher's current followers, once per show ever
+-- (the existing-notification check guards against re-notifying on every
+-- later re-mark/overwrite of an already-finished show, e.g. "mark season
+-- watched" overwriting dates on already-watched episodes).
+create or replace function public.notify_on_show_finished()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  watched_count integer;
+  already_notified boolean;
+begin
+  if new.show_total_episodes is null or new.show_total_episodes <= 0 then
+    return new;
+  end if;
+
+  select count(*) into watched_count
+  from public.episode_watched
+  where user_id = new.user_id and show_id = new.show_id;
+
+  if watched_count < new.show_total_episodes then
+    return new;
+  end if;
+
+  select exists(
+    select 1 from public.notifications
+    where actor_id = new.user_id and show_id = new.show_id and type = 'show_finished'
+  ) into already_notified;
+
+  if already_notified then
+    return new;
+  end if;
+
+  insert into public.notifications (user_id, actor_id, actor_username, type, show_id, show_name, show_poster_path, episode_count)
+  select f.follower_id, new.user_id, u.username, 'show_finished', new.show_id, new.show_name, new.show_poster_path, new.show_total_episodes
+  from public.follows f
+  join public.users u on u.id = new.user_id
+  where f.followed_id = new.user_id
+    and f.follower_id <> new.user_id;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notify_on_show_finished on public.episode_watched;
+create trigger trg_notify_on_show_finished
+  after insert or update on public.episode_watched
+  for each row execute function public.notify_on_show_finished();
