@@ -189,7 +189,7 @@ export default function Navbar() {
           when installed to the home screen. Sticky (not fixed) so the extra
           height reserves space in normal flow. */}
       <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
             to="/home"
             onClick={() => handleNavClick('/home')}
