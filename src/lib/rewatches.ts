@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
+import { ACTIVITY_FETCH_LIMIT } from './constants'
 import type { ShowRewatch } from '../types'
 
 /** Keeps a rewatch list in newest-first order. Needed anywhere a row is
@@ -20,16 +22,21 @@ export async function fetchRewatchesForShow(userId: string, showId: number): Pro
   return (data ?? []) as ShowRewatch[]
 }
 
-export async function fetchRecentRewatches(userId: string, limit = 2000): Promise<ShowRewatch[]> {
-  const { data, error } = await supabase
-    .from('show_rewatches')
-    .select('*')
-    .eq('user_id', userId)
-    .order('rewatched_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as ShowRewatch[]
+export async function fetchRecentRewatches(
+  userId: string,
+  limit = ACTIVITY_FETCH_LIMIT,
+): Promise<ShowRewatch[]> {
+  return fetchPaginated<ShowRewatch>(
+    (from, to) =>
+      supabase
+        .from('show_rewatches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('rewatched_at', { ascending: false })
+        .order('id')
+        .range(from, to),
+    limit,
+  )
 }
 
 export interface LogRewatchInput {

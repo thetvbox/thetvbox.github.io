@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
 import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_USERS } from './constants'
 import type { AppUser, Follow } from '../types'
 
@@ -103,14 +104,11 @@ export async function fetchFollowingWithUsers(userId: string): Promise<AppUser[]
 /** Every follow edge across the group -- powers the Activity feed's "X
  * started following Y" events, same idea as fetchRecentShowRatingsAllUsers. */
 export async function fetchAllFollows(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<Follow[]> {
-  const { data, error } = await supabase
-    .from('follows')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as Follow[]
+  return fetchPaginated<Follow>(
+    (from, to) =>
+      supabase.from('follows').select('*').order('created_at', { ascending: false }).order('id').range(from, to),
+    limit,
+  )
 }
 
 /** How many people have followed userId since they last opened

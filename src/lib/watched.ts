@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
 import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT } from './constants'
 import type { EpisodeWatched, EpisodeWatchedWithUser, WatchedMap } from '../types'
 
@@ -45,15 +46,17 @@ export async function fetchRecentWatched(
   userId: string,
   limit = ACTIVITY_FETCH_LIMIT,
 ): Promise<EpisodeWatched[]> {
-  const { data, error } = await supabase
-    .from('episode_watched')
-    .select('*')
-    .eq('user_id', userId)
-    .order('watched_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as EpisodeWatched[]
+  return fetchPaginated<EpisodeWatched>(
+    (from, to) =>
+      supabase
+        .from('episode_watched')
+        .select('*')
+        .eq('user_id', userId)
+        .order('watched_at', { ascending: false })
+        .order('id')
+        .range(from, to),
+    limit,
+  )
 }
 
 /** Most recent watched-episode rows across the whole group, for the group
@@ -61,14 +64,15 @@ export async function fetchRecentWatched(
 export async function fetchRecentWatchedAllUsers(
   limit = GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
 ): Promise<EpisodeWatchedWithUser[]> {
-  const { data, error } = await supabase
-    .from('episode_watched')
-    .select('*, users(username)')
-    .order('watched_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as unknown as EpisodeWatchedWithUser[]
+  return fetchPaginated<EpisodeWatchedWithUser>(async (from, to) => {
+    const { data, error } = await supabase
+      .from('episode_watched')
+      .select('*, users(username)')
+      .order('watched_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as EpisodeWatchedWithUser[] | null, error }
+  }, limit)
 }
 
 export interface MarkWatchedInput {

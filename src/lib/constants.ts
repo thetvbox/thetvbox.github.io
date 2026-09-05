@@ -28,18 +28,28 @@ export const SKELETON_ROWS_WIDE = 6
  * rows) -- distinct from the larger sizes used by full poster grids. */
 export const POSTER_THUMB_SIZE = 'w185'
 
-/** "Give me basically everything" fetch caps -- no real pagination exists
- * yet, so these just need to be comfortably above any one user's activity.
- * The larger cap is for pages pulling two users' full history at once
- * (Compare) or ranking a whole year of it (Recap). */
-export const ACTIVITY_FETCH_LIMIT = 2000
-export const LARGE_ACTIVITY_FETCH_LIMIT = 5000
+/** "Give me basically everything" fetch caps, paged past PostgREST's 1000-row
+ * response cap by lib/pagination.ts -- comfortably above even a heavy
+ * backfilled history (one real user has 10k+ episode_watched rows). The
+ * larger cap is for pages pulling two users' full history at once (Compare)
+ * or ranking a whole year of it (Recap). A user's true total can still
+ * exceed these in principle; past that point stats should move to a
+ * server-side aggregate (e.g. a Postgres view) rather than raising this
+ * further and shipping more rows to the client on every page load. */
+export const ACTIVITY_FETCH_LIMIT = 20_000
+export const LARGE_ACTIVITY_FETCH_LIMIT = 50_000
 
 /** Same idea as ACTIVITY_FETCH_LIMIT, but for the group-wide Activity feed
  * (every user's recent rows, not just one). Watched episodes get a higher
  * cap -- there are far more of them per show than ratings or follows. */
 export const GROUP_ACTIVITY_FETCH_LIMIT = 500
 export const GROUP_ACTIVITY_WATCHED_FETCH_LIMIT = 1500
+
+/** Supabase's hosted PostgREST caps every response at `db-max-rows` (1000
+ * by default) regardless of a query's own .limit() -- silently truncating
+ * results for any table that grows past that for one user. See
+ * lib/pagination.ts, which pages requests of this size to work around it. */
+export const POSTGREST_MAX_ROWS_PER_REQUEST = 1000
 
 /** The one Supabase table name referenced from outside its own lib file. */
 export const TABLE_USERS = 'users'

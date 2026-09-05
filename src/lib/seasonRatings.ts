@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
 import { GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
 import type { SeasonRating, SeasonRatingWithUser } from '../types'
 
@@ -21,14 +22,15 @@ export async function fetchAllSeasonRatingsForShow(showId: number): Promise<Seas
 export async function fetchRecentSeasonRatingsAllUsers(
   limit = GROUP_ACTIVITY_FETCH_LIMIT,
 ): Promise<SeasonRatingWithUser[]> {
-  const { data, error } = await supabase
-    .from('season_ratings')
-    .select('*, users(username)')
-    .order('rated_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as unknown as SeasonRatingWithUser[]
+  return fetchPaginated<SeasonRatingWithUser>(async (from, to) => {
+    const { data, error } = await supabase
+      .from('season_ratings')
+      .select('*, users(username)')
+      .order('rated_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as SeasonRatingWithUser[] | null, error }
+  }, limit)
 }
 
 export interface UpsertSeasonRatingInput {

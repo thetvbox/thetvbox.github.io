@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
 import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
 import type { ShowRating, ShowRatingWithUser } from '../types'
 
@@ -30,29 +31,32 @@ export async function fetchRecentShowRatings(
   userId: string,
   limit = ACTIVITY_FETCH_LIMIT,
 ): Promise<ShowRating[]> {
-  const { data, error } = await supabase
-    .from('show_ratings')
-    .select('*')
-    .eq('user_id', userId)
-    .order('rated_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as ShowRating[]
+  return fetchPaginated<ShowRating>(
+    (from, to) =>
+      supabase
+        .from('show_ratings')
+        .select('*')
+        .eq('user_id', userId)
+        .order('rated_at', { ascending: false })
+        .order('id')
+        .range(from, to),
+    limit,
+  )
 }
 
 /** Most recent ratings across the whole group (every user), for the group Activity feed. */
 export async function fetchRecentShowRatingsAllUsers(
   limit = GROUP_ACTIVITY_FETCH_LIMIT,
 ): Promise<ShowRatingWithUser[]> {
-  const { data, error } = await supabase
-    .from('show_ratings')
-    .select('*, users(username)')
-    .order('rated_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as unknown as ShowRatingWithUser[]
+  return fetchPaginated<ShowRatingWithUser>(async (from, to) => {
+    const { data, error } = await supabase
+      .from('show_ratings')
+      .select('*, users(username)')
+      .order('rated_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as ShowRatingWithUser[] | null, error }
+  }, limit)
 }
 
 export interface UpsertShowRatingInput {
