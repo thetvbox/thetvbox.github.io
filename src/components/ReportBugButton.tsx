@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -126,7 +127,14 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  return (
+  // Portaled straight to <body>: this component mounts inside Navbar's
+  // <header>, which has backdrop-blur-md -- backdrop-filter (like filter)
+  // creates a containing block for position:fixed descendants, so without
+  // the portal `inset-0` below resolves against the ~72px header bar
+  // instead of the viewport, squeezing the whole dialog into it. Confirmed
+  // live on both desktop and mobile before this fix; broken on both, just
+  // more obviously so on the shorter mobile viewport.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div
         initial={MODAL_BACKDROP_INITIAL}
@@ -226,6 +234,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
           </form>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   )
 }
