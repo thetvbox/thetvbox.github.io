@@ -28,15 +28,27 @@ const RESELLER_CHANNEL_SUFFIX = /\s(Amazon|Apple TV|Roku Premium|Prime Video|Goo
  * channels, since a $70-90/mo bundle isn't "free to you" the same way. */
 const LIVE_TV_BUNDLE = /^(YouTube ?TV|fubo ?TV|Sling ?TV|Philo|DirecTV( Stream)?|Hulu\s*\+?\s*Live ?TV|Vidgo|Frndly ?TV)\b/i
 
+/** Cable/broadcast "TV Everywhere" network apps -- these need an existing
+ * pay-TV subscription to sign in, so they're not a standalone destination
+ * the way Netflix or HBO Max are. JustWatch/TMDB lists one of these as a
+ * flatrate option whenever an older library show also happens to rerun in
+ * syndication -- e.g. The Big Bang Theory ranked "TBS" ahead of its real
+ * streaming home, HBO Max, since TBS still carries reruns. Same "not free
+ * to you the same way" reasoning as LIVE_TV_BUNDLE above, just for linear
+ * cable/broadcast networks instead of vMVPDs. */
+const CABLE_NETWORK_APP =
+  /^(TBS|TNT|TruTV|USA Network|FX|FXX|Comedy Central|Adult Swim|Bravo|E!|Syfy|Freeform|VH1|MTV2?|Nickelodeon|AMC|IFC|Paramount Network|Lifetime|A&E|HGTV|Food Network|Travel Channel|Discovery Channel|TLC|History|National Geographic|CNN|MSNBC|Fox News|CBS|NBC|ABC|FOX|The CW)$/i
+
 function isLowSignalProvider(providerName: string): boolean {
   const name = providerName.trim()
-  return RESELLER_CHANNEL_SUFFIX.test(name) || LIVE_TV_BUNDLE.test(name)
+  return RESELLER_CHANNEL_SUFFIX.test(name) || LIVE_TV_BUNDLE.test(name) || CABLE_NETWORK_APP.test(name)
 }
 
-/** The first provider in priority order that isn't a reseller-channel or
- * live-TV-bundle listing, falling back to the top overall listing if
- * that's genuinely the only way to watch (some smaller platforms are only
- * ever offered bundled, with no direct/standalone option anywhere). */
+/** The first provider in priority order that isn't a reseller-channel,
+ * live-TV-bundle, or cable-network-app listing, falling back to the top
+ * overall listing if that's genuinely the only way to watch (some smaller
+ * platforms are only ever offered bundled, with no direct/standalone
+ * option anywhere). */
 function pickDirect(list: TmdbWatchProvider[]): TmdbWatchProvider | null {
   if (list.length === 0) return null
   return list.find((p) => !isLowSignalProvider(p.provider_name)) ?? list[0]

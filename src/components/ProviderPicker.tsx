@@ -4,6 +4,36 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlinePanel from './InlinePanel'
 import type { TmdbProviderListItem } from '../types'
 
+/** Curated by real-world recognizability, not TMDB's own `display_priority`
+ * -- that field doesn't track "well known" at all (HBO Max ranks ~150th out
+ * of ~200 in TMDB's general US provider list), so this panel's default,
+ * unsearched view was surfacing near-random smaller platforms ahead of the
+ * ones people actually look for. Prefix match, not exact: several of these
+ * come back from TMDB with a tier suffix (e.g. "Peacock Premium",
+ * "Paramount Plus Essential"). */
+const WELL_KNOWN_PROVIDER_PREFIXES = [
+  'Netflix',
+  'HBO Max',
+  'Disney Plus',
+  'Hulu',
+  'Amazon Prime Video',
+  'Apple TV',
+  'Paramount Plus',
+  'Peacock',
+  'Starz',
+  'AMC+',
+  'Discovery',
+  'Crunchyroll',
+]
+
+/** Lower is more recognizable; anything not on the curated list sorts after
+ * all of it, in whatever order it already had (Array.sort is stable, so
+ * that's TMDB's own priority order, untouched). */
+function wellKnownRank(providerName: string): number {
+  const idx = WELL_KNOWN_PROVIDER_PREFIXES.findIndex((prefix) => providerName.startsWith(prefix))
+  return idx === -1 ? WELL_KNOWN_PROVIDER_PREFIXES.length : idx
+}
+
 /** Searchable panel for manually correcting "where to watch" -- backed by
  * TMDB's full provider list, not just those already known for this show. */
 export default function ProviderPicker({
@@ -45,7 +75,10 @@ export default function ProviderPicker({
     if (!allProviders) return []
     const q = query.trim().toLowerCase()
     const filtered = q ? allProviders.filter((p) => p.provider_name.toLowerCase().includes(q)) : allProviders
-    return filtered.slice(0, 8)
+    const sorted = filtered
+      .slice()
+      .sort((a, b) => wellKnownRank(a.provider_name) - wellKnownRank(b.provider_name))
+    return sorted.slice(0, 8)
   }, [allProviders, query])
 
   return (
