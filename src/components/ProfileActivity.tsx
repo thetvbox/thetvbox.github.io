@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchRecentShowRatings } from '../lib/showRatings'
-import { fetchRecentWatched } from '../lib/watched'
+import { fetchRecentDatedWatched } from '../lib/watched'
 import { fetchRecentRewatches } from '../lib/rewatches'
-import { buildDiaryEntries, buildUndatedDiaryEntries, summarizeShowActivity, watchHistory } from '../lib/showActivity'
+import { fetchShowWatchSummary, fetchUndatedShowWatchSummary } from '../lib/showWatchSummary'
+import {
+  buildDiaryEntries,
+  buildUndatedDiaryEntriesFromSummary,
+  summarizeFromWatchSummary,
+  watchHistory,
+} from '../lib/showActivity'
 import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watchlist'
 import { createList, fetchListsForUser } from '../lib/lists'
 import { dayKey, formatDiaryHeading } from '../lib/date'
@@ -20,7 +26,15 @@ import WatchlistTab from './profileActivity/WatchlistTab'
 import ListsTab from './profileActivity/ListsTab'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
-import type { EpisodeWatched, ShowListWithCount, ShowRating, ShowRewatch, WatchlistItem } from '../types'
+import type {
+  EpisodeWatched,
+  ShowListWithCount,
+  ShowRating,
+  ShowRewatch,
+  ShowWatchSummary,
+  UndatedShowWatchSummary,
+  WatchlistItem,
+} from '../types'
 
 interface ProfileActivityProps {
   userId: string
@@ -55,7 +69,14 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     )
   }
   const [ratings, setRatings] = useState<ShowRating[]>([])
-  const [watched, setWatched] = useState<EpisodeWatched[]>([])
+  // Dated (real-timestamp) watched rows only -- the diary's day-level
+  // grouping is the one thing here that genuinely needs per-episode detail.
+  // Everything else (stats, History, the diary's undated bucket) is built
+  // from the two aggregates below instead of the full episode_watched table
+  // -- see lib/showWatchSummary.ts for why.
+  const [datedWatched, setDatedWatched] = useState<EpisodeWatched[]>([])
+  const [showSummaries, setShowSummaries] = useState<ShowWatchSummary[]>([])
+  const [undatedSummaries, setUndatedSummaries] = useState<UndatedShowWatchSummary[]>([])
   const [rewatches, setRewatches] = useState<ShowRewatch[]>([])
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
   const [lists, setLists] = useState<ShowListWithCount[]>([])
@@ -74,15 +95,19 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     setError(null)
     Promise.all([
       fetchRecentShowRatings(userId, ACTIVITY_FETCH_LIMIT),
-      fetchRecentWatched(userId, ACTIVITY_FETCH_LIMIT),
+      fetchRecentDatedWatched(userId, ACTIVITY_FETCH_LIMIT),
+      fetchShowWatchSummary(userId),
+      fetchUndatedShowWatchSummary(userId),
       fetchRecentRewatches(userId, ACTIVITY_FETCH_LIMIT),
       fetchWatchlist(userId),
       fetchListsForUser(userId),
     ])
-      .then(([ratingRows, watchedRows, rewatchRows, watchlistRows, listRows]) => {
+      .then(([ratingRows, datedWatchedRows, showSummaryRows, undatedSummaryRows, rewatchRows, watchlistRows, listRows]) => {
         if (!cancelled) {
           setRatings(ratingRows)
-          setWatched(watchedRows)
+          setDatedWatched(datedWatchedRows)
+          setShowSummaries(showSummaryRows)
+          setUndatedSummaries(undatedSummaryRows)
           setRewatches(rewatchRows)
           setWatchlist(watchlistRows)
           setLists(listRows)
@@ -139,7 +164,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     }
   }
 
-  const activity = useMemo(() => summarizeShowActivity(ratings, watched), [ratings, watched])
+  const activity = useMemo(() => summarizeFromWatchSummary(ratings, showSummaries), [ratings, showSummaries])
 
   const stats = useMemo(() => {
     const totalShows = ratings.length
@@ -147,16 +172,24 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     const avg = totalShows === 0 ? null : ratings.reduce((sum, r) => sum + r.rating, 0) / totalShows
     // Rows logged before runtime_minutes existed contribute 0 here rather
     // than being excluded -- see scripts/backfill-runtime.mjs to fill them in.
-    const hoursWatched = Math.round(watched.reduce((sum, w) => sum + (w.runtime_minutes ?? 0), 0) / 60)
-    return { totalShows, finished, episodesWatched: watched.length, avg, hoursWatched }
-  }, [ratings, watched, activity])
+    const episodesWatched = showSummaries.reduce((sum, s) => sum + s.watched_count, 0)
+    const hoursWatched = Math.round(showSummaries.reduce((sum, s) => sum + s.runtime_minutes_sum, 0) / 60)
+    return { totalShows, finished, episodesWatched, avg, hoursWatched }
+  }, [ratings, showSummaries, activity])
 
   // Every dated, personally-loggable event (watched, rated, rewatched)
   // merged into one timeline -- see buildDiaryEntries. Already sorted
   // newest-first, so grouping is just "start a new bucket whenever the
-  // calendar day changes."
-  const diaryEntries = useMemo(() => buildDiaryEntries(ratings, watched, rewatches), [ratings, watched, rewatches])
-  const undatedDiaryEntries = useMemo(() => buildUndatedDiaryEntries(watched), [watched])
+  // calendar day changes." Only dated watched rows are relevant here -- the
+  // undated bucket below is a per-show aggregate, not day-groupable.
+  const diaryEntries = useMemo(
+    () => buildDiaryEntries(ratings, datedWatched, rewatches),
+    [ratings, datedWatched, rewatches],
+  )
+  const undatedDiaryEntries = useMemo(
+    () => buildUndatedDiaryEntriesFromSummary(undatedSummaries),
+    [undatedSummaries],
+  )
 
   const diaryGroups = useMemo<DiaryDayGroup[]>(() => {
     const groups: DiaryDayGroup[] = []

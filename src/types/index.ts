@@ -204,6 +204,40 @@ export interface EpisodeWatchedWithUser extends EpisodeWatched {
   users: { username: string } | null
 }
 
+/** One row of the episode_watched_show_summary Postgres view (see
+ * schema.sql) -- one user's whole watch history for one show, pre-reduced
+ * server-side instead of shipping every individual episode row to compute
+ * this same rollup in JS. Powers ProfileActivity's stat cards and History
+ * tab via summarizeFromWatchSummary in lib/showActivity.ts. */
+export interface ShowWatchSummary {
+  user_id: string
+  show_id: number
+  show_name: string
+  show_poster_path: string | null
+  watched_count: number
+  total_episodes: number | null
+  last_watched_at: string
+  last_watched_at_unknown: boolean
+  runtime_minutes_sum: number
+}
+
+/** One row of the episode_watched_undated_summary Postgres view (see
+ * schema.sql) -- one user's "watched a while ago" rows for one show,
+ * pre-reduced server-side. Powers the diary's undated bucket via
+ * buildUndatedDiaryEntriesFromSummary in lib/showActivity.ts. */
+export interface UndatedShowWatchSummary {
+  user_id: string
+  show_id: number
+  show_name: string
+  show_poster_path: string | null
+  episode_count: number
+  seasons: number[]
+  /** Set only when episode_count is 1 -- the single episode's own season/number. */
+  sole_season_number: number | null
+  sole_episode_number: number | null
+  added_at: string
+}
+
 /** A show someone wants to watch but hasn't started; see EpisodeWatched for actual progress. */
 export interface WatchlistItem {
   id: string

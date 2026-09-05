@@ -59,6 +59,31 @@ export async function fetchRecentWatched(
   )
 }
 
+/** Same as fetchRecentWatched, but only rows with a real date. Per-episode
+ * detail only matters for the diary's day-level grouping, which is
+ * meaningless for "watched a while ago" placeholder rows -- see
+ * buildUndatedDiaryEntriesFromSummary/lib/showWatchSummary.ts for those
+ * instead. This is normally a much smaller fetch: real-time episode
+ * tracking naturally stays small, while a bulk "mark whole show watched"
+ * import (which lands in the undated bucket) is what actually grows large. */
+export async function fetchRecentDatedWatched(
+  userId: string,
+  limit = ACTIVITY_FETCH_LIMIT,
+): Promise<EpisodeWatched[]> {
+  return fetchPaginated<EpisodeWatched>(
+    (from, to) =>
+      supabase
+        .from('episode_watched')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('watched_at_unknown', false)
+        .order('watched_at', { ascending: false })
+        .order('id')
+        .range(from, to),
+    limit,
+  )
+}
+
 /** Most recent watched-episode rows across the whole group, for the group
  * Activity feed to work out who just finished a show. */
 export async function fetchRecentWatchedAllUsers(

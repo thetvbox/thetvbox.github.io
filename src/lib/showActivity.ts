@@ -9,6 +9,8 @@ import type {
   ShowRewatch,
   ShowStarted,
   ShowWatchingDismissed,
+  ShowWatchSummary,
+  UndatedShowWatchSummary,
 } from '../types'
 
 /** Per-show rollup combining a rating (if any) with watch progress (if any). */
@@ -38,6 +40,30 @@ export interface ShowActivity {
   dismissed: boolean
 }
 
+/** A fresh, all-empty ShowActivity row -- shared starting point for both
+ * summarizeShowActivity (per-row reduction) and summarizeFromWatchSummary
+ * (pre-aggregated input), so the two only differ in how they fill in the
+ * watched-related fields, not in how a show enters the map. */
+function emptyShowActivity(showId: number, showName: string, showPosterPath: string | null): ShowActivity {
+  return {
+    showId,
+    showName,
+    showPosterPath,
+    rating: null,
+    ratedAt: null,
+    watchedCount: 0,
+    totalEpisodes: null,
+    lastWatchedAt: null,
+    lastWatchedAtUnknown: false,
+    finished: false,
+    finishedAt: null,
+    finishedAtUnknown: false,
+    started: false,
+    startedAt: null,
+    dismissed: false,
+  }
+}
+
 /** Merges show_ratings + episode_watched (+ optional show_started,
  * show_watching_dismissed) rows for one user into one summary per show.
  * `started`/`dismissed` default to empty -- only Home's Now Watching needs them. */
@@ -52,23 +78,7 @@ export function summarizeShowActivity(
   function entryFor(showId: number, showName: string, showPosterPath: string | null): ShowActivity {
     let entry = map.get(showId)
     if (!entry) {
-      entry = {
-        showId,
-        showName,
-        showPosterPath,
-        rating: null,
-        ratedAt: null,
-        watchedCount: 0,
-        totalEpisodes: null,
-        lastWatchedAt: null,
-        lastWatchedAtUnknown: false,
-        finished: false,
-        finishedAt: null,
-        finishedAtUnknown: false,
-        started: false,
-        startedAt: null,
-        dismissed: false,
-      }
+      entry = emptyShowActivity(showId, showName, showPosterPath)
       map.set(showId, entry)
     }
     return entry
@@ -120,6 +130,45 @@ export function summarizeShowActivity(
   for (const d of dismissed) {
     const entry = map.get(d.show_id)
     if (entry) entry.dismissed = true
+  }
+
+  return Array.from(map.values())
+}
+
+/** Same output shape as summarizeShowActivity, for callers that only need
+ * ratings + watch progress (no started/dismissed, so no Now Watching
+ * suppression) and already have per-show totals instead of raw episode
+ * rows -- see ShowWatchSummary in lib/showWatchSummary.ts, which computes
+ * this same rollup in Postgres instead of shipping every row to reduce
+ * here. Everything downstream (watchHistory, sortHistory, HistorySection)
+ * takes ShowActivity[] either way, so it doesn't care which path built it. */
+export function summarizeFromWatchSummary(ratings: ShowRating[], summaries: ShowWatchSummary[]): ShowActivity[] {
+  const map = new Map<number, ShowActivity>()
+
+  function entryFor(showId: number, showName: string, showPosterPath: string | null): ShowActivity {
+    let entry = map.get(showId)
+    if (!entry) {
+      entry = emptyShowActivity(showId, showName, showPosterPath)
+      map.set(showId, entry)
+    }
+    return entry
+  }
+
+  for (const r of ratings) {
+    const entry = entryFor(r.show_id, r.show_name, r.show_poster_path)
+    entry.rating = r.rating
+    entry.ratedAt = r.rated_at
+  }
+
+  for (const s of summaries) {
+    const entry = entryFor(s.show_id, s.show_name, s.show_poster_path)
+    entry.watchedCount = s.watched_count
+    entry.totalEpisodes = s.total_episodes
+    entry.lastWatchedAt = s.last_watched_at
+    entry.lastWatchedAtUnknown = s.last_watched_at_unknown
+    entry.finished = entry.totalEpisodes !== null && entry.watchedCount >= entry.totalEpisodes
+    entry.finishedAt = entry.finished ? entry.lastWatchedAt : null
+    entry.finishedAtUnknown = entry.finished ? entry.lastWatchedAtUnknown : false
   }
 
   return Array.from(map.values())
@@ -181,7 +230,8 @@ export interface DiaryEntry {
   showId: number
   showName: string
   showPosterPath: string | null
-  /** ISO timestamp for sorting; empty string for undated entries (see buildUndatedDiaryEntries). */
+  /** ISO timestamp for sorting; empty string for undated entries (see
+   * buildUndatedDiaryEntriesFromSummary). */
   at: string
   /** Set standalone, or merged onto a same-day watched/rewatched entry --
    * logging and rating a show the same day is one diary row, not two. */
@@ -195,7 +245,10 @@ export interface DiaryEntry {
   episodeLabel?: string
 }
 
-function seasonLabelFor(seasonNumbers: number[]): string {
+/** Exported for buildUndatedDiaryEntriesFromSummary, which gets its distinct
+ * season numbers pre-aggregated by Postgres (see the `seasons` column on
+ * episode_watched_undated_summary) rather than from raw rows. */
+export function seasonLabelFor(seasonNumbers: number[]): string {
   const sorted = Array.from(new Set(seasonNumbers)).sort((a, b) => a - b)
   if (sorted.length === 1) return `Season ${sorted[0]}`
   return `S${sorted[0]}–S${sorted[sorted.length - 1]}`
@@ -298,32 +351,32 @@ export function buildDiaryEntries(
 }
 
 /** Watched episodes with no real date ("watched a while ago") -- grouped by
- * show only, surfaced separately instead of vanishing from the diary. Ordered
- * by created_at (the order the rows were actually added), most recent first,
- * matching the rest of the diary's reverse-chronological convention --
- * falling back to show name only for rows old enough to share the same
- * created_at (e.g. legacy rows backfilled before that column existed). */
-export function buildUndatedDiaryEntries(watched: EpisodeWatched[]): DiaryEntry[] {
-  const groups = new Map<number, EpisodeWatched[]>()
-  for (const w of watched) {
-    if (!w.watched_at_unknown) continue
-    const list = groups.get(w.show_id)
-    if (list) list.push(w)
-    else groups.set(w.show_id, [w])
-  }
-  return Array.from(groups.values())
-    .map((rows) => ({
-      id: `watched-undated-${rows[0].show_id}`,
+ * show only, surfaced separately instead of vanishing from the diary.
+ * Ordered by added_at (when the rows were actually added, most recent
+ * first), matching the rest of the diary's reverse-chronological
+ * convention -- falling back to show name only for rows old enough to
+ * share the same added_at (e.g. legacy rows backfilled before that column
+ * existed). Built from the episode_watched_undated_summary Postgres view
+ * (see lib/showWatchSummary.ts) rather than raw rows -- this bucket is
+ * exactly the one a bulk "mark whole show watched" import can grow to
+ * thousands of rows for a single show, with nothing here that needs
+ * individual-episode detail beyond the distinct season numbers touched. */
+export function buildUndatedDiaryEntriesFromSummary(summaries: UndatedShowWatchSummary[]): DiaryEntry[] {
+  return summaries
+    .map((s) => ({
+      id: `watched-undated-${s.show_id}`,
       kind: 'watched' as const,
-      showId: rows[0].show_id,
-      showName: rows[0].show_name,
-      showPosterPath: rows[0].show_poster_path,
+      showId: s.show_id,
+      showName: s.show_name,
+      showPosterPath: s.show_poster_path,
       at: '',
-      addedAt: rows.reduce((max, r) => (r.created_at > max ? r.created_at : max), rows[0].created_at),
-      episodeCount: rows.length,
-      seasonLabel: rows.length > 1 ? seasonLabelFor(rows.map((r) => r.season_number)) : undefined,
+      addedAt: s.added_at,
+      episodeCount: s.episode_count,
+      seasonLabel: s.episode_count > 1 ? seasonLabelFor(s.seasons) : undefined,
       episodeLabel:
-        rows.length === 1 ? `S${rows[0].season_number}E${rows[0].episode_number}` : undefined,
+        s.episode_count === 1 && s.sole_season_number != null && s.sole_episode_number != null
+          ? `S${s.sole_season_number}E${s.sole_episode_number}`
+          : undefined,
     }))
     .sort((a, b) => b.addedAt.localeCompare(a.addedAt) || a.showName.localeCompare(b.showName))
     .map(({ addedAt: _addedAt, ...entry }) => entry)

@@ -366,9 +366,60 @@ alter table public.episode_watched
 -- watched this" date, which may be a placeholder -- see watched_at_unknown
 -- above). Lets multiple undated ("watched a while ago") entries be ordered
 -- by the order they were actually added instead of arbitrarily -- see
--- buildUndatedDiaryEntries in showActivity.ts. Never shown to the user.
+-- buildUndatedDiaryEntriesFromSummary in showActivity.ts. Never shown to
+-- the user.
 alter table public.episode_watched
   add column if not exists created_at timestamptz not null default now();
+
+-- Per-show rollup of episode_watched, computed once here instead of
+-- shipping every individual row to the client just to reduce it in JS --
+-- ProfileActivity's stat cards and History tab only ever needed per-show
+-- totals, never individual-episode detail. A heavy history (10k+ rows) is
+-- still just one row per distinct show through this view. See
+-- lib/showWatchSummary.ts and summarizeFromWatchSummary in showActivity.ts.
+create or replace view public.episode_watched_show_summary as
+select
+  user_id,
+  show_id,
+  (array_agg(show_name order by watched_at desc))[1] as show_name,
+  (array_agg(show_poster_path order by watched_at desc))[1] as show_poster_path,
+  count(*)::integer as watched_count,
+  max(show_total_episodes) as total_episodes,
+  max(watched_at) as last_watched_at,
+  -- True only if EVERY row for this show is the "watched a while ago"
+  -- placeholder -- in that case max(watched_at) above is itself the
+  -- placeholder, matching the semantics summarizeShowActivity already used
+  -- to compute this per-row (a single real date always wins the max()
+  -- either way, so this only needs to catch the "no real date at all" case).
+  bool_and(watched_at_unknown) as last_watched_at_unknown,
+  coalesce(sum(runtime_minutes), 0)::integer as runtime_minutes_sum
+from public.episode_watched
+group by user_id, show_id;
+
+grant select on public.episode_watched_show_summary to anon, authenticated;
+
+-- Per-show rollup of just the undated ("watched a while ago") rows -- the
+-- bucket a bulk "mark whole show watched" import lands in, and the one that
+-- can realistically reach thousands of rows for a single show (a real user
+-- has 180 shows here totaling ~10k rows, vs. only ~30 real dated rows).
+-- Powers buildUndatedDiaryEntriesFromSummary, so the diary's undated bucket
+-- never needs per-episode detail fetched to the client either.
+create or replace view public.episode_watched_undated_summary as
+select
+  user_id,
+  show_id,
+  (array_agg(show_name))[1] as show_name,
+  (array_agg(show_poster_path))[1] as show_poster_path,
+  count(*)::integer as episode_count,
+  array_agg(distinct season_number order by season_number) as seasons,
+  case when count(*) = 1 then min(season_number) end as sole_season_number,
+  case when count(*) = 1 then min(episode_number) end as sole_episode_number,
+  max(created_at) as added_at
+from public.episode_watched
+where watched_at_unknown = true
+group by user_id, show_id;
+
+grant select on public.episode_watched_undated_summary to anon, authenticated;
 
 -- User-curated lists of shows (e.g. "Comfort shows"). "Shareable" is close
 -- to free here since every table in this app is already fully readable by
