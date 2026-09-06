@@ -9,11 +9,7 @@ export interface ToastAction {
   onClick: () => void
 }
 
-/** Shared toast for "Undo" offers and failed-write errors -- every mutating
- * action in the app funnels through this via the useToast hook. Owns its own
- * AnimatePresence/key so callers just render it unconditionally; keying by
- * message also gives each new toast (even one replacing a still-visible one)
- * its own fresh auto-dismiss timer instead of inheriting a stale one. */
+/** Shared toast for "Undo" offers and failed-write errors, rendered unconditionally by callers. */
 export default function Toast({ toast, onDismiss }: { toast: ToastState | null; onDismiss: () => void }) {
   return (
     <AnimatePresence>

@@ -9,11 +9,7 @@ import type { ShowRating } from '../types'
 
 const BUCKETS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const
 
-/** Letterboxd-style rating histogram: one bar per half-star bucket (this
- * app's rating scale, see StarRating.tsx), tallest bar scaled to full
- * height so the shape of someone's ratings is visible at a glance. Clicking
- * a bar expands the exact shows behind it -- otherwise the shape is all you
- * get, with no way to see which shows landed in a given bucket. */
+/** Rating histogram, one bar per half-star bucket; clicking a bar expands the shows behind it. */
 export default function RatingDistribution({ ratings }: { ratings: ShowRating[] }) {
   const [selected, setSelected] = useState<number | null>(null)
 
@@ -54,8 +50,6 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
               className={`flex-1 rounded-t-sm transition-[height,background-color] duration-300 disabled:cursor-default ${
                 isSelected ? 'bg-star' : 'bg-star/70 enabled:hover:bg-star/90'
               }`}
-              // A count of 0 still gets a hairline sliver -- an empty bucket
-              // reads as "zero," not as a rendering gap in the bar row.
               style={{ height: `${counts[i] === 0 ? 3 : Math.max(10, (counts[i] / max) * 100)}%` }}
             />
           )

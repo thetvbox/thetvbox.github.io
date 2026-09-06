@@ -6,8 +6,7 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { ShowListWithCount } from '../types'
 
-/** Expandable panel for adding/removing a show from your lists, or creating
- * a new one on the spot. */
+/** Expandable panel for adding/removing a show from your lists, or creating a new one. */
 export default function AddToListPicker({
   userId,
   showId,
@@ -30,10 +29,8 @@ export default function AddToListPicker({
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
-  // Toast is tied to this panel's own lifetime, not the page's.
   const { toast, showUndo, showError, dismiss } = useToast()
 
-  // Only ever mounted while open, so "active" for its whole lifetime.
   useEscapeAndFocusReturn(true, onClose)
   useEscapeAndFocusReturn(creating, () => setCreating(false))
 
@@ -111,8 +108,6 @@ export default function AddToListPicker({
       try {
         await addShowToList({ listId: list.id, showId, showName, showPosterPath })
       } catch {
-        // List was created but the show didn't make it on -- clean up rather
-        // than leave an orphan list behind.
         await deleteList(list.id).catch(() => {})
         throw new Error('add-to-new-list-failed')
       }

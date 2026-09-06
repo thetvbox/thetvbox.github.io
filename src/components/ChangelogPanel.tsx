@@ -4,9 +4,7 @@ import type { ChangelogBlock } from '../lib/changelog'
 import { formatShortDate } from '../lib/date'
 import InlinePanel from './InlinePanel'
 
-/** Inline "What's new" panel -- same conditionally-mounted-panel shape as
- * ProviderPicker/AddToListPicker (this app has no true modals, see
- * useEscapeAndFocusReturn), just read-only. */
+/** Inline read-only "What's new" panel. */
 export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
   useEscapeAndFocusReturn(true, onClose)
 

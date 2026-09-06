@@ -1,8 +1,6 @@
 import type { SeasonSegment } from '../lib/seasonProgress'
 
-/** Story-bar style progress: one capsule per season instead of one bar for
- * the whole show. Falls back to a single bar for single-season shows, where
- * a season breakdown would just repeat the overall fraction. */
+/** Story-bar progress: one capsule per season, falling back to a single bar for single-season shows. */
 export default function SeasonProgressBar({ segments }: { segments: SeasonSegment[] }) {
   if (segments.length <= 1) {
     const s = segments[0]

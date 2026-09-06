@@ -13,19 +13,13 @@ import InlinePanel from './InlinePanel'
 import type { AppUser } from '../types'
 
 interface FollowListPanelProps {
-  /** Whose followers/following list this is -- not necessarily the viewer. */
   userId: string
   mode: 'followers' | 'following'
   onClose: () => void
-  /** Called with +1/-1 when a follow/unfollow inside this panel succeeds, so
-   * the caller can keep its own "N following" count in sync. Only meaningful
-   * when the panel shows the viewer's own profile; safe to omit otherwise. */
   onMyFollowingCountChange?: (delta: number) => void
 }
 
-/** Inline followers/following list, opened from the count buttons on
- * Profile/PublicProfile. Every row gets its own Follow/Unfollow button for
- * the *viewer's* relationship to that person, plus a "Follows you" badge. */
+/** Inline followers/following list, with a Follow/Unfollow button and "Follows you" badge per row. */
 export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCountChange }: FollowListPanelProps) {
   const { user: me } = useAuth()
   const [people, setPeople] = useState<AppUser[]>([])

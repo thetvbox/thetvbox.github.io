@@ -1,5 +1,3 @@
-/** Small inline icons for ShowDetail's Quick Actions row (list, play/pause, bookmark, drop). */
-
 export function ListGlyph() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
@@ -47,8 +45,7 @@ export function BookmarkGlyph({ filled }: { filled: boolean }) {
   )
 }
 
-/** filled = currently dropped (renders an "x", offering to resume); unfilled
- * = not dropped (renders a down-arrow into a tray, offering to drop it). */
+/** Renders an "x" when dropped (offering resume), or a drop-into-tray arrow otherwise. */
 export function DropGlyph({ filled }: { filled: boolean }) {
   if (filled) {
     return (
