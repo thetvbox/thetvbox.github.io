@@ -25,9 +25,6 @@ export default function ListDetail() {
   const [items, setItems] = useState<ShowListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  // Deleting a list is permanent and takes every item on it with it -- an
-  // inline "are you sure" step (no native confirm(), same reasoning as
-  // DateMarkControl) is the guard against one mis-tap wiping it out.
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const { toast, showUndo, showError, dismiss } = useToast()
@@ -43,11 +40,6 @@ export default function ListDetail() {
       .then(([userRow, listRow, itemRows]) => {
         if (cancelled) return
         setProfile(userRow)
-        // A list's URL is scoped to a username, but listId is looked up on
-        // its own -- without this check, a mismatched URL (list from one
-        // user's page, ID from another's) would render as if it belonged to
-        // the wrong owner, and that owner's "isMine" controls (delete list,
-        // remove show) would act on someone else's list.
         if (listRow && userRow && listRow.user_id !== userRow.id) {
           setList(null)
           setItems([])
@@ -79,9 +71,6 @@ export default function ListDetail() {
       showError(`Failed to remove ${item.show_name}. Try again.`)
       return
     }
-    // The × button sits right next to the poster with no separate confirm
-    // step, so a mis-tap is easy -- give it the same recoverable undo as
-    // every other removal in the app instead of a silent, permanent drop.
     showUndo(`Removed ${item.show_name} from this list`, async () => {
       if (!listId) return
       try {
@@ -197,7 +186,6 @@ export default function ListDetail() {
                       <button
                         type="button"
                         onClick={() => handleRemove(item)}
-                        // Always visible on touch (no hover state to reveal it there), hover-gated from sm: up.
                         className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white backdrop-blur-sm transition-opacity duration-200 sm:h-6 sm:w-6 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100"
                         aria-label={`Remove ${item.show_name} from this list`}
                       >

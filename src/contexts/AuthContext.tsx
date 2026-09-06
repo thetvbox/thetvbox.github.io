@@ -4,9 +4,7 @@ import { supabase } from '../lib/supabase'
 import { STORAGE_KEYS, TABLE_USERS } from '../lib/constants'
 import type { AppUser } from '../types'
 
-// localStorage access can throw (Safari private browsing, storage
-// partitioning, kiosk browsers) -- guard every call so a locked-down
-// browser degrades to logged-out instead of crashing on first render.
+/** Reads the stored session user, guarding against storage being unavailable. */
 function readStoredUser(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEYS.user)
@@ -14,33 +12,26 @@ function readStoredUser(): string | null {
     return null
   }
 }
+
+/** Writes the session user, guarding against storage being unavailable. */
 function writeStoredUser(value: string): void {
   try {
     localStorage.setItem(STORAGE_KEYS.user, value)
-  } catch {
-    // Session still works in-memory for this tab; it just won't survive a reload.
-  }
+  } catch {}
 }
+
+/** Clears the stored session user, guarding against storage being unavailable. */
 function clearStoredUser(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.user)
-  } catch {
-    // Nothing to clean up if storage isn't writable in the first place.
-  }
+  } catch {}
 }
 
 interface AuthContextValue {
   user: AppUser | null
   loading: boolean
-  /**
-   * Looks up a user by email. Returns the user if found (caller should treat
-   * this as "logged in"), or null if this email hasn't registered yet
-   * (caller should then prompt for a username and call register()).
-   */
   findByEmail: (email: string) => Promise<AppUser | null>
-  /** Creates a new user with the given email + unique username and signs them in. */
   register: (email: string, username: string) => Promise<AppUser>
-  /** Sets the given user as the active session (used after findByEmail succeeds). */
   signIn: (user: AppUser) => void
   signOut: () => void
 }
@@ -84,7 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single()
         if (error) {
           if (error.code === '23505') {
-            // unique_violation -- figure out which column collided for a clearer message
             throw new Error(
               error.message.includes('username')
                 ? 'That username is taken. Try another.'

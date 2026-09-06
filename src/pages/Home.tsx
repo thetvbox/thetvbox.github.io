@@ -39,6 +39,7 @@ import type {
   WatchlistItem,
 } from '../types'
 
+/** Returns a time-of-day greeting for the header. */
 function greeting(): string {
   const hour = new Date().getHours()
   if (hour < 5) return 'Still up'
@@ -101,8 +102,6 @@ export default function Home() {
   )
   const watching = useMemo(() => nowWatching(activity), [activity])
 
-  // Per-season watched counts for everything in progress -- lets the card
-  // below say "Season 4 · 2/10" instead of a flat, hard-to-parse "10/44".
   const watchedBySeasonByShow = useMemo(() => {
     const byShow = new Map<number, EpisodeWatched[]>()
     for (const w of watched) {
@@ -137,18 +136,12 @@ export default function Home() {
         }
         setSeasonProgress(next)
       })
-      .catch(() => {
-        // Nice-to-have -- the card below falls back to the flat total.
-      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [watchingKey, watchedBySeasonByShow])
 
-  // "New episode soon" badge -- needs each show's *current* season's
-  // per-episode air dates, which seasonProgress above doesn't carry (only
-  // season-level episode counts), so this is a second, separate fetch keyed
-  // off the current-season number that fetch already worked out.
   const [nextEpisodes, setNextEpisodes] = useState<Map<number, NextEpisode>>(new Map())
 
   useEffect(() => {
@@ -169,18 +162,12 @@ export default function Home() {
         if (next) map.set(showId, next)
       }
       setNextEpisodes(map)
-    }).catch(() => {
-      // Nice-to-have -- the badge just doesn't show up.
-    })
+    }).catch(() => {})
     return () => {
       cancelled = true
     }
   }, [seasonProgress])
 
-  // Aggregates the same per-show next-episode lookups above into one
-  // soonest-first list, instead of that info only surfacing as a small badge
-  // on whichever card happens to have it (easy to miss once Now Watching
-  // grows past a row or two).
   const upcoming = useMemo<UpcomingItem[]>(() => {
     const items: UpcomingItem[] = []
     for (const s of watching) {
@@ -283,10 +270,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Upcoming -- next air dates across everything in Now Watching, soonest
-          first. Friend activity used to have a teaser here too, but that's a
-          browse-when-curious feed (still lives in full on Activity); this is
-          time-sensitive, so it earns the homepage slot instead. */}
       {upcoming.length > 0 && (
         <div className="mt-12">
           <div className="mb-4 flex items-center justify-between">
@@ -300,11 +283,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Watchlist -- shows saved for later, right below what's in progress.
-          History moved off Home entirely (still on Profile) -- removing a
-          show from Now Watching is now handled from the show's own page
-          (see ShowDetail.tsx), so it no longer needs a matching "finished"
-          list here to explain where things went. */}
       {!loading && watchlist.length > 0 && (
         <div className="mt-12">
           <div className="mb-4 flex items-center justify-between">
@@ -330,10 +308,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Lists teaser -- Lists otherwise only surface a few taps deep on
-          Profile's Lists tab, easy to forget exist. A compact row here (not
-          full poster grids, just names + counts) is enough to remind you
-          they're there without competing with Now Watching for attention. */}
       {!loading && lists.length > 0 && (
         <div className="mt-12">
           <div className="mb-4 flex items-center justify-between">

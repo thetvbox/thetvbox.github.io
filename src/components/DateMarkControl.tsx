@@ -7,10 +7,7 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlineConfirmCancel from './InlineConfirmCancel'
 import { TRIGGER_SWAP_MOTION } from '../lib/motion'
 
-/** Text trigger that expands into a date picker + confirm, so any "mark
- * watched" action can land on the right date in History instead of
- * defaulting to today. No native confirm() -- opening this control and
- * tapping Confirm is already the confirmation step. */
+/** Text trigger that expands into a date picker + confirm, for marking watched on a chosen date. */
 export default function DateMarkControl({
   label,
   onConfirm,
@@ -20,8 +17,6 @@ export default function DateMarkControl({
   label: string
   onConfirm: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
   className?: string
-  /** Shown above the date picker once expanded, e.g. "This will overwrite
-   * the date on 3 already-watched episodes." */
   confirmSummary?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -60,13 +55,6 @@ export default function DateMarkControl({
               saving={saving}
               savingLabel="Marking…"
               onConfirm={async () => {
-                // iOS Safari's native <input type="date"> wheel is still
-                // mid-dismiss when this fires (tapping Confirm doesn't blur
-                // the date input first) -- letting that settle before the
-                // parent's mark-watched state change collapses this form
-                // avoids two overlapping reflows landing on top of each
-                // other, which is what "screen offsetting" bug reports
-                // turned out to be.
                 ;(document.activeElement as HTMLElement | null)?.blur()
                 setSaving(true)
                 try {

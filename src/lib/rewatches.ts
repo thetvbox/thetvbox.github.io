@@ -3,9 +3,7 @@ import { fetchPaginated } from './pagination'
 import { ACTIVITY_FETCH_LIMIT } from './constants'
 import type { ShowRewatch } from '../types'
 
-/** Keeps a rewatch list in newest-first order. Needed anywhere a row is
- * reinserted into local state outside a fresh fetch (log, undo delete,
- * rollback) -- a plain prepend breaks now that rewatchedAt can be backdated. */
+/** Sorts a rewatch list newest-first by rewatchedAt. */
 export function sortRewatchesDesc(rows: ShowRewatch[]): ShowRewatch[] {
   return [...rows].sort((a, b) => b.rewatched_at.localeCompare(a.rewatched_at))
 }
@@ -44,14 +42,10 @@ export interface LogRewatchInput {
   showId: number
   showName: string
   showPosterPath: string | null
-  /** Caller-chosen, like bulkMarkWatched's watchedAt -- lets a rewatch from
-   * last week be backdated instead of logged as today. */
   rewatchedAt: string
 }
 
-/** Logs one rewatch event. Unlike everything else in this app, this is a
- * plain insert, not an upsert -- there's no unique constraint to conflict
- * with, since logging the same show's rewatch twice is the whole point. */
+/** Logs one rewatch event as a plain insert, since duplicate rewatches are expected. */
 export async function logRewatch(input: LogRewatchInput): Promise<ShowRewatch> {
   const { data, error } = await supabase
     .from('show_rewatches')
@@ -74,10 +68,7 @@ export async function deleteRewatch(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Re-inserts a deleted rewatch, preserving its original rewatched_at, to
- * undo deleteRewatch. Plain insert (no unique constraint to upsert against),
- * so the restored row gets a new id -- fine, nothing keys off it beyond
- * React's list key. */
+/** Re-inserts a deleted rewatch, preserving its original rewatched_at, to undo deleteRewatch. */
 export async function restoreRewatch(row: ShowRewatch): Promise<ShowRewatch> {
   const { data, error } = await supabase
     .from('show_rewatches')

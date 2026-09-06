@@ -4,13 +4,6 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlinePanel from './InlinePanel'
 import type { TmdbProviderListItem } from '../types'
 
-/** Curated by real-world recognizability, not TMDB's own `display_priority`
- * -- that field doesn't track "well known" at all (HBO Max ranks ~150th out
- * of ~200 in TMDB's general US provider list), so this panel's default,
- * unsearched view was surfacing near-random smaller platforms ahead of the
- * ones people actually look for. Prefix match, not exact: several of these
- * come back from TMDB with a tier suffix (e.g. "Peacock Premium",
- * "Paramount Plus Essential"). */
 const WELL_KNOWN_PROVIDER_PREFIXES = [
   'Netflix',
   'HBO Max',
@@ -26,16 +19,13 @@ const WELL_KNOWN_PROVIDER_PREFIXES = [
   'Crunchyroll',
 ]
 
-/** Lower is more recognizable; anything not on the curated list sorts after
- * all of it, in whatever order it already had (Array.sort is stable, so
- * that's TMDB's own priority order, untouched). */
+/** Returns a sort rank where lower is more recognizable; unlisted providers sort last. */
 function wellKnownRank(providerName: string): number {
   const idx = WELL_KNOWN_PROVIDER_PREFIXES.findIndex((prefix) => providerName.startsWith(prefix))
   return idx === -1 ? WELL_KNOWN_PROVIDER_PREFIXES.length : idx
 }
 
-/** Searchable panel for manually correcting "where to watch" -- backed by
- * TMDB's full provider list, not just those already known for this show. */
+/** Searchable panel for manually correcting "where to watch", backed by TMDB's full provider list. */
 export default function ProviderPicker({
   region,
   onPick,
@@ -50,7 +40,6 @@ export default function ProviderPicker({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // Only ever mounted while open, so "active" for its whole lifetime.
   useEscapeAndFocusReturn(true, onClose)
 
   useEffect(() => {
