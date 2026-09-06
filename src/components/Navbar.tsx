@@ -161,17 +161,13 @@ export default function Navbar() {
   const [openPanel, setOpenPanel] = useState<UtilityPanel | null>(null)
   const utilityRef = useRef<HTMLDivElement>(null)
 
-  // React Router fires no navigation when a Link targets the current route,
-  // so "tap the tab you're already on to scroll to top" needs explicit handling.
+  /** Scrolls to top when tapping the tab you're already on. */
   function handleNavClick(to: string) {
     if (location.pathname === to) {
       window.scrollTo({ top: 0, left: 0, behavior: scrollBehavior() })
     }
   }
 
-  // Tapping outside either panel closes it, the standard dismiss gesture for
-  // an inline dropdown -- Escape (see useEscapeAndFocusReturn) covers desktop
-  // keyboard users, but touch has no equivalent without this.
   useEffect(() => {
     if (!openPanel) return
     function handlePointerDown(e: PointerEvent) {
@@ -185,9 +181,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top bar. pt-[env(safe-area-inset-top)] clears the iOS status bar/notch
-          when installed to the home screen. Sticky (not fixed) so the extra
-          height reserves space in normal flow. */}
       <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
@@ -225,12 +218,6 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            {/* `relative` lives here, not on NotificationsBell's own 44px
-                trigger -- it sits left of the rightmost icon, so anchoring
-                its dropdown to the shared cluster instead guarantees it
-                still opens flush with the true right edge. ReportBugButton
-                is a centered modal (see its own component), so it doesn't
-                need this anchor at all. */}
             <div ref={utilityRef} className="relative flex items-center gap-1.5">
               <ThemeToggle />
               <ReportBugButton
@@ -246,9 +233,6 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Bottom tab bar (mobile only). transform-gpu forces its own compositing
-          layer up front -- fixed + backdrop-blur otherwise desyncs from the
-          viewport mid-scroll on mobile Safari/Chrome. */}
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

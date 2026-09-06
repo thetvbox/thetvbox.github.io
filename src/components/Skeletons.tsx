@@ -5,10 +5,6 @@ function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
     <div className="animate-pulse">
       <div className="aspect-[2/3] rounded-2xl bg-base-800" />
       <div className="mt-2 h-3.5 w-3/4 rounded bg-base-800" />
-      {/* Now Watching cards carry a season-progress bar under the title
-          instead of a second line of text -- swap the placeholder shape to
-          match so a grid of these doesn't visibly change proportions once
-          real cards load in. */}
       {progress ? (
         <div className="mt-1.5 h-1.5 w-full rounded-full bg-base-800" />
       ) : (
@@ -28,10 +24,7 @@ export function ShowGridSkeleton({ count = 12, progress = false }: { count?: num
   )
 }
 
-// Mirrors EpisodeRow.tsx's actual layout (full-width stacked image on
-// mobile, side-by-side from sm: up) -- a skeleton with the old fixed-width
-// side-by-side shape would pop into a visibly different layout the instant
-// real content loads in.
+/** Mirrors EpisodeRow.tsx's layout so it doesn't pop on load. */
 export function EpisodeRowSkeleton() {
   return (
     <div className="flex animate-pulse flex-col gap-3 rounded-xl border border-hairline bg-base-850/60 p-3 sm:flex-row sm:gap-4 sm:p-4">

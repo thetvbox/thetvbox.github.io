@@ -12,9 +12,6 @@ export default function SeasonTabs({ seasons, active, onSelect }: SeasonTabsProp
   const real = seasons.filter((s) => s.season_number > 0 || seasons.length === 1)
   const activeRef = useRef<HTMLButtonElement>(null)
 
-  // This row scrolls horizontally on narrow screens; scroll the active tab
-  // into view so landing on e.g. Season 4 doesn't clip it at the edge.
-  // block: 'nearest' avoids also scrolling the page vertically.
   useEffect(() => {
     activeRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
   }, [active])
