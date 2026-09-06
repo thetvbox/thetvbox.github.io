@@ -3,27 +3,10 @@ import { POSTGREST_MAX_ROWS_PER_REQUEST } from './constants'
 interface PageResult<T> {
   data: T[] | null
   error: { message: string } | null
-  /** Exact total row count for the query, independent of `.range()` --
-   * every `fetchPage` passed in here MUST request it (`{ count: 'exact' }`
-   * alongside `.select()`), so the first page tells us how many more pages
-   * exist and the rest can be fetched together instead of one at a time. */
   count?: number | null
 }
 
-/** Works around Supabase's hosted PostgREST silently capping every response
- * at `db-max-rows` (1000 by default) by paging with `.range()`.
- *
- * Pages are NOT fetched one-at-a-time-then-wait: the first page's exact
- * count tells us the total up front, so every remaining page is requested
- * in parallel via Promise.all. A heavy history (10k+ rows = 11 pages) went
- * from ~11 sequential round trips (the actual cause of a reported 4-5s
- * profile-load) to 2 concurrent batches.
- *
- * The query built by `fetchPage` MUST sort by a fully unique, deterministic
- * column (id) as a tiebreaker after any semantic ordering -- otherwise rows
- * tied on the semantic sort (e.g. many episodes backfilled with the same
- * "watched a while ago" placeholder date) can be skipped or duplicated
- * across page boundaries. */
+/** Fetches all rows past PostgREST's per-request row cap by paging with `.range()` in parallel. */
 export async function fetchPaginated<T>(
   fetchPage: (from: number, to: number) => PromiseLike<PageResult<T>>,
   maxRows: number,

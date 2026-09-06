@@ -50,12 +50,6 @@ const TABS: Tab[] = ['diary', 'history', 'watchlist', 'dropped', 'lists']
 export default function ProfileActivity({ userId, username }: ProfileActivityProps) {
   const { user: me } = useAuth()
   const isMe = me?.id === userId
-  // The URL is the source of truth for the active tab (not component state)
-  // so linking straight to a tab (see ListDetail's back link) and returning
-  // via the browser's back button both land you on the tab you actually
-  // meant, instead of always Diary -- and switching to a different profile
-  // (this component doesn't remount between two `/u/:username` routes)
-  // can't leave a stale tab behind, since there's no local copy to go stale.
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const tab: Tab = tabParam && TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'diary'
@@ -72,11 +66,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     )
   }
   const [ratings, setRatings] = useState<ShowRating[]>([])
-  // Dated (real-timestamp) watched rows only -- the diary's day-level
-  // grouping is the one thing here that genuinely needs per-episode detail.
-  // Everything else (stats, History, the diary's undated bucket) is built
-  // from the two aggregates below instead of the full episode_watched table
-  // -- see lib/showWatchSummary.ts for why.
   const [datedWatched, setDatedWatched] = useState<EpisodeWatched[]>([])
   const [showSummaries, setShowSummaries] = useState<ShowWatchSummary[]>([])
   const [undatedSummaries, setUndatedSummaries] = useState<UndatedShowWatchSummary[]>([])
@@ -211,18 +200,11 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     const totalShows = ratings.length
     const finished = activity.filter((s) => s.finished).length
     const avg = totalShows === 0 ? null : ratings.reduce((sum, r) => sum + r.rating, 0) / totalShows
-    // Rows logged before runtime_minutes existed contribute 0 here rather
-    // than being excluded -- see scripts/backfill-runtime.mjs to fill them in.
     const episodesWatched = showSummaries.reduce((sum, s) => sum + s.watched_count, 0)
     const hoursWatched = Math.round(showSummaries.reduce((sum, s) => sum + s.runtime_minutes_sum, 0) / 60)
     return { totalShows, finished, episodesWatched, avg, hoursWatched }
   }, [ratings, showSummaries, activity])
 
-  // Every dated, personally-loggable event (watched, rated, rewatched)
-  // merged into one timeline -- see buildDiaryEntries. Already sorted
-  // newest-first, so grouping is just "start a new bucket whenever the
-  // calendar day changes." Only dated watched rows are relevant here -- the
-  // undated bucket below is a per-show aggregate, not day-groupable.
   const diaryEntries = useMemo(
     () => buildDiaryEntries(ratings, datedWatched, rewatches),
     [ratings, datedWatched, rewatches],

@@ -3,14 +3,11 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 
 interface StarRatingProps {
-  /** Rating from 0 to 5, in 0.5 increments. 0 means unrated. */
   value: number
   onChange?: (value: number) => void
   size?: 'sm' | 'md' | 'lg'
   readOnly?: boolean
   className?: string
-  /** Screen-reader label for the interactive case, e.g. "Rate this show" --
-   * this component has no idea what it's rating, so the caller supplies one. */
   label?: string
 }
 
@@ -20,14 +17,10 @@ const SIZE_MAP: Record<NonNullable<StarRatingProps['size']>, number> = {
   lg: 28,
 }
 
-// How far a pointer has to move before a press counts as a drag rather than
-// a plain tap/click -- keeps an ordinary click from being treated as a
-// (no-op, same-spot) drag.
 const DRAG_THRESHOLD_PX = 6
 
+/** Renders one star, partially filled (0, 0.5, or 1) via a clip-path. */
 function Star({ fill, px }: { fill: number; px: number }) {
-  // fill: 0, 0.5, or 1. useId is stable and unique even with several
-  // StarRating instances mounted at once (show + season ratings).
   const clipId = useId()
   return (
     <svg width={px} height={px} viewBox="0 0 24 24" className="pointer-events-none block">
@@ -67,34 +60,27 @@ export default function StarRating({
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  // Tracks an in-progress press across the whole row (not per-star). Ref, not
-  // state -- read/written within one pointer-event sequence, no re-render needed.
   const dragRef = useRef<{ pointerId: number; startX: number; dragging: boolean } | null>(null)
   const px = SIZE_MAP[size]
   const displayValue = hoverValue ?? value
   const interactive = !readOnly && Boolean(onChange)
 
+  /** Converts a pointer's clientX into a 0.5-step rating across the row's width. */
   function valueFromClientX(clientX: number): number {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0) return value
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    // 5 stars, half-star steps -> 10 slots across the row's width.
     return Math.max(0.5, Math.min(5, Math.round(ratio * 10) / 2))
   }
 
+  /** Commits a tap/click pick, clearing the rating if the same value is picked again. */
   function handlePick(starIndex: number, half: boolean) {
     if (!interactive || !onChange) return
     const picked = half ? starIndex - 0.5 : starIndex
-    // Picking the same rating again clears it -- a shortcut for the explicit
-    // "Clear" control in RatingSummary.
     onChange(picked === value ? 0 : picked)
   }
 
-  // A precise tap on a ~10px half-star zone is hard on a phone. Letting a
-  // press drag across the row -- previewing live, committing on release --
-  // is more forgiving. Only takes over once real movement is detected
-  // (pointer capture then redirects the eventual click away from the button
-  // underneath), so plain taps/clicks still go through each button's onClick.
+  /** Starts tracking a potential drag-to-rate gesture. */
   function handlePointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (!interactive) return
     dragRef.current = { pointerId: e.pointerId, startX: e.clientX, dragging: false }
@@ -128,10 +114,6 @@ export default function StarRating({
   return (
     <div
       ref={containerRef}
-      // py-2.5/-my-2.5 pads the touch target to ~44px (WCAG/HIG minimum)
-      // without affecting surrounding layout. touch-pan-y keeps vertical
-      // scroll gestures native so a scroll starting on the star row isn't
-      // hijacked into a rating drag.
       className={`inline-flex touch-pan-y items-center gap-[3px] py-2.5 -my-2.5 ${className}`}
       onMouseLeave={() => {
         if (!dragRef.current?.dragging) setHoverValue(null)

@@ -28,18 +28,11 @@ interface NotificationsBellProps {
   onOpenChange: (open: boolean) => void
 }
 
-/** Bell icon in the top bar -- unseen badge, opens an inline dropdown of
- * recent follow / show-rated / show-finished activity from people the user
- * follows. The panel anchors to Navbar's shared utility-cluster container,
- * not this component's own root -- same reasoning as ReportBugButton.tsx.
- * Controlled by Navbar so opening this closes ReportBugButton's panel and
- * vice versa. */
+/** Bell icon in the top bar; opens a dropdown of recent activity from followed users. */
 export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
   const { user: me } = useAuth()
   const [unseen, setUnseen] = useState(0)
 
-  // Navbar never unmounts across route changes -- without this, tapping a
-  // nav link while this panel is open leaves it floating over the new page.
   useCloseOnNavigate(() => onOpenChange(false))
 
   useEffect(() => {
@@ -52,17 +45,10 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
         .then((count) => {
           if (!cancelled) setUnseen(count)
         })
-        .catch(() => {
-          // Silent -- a failed unseen-count fetch shouldn't disrupt the rest
-          // of the app. Worst case, the badge just doesn't show up.
-        })
+        .catch(() => {})
     }
 
     refresh()
-    // Navbar (and this bell) mounts once for the whole session rather than
-    // per-route, so without polling a new notification picked up mid-session
-    // would never show up until a hard reload. A minute is frequent enough
-    // to feel "live" without hammering Supabase on a low-stakes badge count.
     const interval = window.setInterval(refresh, NOTIFICATIONS_POLL_MS)
     return () => {
       cancelled = true
@@ -116,9 +102,7 @@ function BellGlyph() {
   )
 }
 
-/** Small per-type badge shown at the corner of the actor's avatar -- gives
- * each notification a glanceable shape (follow vs. rated vs. finished)
- * without having to read the sentence first. */
+/** Small per-type badge shown at the corner of the actor's avatar. */
 function TypeBadge({ type }: { type: Notification['type'] }) {
   if (type === 'follow') {
     return (
@@ -147,8 +131,7 @@ function TypeBadge({ type }: { type: Notification['type'] }) {
   )
 }
 
-/** The one-line description for a notification, shared between the copy
- * conventions ActivityRow already established ("finished X" / "rated X"). */
+/** The one-line description for a notification. */
 function NotificationText({ n }: { n: Notification }) {
   if (n.type === 'follow') {
     return (
@@ -208,11 +191,6 @@ function NotificationsPanel({
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    // Fire-and-forget: if this fails, the badge just reappears next time
-    // fetchUnseenNotificationCount runs -- a harmless, self-healing
-    // fallback, not worth surfacing an error for. Also opportunistically
-    // prunes anything seen more than a day ago, since there's no server
-    // cron here -- see lib/notifications.ts.
     markNotificationsSeenAndPrune(userId)
       .then(onSeen)
       .catch(() => {})
@@ -264,9 +242,6 @@ function NotificationsPanel({
 
       {error && <p className="mb-2 text-xs text-danger">{error}</p>}
 
-      {/* Fixed height regardless of loading/empty/loaded state -- content
-          swaps inside it instead of the panel itself growing or shrinking
-          right after opening, once the fetch above resolves. */}
       <div className="h-64 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">

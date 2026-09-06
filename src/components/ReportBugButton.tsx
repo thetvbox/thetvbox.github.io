@@ -20,20 +20,13 @@ import {
   MODAL_PANEL_TRANSITION,
 } from '../lib/motion'
 
-/** Top-bar trigger for a centered modal (this app's only one -- everything
- * else toggled from the top bar is an inline dropdown anchored under its
- * trigger, but a short bug-report form reads better as a proper dialog than
- * a cramped corner popup). */
 interface ReportBugButtonProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-/** Controlled by Navbar so opening this closes NotificationsBell's panel and
- * vice versa -- see Navbar's `openPanel` state. */
+/** Top-bar trigger for the app's one centered-modal bug report form. */
 export default function ReportBugButton({ open, onOpenChange }: ReportBugButtonProps) {
-  // Navbar never unmounts across route changes -- without this, tapping a
-  // nav link while this panel is open leaves it floating over the new page.
   useCloseOnNavigate(() => onOpenChange(false))
 
   return (
@@ -82,16 +75,10 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ url: string; number: number } | null>(null)
-  // Desktop-only autofocus -- see the hook. On mobile, autofocusing here
-  // would pop the keyboard the instant the bug icon is tapped, before the
-  // panel has even settled into place.
   const titleInputRef = useDesktopAutoFocus(true)
 
   useEscapeAndFocusReturn(true, onClose)
 
-  // A background page scrolling behind a centered modal reads as broken --
-  // none of this app's other top-bar panels need this, since they're inline
-  // dropdowns that don't cover the page.
   useEffect(() => {
     const original = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -102,10 +89,6 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    // The submit button is disabled while saving, but a native form still
-    // submits on Enter from the title field regardless of that -- without
-    // this guard, pressing Enter again during a slow request re-fires
-    // handleSubmit and files a second, duplicate issue.
     if (status === 'saving') return
     if (!title.trim() || !description.trim()) return
     setStatus('saving')
@@ -127,13 +110,6 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  // Portaled straight to <body>: this component mounts inside Navbar's
-  // <header>, which has backdrop-blur-md -- backdrop-filter (like filter)
-  // creates a containing block for position:fixed descendants, so without
-  // the portal `inset-0` below resolves against the ~72px header bar
-  // instead of the viewport, squeezing the whole dialog into it. Confirmed
-  // live on both desktop and mobile before this fix; broken on both, just
-  // more obviously so on the shorter mobile viewport.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div
