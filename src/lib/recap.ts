@@ -17,9 +17,7 @@ function inYear(iso: string, year: number): boolean {
   return new Date(iso).getFullYear() === year
 }
 
-/** Every calendar year with *any* activity, newest first -- for the year picker.
- * Unknown-date watches carry a placeholder epoch timestamp and are excluded,
- * or they'd all wrongly surface a "1970" year. */
+/** Returns every calendar year with any dated activity, newest first. */
 export function availableRecapYears(
   ratings: ShowRating[],
   watched: EpisodeWatched[],
@@ -32,9 +30,7 @@ export function availableRecapYears(
   return Array.from(years).sort((a, b) => b - a)
 }
 
-/** Builds one year's recap from already-fetched data -- ShowActivity (from
- * summarizeShowActivity) for "finished this year", and the raw rows for
- * everything else, since ShowActivity only keeps one rating per show. */
+/** Builds one year's recap from already-fetched activity and raw rows. */
 export function buildYearRecap(
   year: number,
   activity: ShowActivity[],

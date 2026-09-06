@@ -3,9 +3,7 @@ import { fetchPaginated } from './pagination'
 import { GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
 import type { SeasonRating, SeasonRatingWithUser } from '../types'
 
-/** Every season rating (every user, every season) for a show, joined with
- * usernames -- fetched once per show alongside show_ratings and filtered
- * client-side per active season, the same pattern as episode_watched. */
+/** Fetches every season rating for a show, joined with usernames. */
 export async function fetchAllSeasonRatingsForShow(showId: number): Promise<SeasonRatingWithUser[]> {
   const { data, error } = await supabase
     .from('season_ratings')
@@ -16,9 +14,7 @@ export async function fetchAllSeasonRatingsForShow(showId: number): Promise<Seas
   return (data ?? []) as unknown as SeasonRatingWithUser[]
 }
 
-/** Most recent season ratings across the whole group (every user), for the
- * group Activity feed -- same shape/purpose as fetchRecentShowRatingsAllUsers
- * in lib/showRatings.ts, just for the season-level table. */
+/** Fetches the most recent season ratings across the whole group, for the group Activity feed. */
 export async function fetchRecentSeasonRatingsAllUsers(
   limit = GROUP_ACTIVITY_FETCH_LIMIT,
 ): Promise<SeasonRatingWithUser[]> {

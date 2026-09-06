@@ -1,8 +1,7 @@
 import { supabase } from './supabase'
 import type { ShowList, ShowListItem, ShowListWithCount } from '../types'
 
-/** One user's lists, each with how many shows are on it -- for the "My
- * Lists" overview, without fetching every item of every list. */
+/** Fetches one user's lists, each with how many shows are on it. */
 export async function fetchListsForUser(userId: string): Promise<ShowListWithCount[]> {
   const { data, error } = await supabase
     .from('show_lists')
@@ -34,8 +33,7 @@ export async function fetchListItems(listId: string): Promise<ShowListItem[]> {
   return (data ?? []) as ShowListItem[]
 }
 
-/** Every list a show appears on, for a given user -- powers the "Add to a
- * list" picker's added/not-added state on ShowDetail. */
+/** Fetches every list a show appears on, for a given user. */
 export async function fetchListMembershipForShow(userId: string, showId: number): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('show_list_items')

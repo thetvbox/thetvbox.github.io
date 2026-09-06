@@ -19,9 +19,6 @@ export default function Search() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const requestId = useRef(0)
 
-  // TMDB sometimes returns rows with no poster -- filtered out everywhere
-  // results are counted or rendered, so a page of posterless matches reads
-  // as "no shows found" instead of silently rendering an empty grid.
   const posterResults = useMemo(() => results.filter((s) => s.poster_path), [results])
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
   const { platforms } = useStreamingPlatforms(resultIds)
@@ -40,9 +37,6 @@ export default function Search() {
 
     debounceRef.current = setTimeout(async () => {
       const id = ++requestId.current
-      // Only shown once the debounced request actually starts -- setting it
-      // immediately on every keystroke flashed the skeleton for the whole
-      // debounce window (see SEARCH_DEBOUNCE_MS) before any request had fired.
       setLoading(true)
       try {
         const shows = await searchShows(trimmed)

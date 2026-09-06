@@ -4,7 +4,6 @@ import type { TmdbShowDetail } from '../types'
 
 export interface HistoryFilters {
   rated: 'any' | 'rated' | 'unrated'
-  /** Only meaningful when rated === 'rated' -- "at least N stars." */
   minRating: number | null
   genres: Set<string>
   yearFrom: number | null
@@ -33,8 +32,7 @@ export function isHistoryFiltersActive(filters: HistoryFilters): boolean {
   return countActiveHistoryFilters(filters) > 0
 }
 
-/** Powers the small "Filters · N" count badge on the toggle button. Year is
- * one combined facet (from/to) even though it's two fields internally. */
+/** Counts active filter facets, treating year from/to as one combined facet. */
 export function countActiveHistoryFilters(filters: HistoryFilters): number {
   let count = 0
   if (filters.rated !== 'any') count++
@@ -115,7 +113,6 @@ export function filterHistory(
     if (filters.rated === 'unrated' && s.rating !== null) return false
     if (filters.minRating !== null && (s.rating === null || s.rating < filters.minRating)) return false
 
-    // Facets below need show details; a show still loading them can't match.
     const d = details.get(s.showId)
 
     if (filters.genres.size > 0 && !(d && d.genres?.some((g) => filters.genres.has(g.name)))) {

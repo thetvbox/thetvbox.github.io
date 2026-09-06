@@ -15,8 +15,6 @@ export default function ShowDetail() {
   const { user } = useAuth()
   const d = useShowDetail(showId, user)
   const location = useLocation()
-  // Set by Home's Now Watching card (see Home.tsx) so a click there jumps
-  // straight to the next unwatched episode instead of landing at the top.
   const jumpToProgress = Boolean((location.state as { jumpToProgress?: boolean } | null)?.jumpToProgress)
 
   if (Number.isNaN(showId)) {
@@ -43,9 +41,6 @@ export default function ShowDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-base-950 via-base-950/70 to-base-950/20" />
       </div>
 
-      {/* relative: the hero above is a positioned element, so without this,
-          this static sibling would paint behind it wherever the negative
-          margin makes them overlap, clipping the top of the poster. */}
       <div className="relative mx-auto -mt-24 max-w-5xl px-4 sm:-mt-28 sm:px-6 lg:-mt-32">
         <ShowDetailHero
           show={d.show}

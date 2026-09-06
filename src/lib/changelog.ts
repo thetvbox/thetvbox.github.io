@@ -11,9 +11,7 @@ export interface ChangelogRelease {
   blocks: ChangelogBlock[]
 }
 
-/** Hand-rolled, not a markdown library -- CHANGELOG.md only ever uses a
- * small, fixed subset (## headings, ### subheadings, "- " list items,
- * paragraphs, trailing reference links), so a real parser would be overkill. */
+/** Parses CHANGELOG.md's fixed Keep-a-Changelog subset into structured releases. */
 export function parseChangelog(raw: string): ChangelogRelease[] {
   const releases: ChangelogRelease[] = []
   let current: ChangelogRelease | null = null
@@ -24,11 +22,10 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
     const releaseMatch = line.match(/^## \[(.+?)\](?: - (.+))?/)
     if (releaseMatch) {
       current = { version: releaseMatch[1], date: releaseMatch[2] ?? null, blocks: [] }
-      // "Unreleased" starts out empty -- only surface it once it has content.
       releases.push(current)
       continue
     }
-    if (!current) continue // Skip the H1 title + intro paragraph before the first release.
+    if (!current) continue
 
     if (line.startsWith('### ')) {
       current.blocks.push({ type: 'heading', text: line.slice(4).trim() })
@@ -40,7 +37,7 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
       else current.blocks.push({ type: 'list', items: [line.slice(2).trim()] })
       continue
     }
-    if (/^\[.+\]:\s*https?:\/\//.test(line)) continue // Reference-link definitions at the bottom.
+    if (/^\[.+\]:\s*https?:\/\//.test(line)) continue
     if (line.trim() === '') continue
 
     const last = current.blocks[current.blocks.length - 1]
@@ -53,7 +50,4 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
 
 export const changelogReleases: ChangelogRelease[] = parseChangelog(changelogRaw)
 
-/** Inlined at build time from package.json (see vite.config.ts) -- the
- * single source of truth for both the npm package version and what Profile
- * shows as the running app's version. */
 export const appVersion = __APP_VERSION__

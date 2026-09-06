@@ -15,10 +15,7 @@ export interface BugReportResult {
   number: number
 }
 
-/** Files a GitHub issue via the report-bug Edge Function -- see
- * supabase/functions/report-bug/README.md for the one-time server setup
- * this needs. Until that's done, the function itself returns a clear
- * "not configured" error rather than a confusing generic failure. */
+/** Files a GitHub issue via the report-bug Edge Function. */
 export async function submitBugReport(input: BugReportInput): Promise<BugReportResult> {
   const { data, error } = await supabase.functions.invoke('report-bug', { body: input })
 
@@ -28,9 +25,7 @@ export async function submitBugReport(input: BugReportInput): Promise<BugReportR
       try {
         const body = await error.context.json()
         if (body?.error) message = body.error
-      } catch {
-        // Response body wasn't JSON -- keep the generic message.
-      }
+      } catch {}
     }
     throw new Error(message)
   }

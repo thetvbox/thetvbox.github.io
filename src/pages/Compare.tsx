@@ -25,7 +25,7 @@ interface SharedShow {
 export default function Compare() {
   const { username } = useParams<{ username: string }>()
   const { user: me } = useAuth()
-  const [them, setThem] = useState<AppUser | null | undefined>(undefined) // undefined = loading
+  const [them, setThem] = useState<AppUser | null | undefined>(undefined)
   const [myRatings, setMyRatings] = useState<ShowRating[]>([])
   const [theirRatings, setTheirRatings] = useState<ShowRating[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,10 +92,6 @@ export default function Compare() {
     return { shared: rows, matchPercent: match }
   }, [myRatings, theirRatings])
 
-  // Checked before the not-found/self-compare branches below: `them` and
-  // `username` can briefly hold a previous lookup's result right after the
-  // route param changes (the effect that resets them hasn't committed yet),
-  // which without this guard flashed the wrong message instead of a skeleton.
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
