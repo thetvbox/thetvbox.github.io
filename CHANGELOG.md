@@ -6,6 +6,38 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- "Dropped" as a third watch status alongside Now Watching and Watchlist,
+  for shows you've stopped partway through — its own Profile tab, and it
+  resumes automatically the moment you mark another episode watched.
+- Notifications rebuilt into a real activity feed: new followers, ratings,
+  and finishes from people you follow, not just follow alerts.
+- Clicking a bar in the rating histogram reveals which shows make it up.
+- Watchlist entries are removed automatically once you actually start
+  watching that show.
+
+### Changed
+
+- "Report a bug" now opens as a centered modal instead of a dropdown,
+  fixing clipping on mobile.
+- Profile stats load in a fraction of the time — moved the heaviest
+  aggregation into two Postgres views instead of paginating raw rows
+  client-side.
+- Desktop navbar widened to feel less boxed-in on wide screens.
+
+### Fixed
+
+- Profile stats no longer silently truncate at 1,000 rows for users with
+  large watch histories (a Supabase/PostgREST response cap).
+- Undated diary entries now keep the order you added them in, instead of
+  resorting alphabetically.
+- Fixed screen offsetting on mobile when marking a season or show fully
+  watched.
+- "Jump to progress" from Now Watching no longer does nothing once you're
+  caught up on every aired episode.
+- Fixed the notifications panel resizing awkwardly right after opening.
+
 ## [1.1.0] - 2026-08-22
 
 ### Added
