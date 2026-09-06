@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import StarRating from './StarRating'
 import StarGlyph from './StarGlyph'
+import { profileRoute } from '../lib/routes'
 
 /** Minimal shape both ShowRatingWithUser and SeasonRatingWithUser satisfy --
  * this component doesn't care which kind of rating it's showing. */
@@ -97,7 +98,7 @@ export default function RatingSummary({
                 {r.user_id === currentUserId ? (
                   <span className="text-base-300">You</span>
                 ) : (
-                  <Link to={`/u/${r.users?.username ?? ''}`} className="text-base-300 hover:text-accent-400">
+                  <Link to={profileRoute(r.users?.username ?? '')} className="text-base-300 hover:text-accent-400">
                     @{r.users?.username ?? 'unknown'}
                   </Link>
                 )}

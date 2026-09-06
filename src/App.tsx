@@ -9,6 +9,7 @@ import Navbar from './components/Navbar'
 import PasscodeGate from './components/PasscodeGate'
 import ErrorBoundary from './components/ErrorBoundary'
 import { hasPassedGate, isGateConfigured } from './lib/siteGate'
+import { ROUTES } from './lib/routes'
 import { useScrollRestoration } from './hooks/useScrollRestoration'
 import Login from './pages/Login'
 
@@ -46,7 +47,7 @@ function Page({ children }: { children: ReactNode }) {
 function AppShell() {
   const { user, loading } = useAuth()
   const location = useLocation()
-  const showNav = Boolean(user) && location.pathname !== '/login'
+  const showNav = Boolean(user) && location.pathname !== ROUTES.login
   const [gatePassed, setGatePassed] = useState(hasPassedGate)
 
   // Tapping a nav item (bottom tab bar on mobile, top bar on desktop) lands
@@ -78,9 +79,9 @@ function AppShell() {
             what resets ErrorBoundary's state each time the route changes. */}
         <ErrorBoundary key={location.pathname}>
           <Routes location={location}>
-            <Route path="/login" element={<Login />} />
+            <Route path={ROUTES.login} element={<Login />} />
             <Route
-              path="/home"
+              path={ROUTES.home}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -90,7 +91,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/activity"
+              path={ROUTES.activity}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -100,7 +101,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/search"
+              path={ROUTES.search}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -110,7 +111,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/show/:id"
+              path={ROUTES.show}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -120,7 +121,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/profile"
+              path={ROUTES.profile}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -130,7 +131,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/members"
+              path={ROUTES.members}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -140,7 +141,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/u/:username"
+              path={ROUTES.publicProfile}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -150,7 +151,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/u/:username/shows/:showId"
+              path={ROUTES.showDiary}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -160,7 +161,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/compare/:username"
+              path={ROUTES.compare}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -170,7 +171,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/u/:username/lists/:listId"
+              path={ROUTES.listDetail}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -180,7 +181,7 @@ function AppShell() {
               }
             />
             <Route
-              path="/recap"
+              path={ROUTES.recap}
               element={
                 <ProtectedRoute>
                   <Page>
@@ -189,8 +190,8 @@ function AppShell() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to={user ? '/home' : '/login'} replace />} />
-            <Route path="*" element={<Navigate to={user ? '/home' : '/login'} replace />} />
+            <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
+            <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
           </Routes>
         </ErrorBoundary>
       </AnimatePresence>

@@ -4,6 +4,7 @@ import { staggerRowMotion } from '../../lib/motion'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
+import { showRoute } from '../../lib/routes'
 import type { ShowDropped } from '../../types'
 
 interface DroppedTabProps {
@@ -33,7 +34,7 @@ export default function DroppedTab({ items, isMe, onResume }: DroppedTabProps) {
           {...staggerRowMotion(i, 8)}
           className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
         >
-          <Link to={`/show/${d.show_id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <Link to={showRoute(d.show_id)} className="flex min-w-0 flex-1 items-center gap-3">
             <PosterThumb posterPath={d.show_poster_path} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-base-100">{d.show_name}</p>

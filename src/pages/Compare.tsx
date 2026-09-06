@@ -6,6 +6,7 @@ import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
+import { showRoute } from '../lib/routes'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
@@ -144,7 +145,7 @@ export default function Compare() {
             {shared.map((r, i) => (
               <motion.li key={r.showId} {...staggerRowMotion(i)}>
                 <Link
-                  to={`/show/${r.showId}`}
+                  to={showRoute(r.showId)}
                   className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
                 >
                   <PosterThumb posterPath={r.showPosterPath} />

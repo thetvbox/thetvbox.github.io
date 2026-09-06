@@ -5,6 +5,7 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useFollowActions } from '../hooks/useFollowActions'
 import { fetchFollowerIds, fetchFollowersWithUsers, fetchFollowingIds, fetchFollowingWithUsers } from '../lib/follows'
 import { SKELETON_ROWS_COMPACT } from '../lib/constants'
+import { profileRoute } from '../lib/routes'
 import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
@@ -123,7 +124,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
         <ul className="space-y-1.5">
           {people.map((p) => (
             <li key={p.id} className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover">
-              <Link to={`/u/${p.username}`} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-2.5">
+              <Link to={profileRoute(p.username)} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-2.5">
                 <Avatar username={p.username} size="xs" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-base-100">@{p.username}</p>

@@ -21,6 +21,7 @@ import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
 import { ACTIVITY_FETCH_LIMIT, PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
+import { listDetailRoute, showRoute } from '../lib/routes'
 import SeasonProgressBar from '../components/SeasonProgressBar'
 import StreamingBadge from '../components/StreamingBadge'
 import UpcomingRow from '../components/UpcomingRow'
@@ -244,7 +245,7 @@ export default function Home() {
             return (
               <motion.div key={s.showId} {...staggerTileMotion(i)}>
                 <Link
-                  to={`/show/${s.showId}`}
+                  to={showRoute(s.showId)}
                   state={{ jumpToProgress: true }}
                   className="group block"
                 >
@@ -318,7 +319,7 @@ export default function Home() {
           <div className={POSTER_GRID_CLASSES}>
             {watchlist.map((w, i) => (
               <motion.div key={w.id} {...staggerTileMotion(i)}>
-                <Link to={`/show/${w.show_id}`} className="group block">
+                <Link to={showRoute(w.show_id)} className="group block">
                   <PosterTile posterPath={w.show_poster_path} name={w.show_name} />
                   <p className="mt-2 truncate text-sm font-medium text-base-100">{w.show_name}</p>
                   <p className="text-xs text-base-400">Added {formatShortDate(w.added_at)}</p>
@@ -348,7 +349,7 @@ export default function Home() {
             {lists.map((l) => (
               <Link
                 key={l.id}
-                to={`/u/${user?.username}/lists/${l.id}`}
+                to={listDetailRoute(user?.username ?? '', l.id)}
                 className="rounded-full border border-hairline-strong bg-base-850/60 px-3.5 py-2 text-sm text-base-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
               >
                 {l.name} <span className="text-base-500">· {l.itemCount}</span>

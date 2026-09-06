@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
 import type { GroupActivityEvent } from '../lib/showActivity'
+import { showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
 import StarGlyph from './StarGlyph'
@@ -9,7 +10,7 @@ import StarGlyph from './StarGlyph'
 export default function ActivityRow({ event }: { event: GroupActivityEvent }) {
   return (
     <Link
-      to={`/u/${event.username}/shows/${event.showId}`}
+      to={showDiaryRoute(event.username, event.showId)}
       className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
       <Avatar username={event.username} size="sm" />

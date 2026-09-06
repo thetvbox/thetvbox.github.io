@@ -12,6 +12,7 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
+import { profileRoute, showRoute } from '../lib/routes'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
 export default function ListDetail() {
@@ -102,7 +103,7 @@ export default function ListDetail() {
     setDeleting(true)
     try {
       await deleteList(listId)
-      navigate(`/u/${username}`)
+      navigate(profileRoute(username))
     } catch {
       setDeleting(false)
       setConfirmingDelete(false)
@@ -117,7 +118,7 @@ export default function ListDetail() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <Link
-        to={`/u/${username}?${PROFILE_LISTS_TAB_QUERY}`}
+        to={`${profileRoute(username ?? '')}?${PROFILE_LISTS_TAB_QUERY}`}
         className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
       >
         &larr; {isMine ? 'Your' : `@${username}'s`} lists
@@ -188,7 +189,7 @@ export default function ListDetail() {
               <div className={POSTER_GRID_CLASSES}>
                 {items.map((item, i) => (
                   <motion.div key={item.id} {...staggerTileMotion(i)} className="group relative">
-                    <Link to={`/show/${item.show_id}`} className="block">
+                    <Link to={showRoute(item.show_id)} className="block">
                       <PosterTile posterPath={item.show_poster_path} name={item.show_name} />
                       <p className="mt-2 truncate text-sm font-medium text-base-100">{item.show_name}</p>
                     </Link>

@@ -18,6 +18,7 @@ import {
   DROPDOWN_PANEL_TRANSITION,
 } from '../lib/motion'
 import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
+import { profileRoute, showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
 import type { Notification } from '../types'
@@ -175,8 +176,8 @@ function NotificationText({ n }: { n: Notification }) {
 }
 
 function notificationHref(n: Notification): string {
-  if (n.type === 'follow') return `/u/${n.actor_username}`
-  return `/u/${n.actor_username}/shows/${n.show_id}`
+  if (n.type === 'follow') return profileRoute(n.actor_username)
+  return showDiaryRoute(n.actor_username, n.show_id ?? '')
 }
 
 function NotificationsPanel({

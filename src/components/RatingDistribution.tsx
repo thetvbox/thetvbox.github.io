@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import StarGlyph from './StarGlyph'
 import PosterThumb from './PosterThumb'
 import InlinePanel from './InlinePanel'
+import { showRoute } from '../lib/routes'
 import type { ShowRating } from '../types'
 
 const BUCKETS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const
@@ -94,7 +95,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
               {selectedShows.map((r) => (
                 <li key={r.id}>
                   <Link
-                    to={`/show/${r.show_id}`}
+                    to={showRoute(r.show_id)}
                     className="flex items-center gap-2.5 rounded-lg p-1 transition-colors duration-200 hover:bg-hover"
                   >
                     <PosterThumb posterPath={r.show_poster_path} size="sm" />

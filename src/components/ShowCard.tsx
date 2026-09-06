@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { yearFromDate } from '../lib/tmdb'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import type { ResolvedProvider } from '../lib/streamingProvider'
+import { showRoute } from '../lib/routes'
 import StreamingBadge from './StreamingBadge'
 import PosterTile from './PosterTile'
 import type { TmdbShowSummary } from '../types'
@@ -23,7 +24,7 @@ export default function ShowCard({
       transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
     >
       <Link
-        to={`/show/${show.id}`}
+        to={showRoute(show.id)}
         className="group block"
         aria-label={`${show.name}${year ? ` (${year})` : ''}`}
       >

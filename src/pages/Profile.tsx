@@ -7,6 +7,7 @@ import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
+import { profileRoute } from '../lib/routes'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
@@ -34,7 +35,7 @@ export default function Profile() {
             Year in review
           </Link>
           <Link
-            to={`/u/${user?.username}`}
+            to={profileRoute(user?.username ?? '')}
             className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
           >
             Public view

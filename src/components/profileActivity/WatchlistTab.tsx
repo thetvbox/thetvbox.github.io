@@ -4,6 +4,7 @@ import { staggerRowMotion } from '../../lib/motion'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
+import { showRoute } from '../../lib/routes'
 import type { WatchlistItem } from '../../types'
 
 interface WatchlistTabProps {
@@ -40,7 +41,7 @@ export default function WatchlistTab({ items, isMe, onRemove }: WatchlistTabProp
           {...staggerRowMotion(i, 8)}
           className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
         >
-          <Link to={`/show/${w.show_id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <Link to={showRoute(w.show_id)} className="flex min-w-0 flex-1 items-center gap-3">
             <PosterThumb posterPath={w.show_poster_path} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-base-100">{w.show_name}</p>

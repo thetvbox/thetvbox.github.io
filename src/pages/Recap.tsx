@@ -9,6 +9,7 @@ import { summarizeShowActivity } from '../lib/showActivity'
 import { availableRecapYears, buildYearRecap } from '../lib/recap'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
+import { showRoute } from '../lib/routes'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StarGlyph from '../components/StarGlyph'
@@ -134,7 +135,7 @@ export default function Recap() {
                 Top rated
               </h2>
               <Link
-                to={`/show/${recap.topRated.showId}`}
+                to={showRoute(recap.topRated.showId)}
                 className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
               >
                 <PosterThumb posterPath={recap.topRated.showPosterPath} size="lg" />

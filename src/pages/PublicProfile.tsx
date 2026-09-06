@@ -6,6 +6,7 @@ import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import CenteredMessage from '../components/CenteredMessage'
 import Avatar from '../components/Avatar'
+import { compareRoute } from '../lib/routes'
 import type { AppUser } from '../types'
 
 export default function PublicProfile() {
@@ -67,7 +68,7 @@ export default function PublicProfile() {
           </Link>
         ) : (
           <Link
-            to={`/compare/${username}`}
+            to={compareRoute(username ?? '')}
             className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
           >
             Compare ratings

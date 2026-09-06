@@ -9,6 +9,7 @@ import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
 import { staggerRowMotion } from '../lib/motion'
+import { profileRoute, showRoute } from '../lib/routes'
 import CenteredMessage from '../components/CenteredMessage'
 import StarGlyph from '../components/StarGlyph'
 import type { AppUser, EpisodeWatched, ShowRating, ShowRewatch } from '../types'
@@ -72,7 +73,7 @@ export default function ShowDiary() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <Link
-        to={`/u/${username}`}
+        to={profileRoute(username ?? '')}
         className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
       >
         &larr; {isMe ? 'Your' : `@${username}'s`} shows
@@ -132,7 +133,7 @@ export default function ShowDiary() {
                 )}
               </p>
               <Link
-                to={`/show/${showIdNum}`}
+                to={showRoute(showIdNum)}
                 className="mt-1.5 inline-block text-xs text-accent-400 hover:underline"
               >
                 Open show page &rarr;

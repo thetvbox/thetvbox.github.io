@@ -23,6 +23,7 @@ import PosterTile, { POSTER_GRID_CLASSES } from './PosterTile'
 import { formatShortDate } from '../lib/date'
 import { staggerTileMotion } from '../lib/motion'
 import { SKELETON_ROWS } from '../lib/constants'
+import { showDiaryRoute } from '../lib/routes'
 
 const SORT_LABELS: Record<HistorySort, string> = {
   recent: 'Recent',
@@ -237,7 +238,7 @@ function HistoryCard({
 }) {
   return (
     <motion.div {...staggerTileMotion(index)}>
-      <Link to={`/u/${username}/shows/${s.showId}`} className="group block">
+      <Link to={showDiaryRoute(username, s.showId)} className="group block">
         <PosterTile posterPath={s.showPosterPath} name={s.showName}>
           <StreamingBadge provider={provider} />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-4">

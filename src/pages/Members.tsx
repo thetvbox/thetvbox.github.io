@@ -6,6 +6,7 @@ import { fetchAllUsers } from '../lib/users'
 import { fetchFollowerIds, fetchFollowingIds } from '../lib/follows'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { SKELETON_ROWS } from '../lib/constants'
+import { profileRoute } from '../lib/routes'
 import { useFollowActions } from '../hooks/useFollowActions'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
@@ -158,7 +159,7 @@ export default function Members() {
               {...staggerRowMotion(i)}
               className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
             >
-              <Link to={`/u/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">
+              <Link to={profileRoute(u.username)} className="flex min-w-0 flex-1 items-center gap-3">
                 <Avatar username={u.username} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-base-100">

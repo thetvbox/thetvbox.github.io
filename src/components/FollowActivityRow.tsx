@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
 import type { FollowActivityEvent } from '../lib/showActivity'
+import { profileRoute } from '../lib/routes'
 import Avatar from './Avatar'
 
 /** One "X started following Y" row -- same layout language as ActivityRow
@@ -11,7 +12,7 @@ import Avatar from './Avatar'
 export default function FollowActivityRow({ event }: { event: FollowActivityEvent }) {
   return (
     <Link
-      to={`/u/${event.followedUsername}`}
+      to={profileRoute(event.followedUsername)}
       className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
       <Avatar username={event.followerUsername} size="sm" />

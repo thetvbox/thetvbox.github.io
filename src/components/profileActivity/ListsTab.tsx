@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
+import { listDetailRoute } from '../../lib/routes'
 import EmptyState from '../EmptyState'
 import type { ShowListWithCount } from '../../types'
 
@@ -87,7 +88,7 @@ export default function ListsTab({
           {lists.map((l, i) => (
             <motion.li key={l.id} {...staggerRowMotion(i, 8)}>
               <Link
-                to={`/u/${username}/lists/${l.id}`}
+                to={listDetailRoute(username, l.id)}
                 className="flex items-center justify-between rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70"
               >
                 <div className="min-w-0">

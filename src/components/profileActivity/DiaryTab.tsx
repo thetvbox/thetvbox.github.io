@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
 import type { DiaryEntry } from '../../lib/showActivity'
+import { showDiaryRoute, showRoute } from '../../lib/routes'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
 import StarGlyph from '../StarGlyph'
@@ -71,7 +72,7 @@ function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number
       {...staggerRowMotion(index, 8)}
       className="flex items-center gap-1.5 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
     >
-      <Link to={`/show/${entry.showId}`} className="flex min-w-0 flex-1 items-center gap-3">
+      <Link to={showRoute(entry.showId)} className="flex min-w-0 flex-1 items-center gap-3">
         <PosterThumb posterPath={entry.showPosterPath} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-base-100">{entry.showName}</p>
@@ -106,7 +107,7 @@ function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number
         )}
       </Link>
       <Link
-        to={`/u/${username}/shows/${entry.showId}`}
+        to={showDiaryRoute(username, entry.showId)}
         title="View this show's full diary"
         aria-label="View this show's full diary"
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base-500 transition-colors duration-200 hover:bg-hover hover:text-accent-400"
