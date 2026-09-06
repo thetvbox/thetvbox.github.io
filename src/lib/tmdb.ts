@@ -14,6 +14,7 @@ export const isTmdbConfigured = Boolean(API_KEY)
 
 class TmdbError extends Error {}
 
+/** Fetches a TMDB API path with the API key and default query params applied. */
 async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   if (!API_KEY) {
     throw new TmdbError(
@@ -33,6 +34,7 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
   return res.json() as Promise<T>
 }
 
+/** Searches TMDB for TV shows matching a query, ranked by TMDB's own relevance. */
 export async function searchShows(query: string): Promise<TmdbShowSummary[]> {
   if (!query.trim()) return []
   const data = await tmdbFetch<{ results: TmdbShowSummary[] }>('/search/tv', {
@@ -40,30 +42,21 @@ export async function searchShows(query: string): Promise<TmdbShowSummary[]> {
     include_adult: 'false',
     page: '1',
   })
-  // Only keep shows with at least a name + poster-ish signal, ranked by TMDB's own relevance.
   return data.results
 }
 
-// Module-level cache: a show's detail (name, seasons, external IDs) never
-// changes within a session, and this ends up fetched twice for the same
-// show on ShowDetail -- once for the page itself, once by lib/tvmaze.ts to
-// look up the show's IMDb ID for its air-date correction. Same pattern as
-// the other session caches in this codebase (seasonCache, platformCache).
 const showDetailCache = new Map<number, TmdbShowDetail>()
 
+/** Fetches a show's full detail, session-cached, including external_ids for TVmaze cross-referencing. */
 export async function getShowDetail(showId: number): Promise<TmdbShowDetail> {
   const cached = showDetailCache.get(showId)
   if (cached) return cached
-  // external_ids (IMDb, TheTVDB, ...) piggybacks on this same request rather
-  // than a separate call -- it's what lets lib/tvmaze.ts cross-reference a
-  // show without a second round trip per page load.
   const detail = await tmdbFetch<TmdbShowDetail>(`/tv/${showId}`, { append_to_response: 'external_ids' })
   showDetailCache.set(showId, detail)
   return detail
 }
 
-/** Batched, cached getShowDetail for History filters -- a show that fails to
- * fetch is just missing from the map, not a failure of the whole batch. */
+/** Batched, cached getShowDetail for History filters; a failed fetch is just missing from the map. */
 export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number, TmdbShowDetail>> {
   const uniqueIds = [...new Set(showIds)]
   const results = await Promise.all(
@@ -89,12 +82,12 @@ export async function getSeasonDetail(
   return tmdbFetch<TmdbSeasonDetail>(`/tv/${showId}/season/${seasonNumber}`)
 }
 
-/** Streaming/rent/buy availability by country, sourced from JustWatch via TMDB. */
+/** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB. */
 export async function getWatchProviders(showId: number): Promise<TmdbWatchProviders> {
   return tmdbFetch<TmdbWatchProviders>(`/tv/${showId}/watch/providers`)
 }
 
-/** Every streaming provider TMDB knows about for a region -- powers the manual "fix it" picker. */
+/** Fetches every streaming provider TMDB knows about for a region. */
 export async function getAllTvProviders(region: string): Promise<TmdbProviderListItem[]> {
   const data = await tmdbFetch<{ results: TmdbProviderListItem[] }>('/watch/providers/tv', {
     watch_region: region,
@@ -106,7 +99,7 @@ export async function getAllTvProviders(region: string): Promise<TmdbProviderLis
   })
 }
 
-/** Best-guess 2-letter region from the browser's own locale, falling back to US. */
+/** Returns a best-guess 2-letter region from the browser's own locale, falling back to US. */
 export function detectRegion(): string {
   try {
     const locale = navigator.language || 'en-US'

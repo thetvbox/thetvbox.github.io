@@ -3,16 +3,14 @@ import { fetchPaginated } from './pagination'
 import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_USERS } from './constants'
 import type { AppUser, Follow } from '../types'
 
-/** Every id current user follows -- powers "Following" scope filters and
- * per-row Follow/Following button state across Find People and the
- * follower/following lists. */
+/** Fetches every id the current user follows. */
 export async function fetchFollowingIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('follows').select('followed_id').eq('follower_id', userId)
   if (error) throw error
   return new Set((data ?? []).map((r) => r.followed_id as string))
 }
 
-/** Every id that follows this user -- used to render "Follows you" badges. */
+/** Fetches every id that follows this user. */
 export async function fetchFollowerIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('follows').select('follower_id').eq('followed_id', userId)
   if (error) throw error
@@ -62,21 +60,16 @@ export async function unfollowUser(followerId: string, followedId: string): Prom
   if (error) throw error
 }
 
-/** Resolves user ids to AppUser rows in the same order as the input. A
- * separate `.in()` lookup, not an embedded join -- `follows` has two FKs to
- * `users`, and PostgREST needs a constraint-name hint to disambiguate that. */
+/** Resolves user ids to AppUser rows in the same order as the input. */
 async function resolveUsersInOrder(ids: string[]): Promise<AppUser[]> {
   if (ids.length === 0) return []
   const { data, error } = await supabase.from(TABLE_USERS).select('*').in('id', ids)
   if (error) throw error
   const byId = new Map((data ?? []).map((u) => [(u as AppUser).id, u as AppUser]))
-  // .in() doesn't preserve input order -- re-sort to match the caller's
-  // (already-chronological) order rather than whatever Postgres returns.
   return ids.map((id) => byId.get(id)).filter((u): u is AppUser => Boolean(u))
 }
 
-/** Followers of userId, most recently followed first -- powers
- * FollowListPanel's "Followers" mode. */
+/** Fetches followers of userId, most recently followed first. */
 export async function fetchFollowersWithUsers(userId: string): Promise<AppUser[]> {
   const { data, error } = await supabase
     .from('follows')
@@ -88,8 +81,7 @@ export async function fetchFollowersWithUsers(userId: string): Promise<AppUser[]
   return resolveUsersInOrder((data ?? []).map((r) => r.follower_id as string))
 }
 
-/** Who userId follows, most recently followed first -- powers
- * FollowListPanel's "Following" mode. */
+/** Fetches who userId follows, most recently followed first. */
 export async function fetchFollowingWithUsers(userId: string): Promise<AppUser[]> {
   const { data, error } = await supabase
     .from('follows')
@@ -101,8 +93,7 @@ export async function fetchFollowingWithUsers(userId: string): Promise<AppUser[]
   return resolveUsersInOrder((data ?? []).map((r) => r.followed_id as string))
 }
 
-/** Every follow edge across the group -- powers the Activity feed's "X
- * started following Y" events, same idea as fetchRecentShowRatingsAllUsers. */
+/** Fetches every follow edge across the group, for the Activity feed's follow events. */
 export async function fetchAllFollows(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<Follow[]> {
   return fetchPaginated<Follow>(
     (from, to) =>

@@ -1,13 +1,6 @@
-/** TMDB's air_date sometimes reflects an early-access drop rather than the
- * marketed release day (e.g. Apple TV+ episodes posted the evening before).
- * TVmaze tracks the TV-guide release day, so it's used as a correction layer
- * over just the *displayed* date -- TMDB stays the backbone for everything
- * else. Matched by IMDb ID (more reliable than title matching); every lookup
- * fails silently to TMDB's own date, since TVmaze's smaller catalog missing
- * a show is expected, not an error. */
-
 const TVMAZE_BASE = 'https://api.tvmaze.com'
 
+/** Fetches a TVmaze API path, returning null on a 404. */
 async function tvmazeFetch<T>(path: string): Promise<T | null> {
   const res = await fetch(`${TVMAZE_BASE}${path}`)
   if (res.status === 404) return null
@@ -22,7 +15,6 @@ interface TvmazeShow {
 interface TvmazeEpisode {
   season: number
   number: number
-  /** Empty string (not null) when TVmaze doesn't have a date for this episode yet. */
   airdate: string
 }
 
@@ -30,10 +22,10 @@ export function tvmazeEpisodeKey(seasonNumber: number, episodeNumber: number): s
   return `${seasonNumber}-${episodeNumber}`
 }
 
-// Session-lifetime caches, keyed by IMDb ID -- what both lookups need.
 const showIdByImdbId = new Map<string, number | null>()
 const airDatesByTvmazeShowId = new Map<number, Map<string, string>>()
 
+/** Resolves a show's TVmaze id from its IMDb id, session-cached. */
 async function findTvmazeShowId(imdbId: string): Promise<number | null> {
   const cached = showIdByImdbId.get(imdbId)
   if (cached !== undefined) return cached
@@ -48,6 +40,7 @@ async function findTvmazeShowId(imdbId: string): Promise<number | null> {
   return result
 }
 
+/** Fetches all of a show's episode air dates from TVmaze, session-cached. */
 async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, string>> {
   const cached = airDatesByTvmazeShowId.get(tvmazeShowId)
   if (cached) return cached
@@ -57,16 +50,12 @@ async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, st
     for (const ep of episodes ?? []) {
       if (ep.airdate) map.set(tvmazeEpisodeKey(ep.season, ep.number), ep.airdate)
     }
-  } catch {
-    // Leave the map empty -- callers fall back to TMDB's own air_date per episode.
-  }
+  } catch {}
   airDatesByTvmazeShowId.set(tvmazeShowId, map)
   return map
 }
 
-/** Corrected air dates for one show, keyed by tvmazeEpisodeKey. Empty map
- * (not an error) on no IMDb ID, no match, or a failed lookup -- callers do
- * `corrected.get(key) ?? episode.air_date`. */
+/** Fetches TVmaze's corrected air dates for one show, keyed by tvmazeEpisodeKey. */
 export async function getCorrectedAirDates(imdbId: string | null | undefined): Promise<Map<string, string>> {
   if (!imdbId) return new Map()
   const tvmazeShowId = await findTvmazeShowId(imdbId)

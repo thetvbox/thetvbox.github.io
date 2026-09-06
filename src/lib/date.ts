@@ -1,10 +1,10 @@
-/** Local calendar-day key (YYYY-MM-DD), independent of time-of-day, for grouping. */
+/** Returns a local calendar-day key (YYYY-MM-DD), independent of time-of-day. */
 export function dayKey(iso: string): string {
   const d = new Date(iso)
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
 }
 
-/** "Today" / "Yesterday" / "Wednesday, June 3" (adds the year if not this year). */
+/** Formats a date as "Today" / "Yesterday" / "Wednesday, June 3" (with year if not this year). */
 export function formatDiaryHeading(iso: string): string {
   const date = new Date(iso)
   const now = new Date()
@@ -22,9 +22,7 @@ export function formatDiaryHeading(iso: string): string {
   })
 }
 
-/** Compact "Aug 12" for list rows. Handles both full ISO timestamps and
- * TMDB's date-only "YYYY-MM-DD" (parsed as a local calendar day, not UTC,
- * or it rolls back a day west of UTC). */
+/** Formats a compact "Aug 12" date, parsing date-only strings as a local calendar day. */
 export function formatShortDate(iso: string): string {
   const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso)
   const date = dateOnly
@@ -36,9 +34,7 @@ export function formatShortDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-/** Today as a local YYYY-MM-DD string for `<input type="date">`. Not
- * `toISOString().slice(0, 10)` -- that's the UTC date, a different calendar
- * day from local "today" for much of the day depending on timezone. */
+/** Returns today as a local YYYY-MM-DD string for `<input type="date">`. */
 export function todayLocalDateInput(): string {
   const d = new Date()
   const y = d.getFullYear()
@@ -47,16 +43,12 @@ export function todayLocalDateInput(): string {
   return `${y}-${m}-${day}`
 }
 
-/** Converts a `<input type="date">` value to an ISO timestamp anchored at
- * local noon, not midnight -- avoids UTC conversion rolling it back a
- * calendar day west of UTC. */
+/** Converts a `<input type="date">` value to an ISO timestamp anchored at local noon. */
 export function dateInputToNoonIso(dateInput: string): string {
   return new Date(`${dateInput}T12:00:00`).toISOString()
 }
 
-/** Whether a TMDB date-only string is still ahead of today, by the viewer's
- * local calendar day -- not `new Date(dateStr) > new Date()`, which compares
- * against UTC midnight and flips episodes to "aired" hours early west of UTC. */
+/** True if a TMDB date-only string is still ahead of today, by the viewer's local calendar day. */
 export function isFutureDate(dateStr: string): boolean {
   const [y, m, d] = dateStr.split('-').map(Number)
   if (!y || !m || !d) return false

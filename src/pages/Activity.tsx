@@ -25,9 +25,7 @@ interface DayGroup {
 
 type Scope = 'following' | 'everyone'
 
-/** Who "did" this item, for scope-filtering and the person-chip row -- a
- * show event's actor is whoever rated/finished it, a follow event's actor
- * is whoever did the following (not who got followed). */
+/** Returns who "did" this item, for scope-filtering and the person-chip row. */
 function actorUsername(item: ActivityFeedItem): string {
   return item.kind === 'follow' ? item.followerUsername : item.username
 }
@@ -44,8 +42,6 @@ export default function Activity() {
   const [filterUsername, setFilterUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  // Once someone deliberately picks a scope, that choice sticks -- this only
-  // steers the *default* for a first-time visitor with nothing to see yet.
   const scopeTouched = useRef(false)
 
   useEffect(() => {
@@ -81,9 +77,6 @@ export default function Activity() {
     }
   }, [me])
 
-  // A brand-new user following nobody would otherwise land on an empty
-  // "Following" feed by default -- steer them to "Everyone" instead, unless
-  // they've already touched the toggle themselves.
   useEffect(() => {
     if (!loading && !scopeTouched.current && followingIds.size === 0) {
       setScope('everyone')
@@ -97,10 +90,6 @@ export default function Activity() {
 
   const usernameToId = useMemo(() => new Map(members.map((u) => [u.username, u.id])), [members])
 
-  // "Following" scope keeps an item if whoever did it is someone you follow,
-  // or you (your own activity always shows up in your own feed) -- "Everyone"
-  // skips this filter entirely. Applied before the person-chip filter below,
-  // so the chip row only ever offers people actually visible in this scope.
   const scoped = useMemo(() => {
     if (scope === 'everyone' || !me) return feed
     return feed.filter((item) => {
@@ -124,10 +113,6 @@ export default function Activity() {
     const groups: DayGroup[] = []
     let currentKey = ''
     for (const item of filtered) {
-      // Unknown-date events carry a placeholder timestamp (epoch) purely so
-      // the column can stay NOT NULL -- never format it as a real date.
-      // They already sort last (epoch loses every date comparison), so they
-      // naturally collapse into one trailing group here.
       const key = item.atUnknown ? 'unknown' : dayKey(item.at)
       if (key !== currentKey) {
         groups.push({

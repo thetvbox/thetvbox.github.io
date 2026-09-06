@@ -3,7 +3,6 @@ import { getCorrectedAirDates, tvmazeEpisodeKey } from './tvmaze'
 import { isFutureDate } from './date'
 import type { TmdbSeasonSummary } from '../types'
 
-/** One season's watched/total, in order. */
 export interface SeasonSegment {
   seasonNumber: number
   watched: number
@@ -17,16 +16,14 @@ export interface SeasonProgress {
   currentSeasonTotal: number
 }
 
-/** Tally of watched-episode counts per season, from a flat list of watched rows. */
+/** Tallies watched-episode counts per season from a flat list of watched rows. */
 export function countWatchedBySeason(rows: { season_number: number }[]): Record<number, number> {
   const counts: Record<number, number> = {}
   for (const row of rows) counts[row.season_number] = (counts[row.season_number] ?? 0) + 1
   return counts
 }
 
-/** Turns "10/44 watched" into which season is in progress. "Current" is the
- * first not-fully-watched real season, falling back to the last one if all
- * are somehow complete (stale TMDB episode counts). */
+/** Works out which season is "current": the first not-fully-watched real season. */
 export function computeSeasonProgress(
   seasons: TmdbSeasonSummary[],
   watchedBySeason: Record<number, number>,
@@ -52,11 +49,9 @@ export function computeSeasonProgress(
   }
 }
 
-// Module-level cache: a show's season breakdown is stable within a session.
 const seasonCache = new Map<number, TmdbSeasonSummary[]>()
 
-/** Batched + cached per-show season breakdowns, for computing season progress
- * across everything in "Now Watching" at once. */
+/** Fetches batched, session-cached per-show season breakdowns. */
 export async function fetchSeasonBreakdowns(showIds: number[]): Promise<Map<number, TmdbSeasonSummary[]>> {
   const uncached = [...new Set(showIds)].filter((id) => !seasonCache.has(id))
 
@@ -65,9 +60,7 @@ export async function fetchSeasonBreakdowns(showIds: number[]): Promise<Map<numb
       try {
         const detail = await getShowDetail(id)
         seasonCache.set(id, detail.seasons)
-      } catch {
-        // Nice-to-have -- callers fall back to the flat total if missing.
-      }
+      } catch {}
     }),
   )
 
@@ -85,16 +78,13 @@ export interface NextEpisode {
   airDate: string
 }
 
-// Separate cache from seasonCache: "next unaired episode" changes as real
-// time passes, unlike the static season/episode-count breakdown above.
 const nextEpisodeCache = new Map<string, NextEpisode | null>()
 
 function nextEpisodeCacheKey(showId: number, seasonNumber: number): string {
   return `${showId}:${seasonNumber}`
 }
 
-/** The next not-yet-aired episode in a show's season, if any -- powers the
- * "new episode soon" badge on Now Watching and ShowDetail. Cached per session. */
+/** Fetches the next not-yet-aired episode in a show's season, if any. */
 export async function fetchNextEpisode(showId: number, seasonNumber: number): Promise<NextEpisode | null> {
   const key = nextEpisodeCacheKey(showId, seasonNumber)
   if (nextEpisodeCache.has(key)) return nextEpisodeCache.get(key) ?? null
@@ -102,8 +92,6 @@ export async function fetchNextEpisode(showId: number, seasonNumber: number): Pr
   try {
     const [detail, show] = await Promise.all([
       getSeasonDetail(showId, seasonNumber),
-      // Just for the IMDb ID -- getShowDetail is cached, so this is free
-      // once fetchSeasonBreakdowns has already loaded this show.
       getShowDetail(showId).catch(() => null),
     ])
     const next = detail.episodes.find((ep) => ep.air_date && isFutureDate(ep.air_date))
