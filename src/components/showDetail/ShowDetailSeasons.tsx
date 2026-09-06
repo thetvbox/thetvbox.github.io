@@ -73,8 +73,18 @@ export default function ShowDetailSeasons({
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
 
+  // Caught up on every aired episode (e.g. a currently-airing show between
+  // releases) means there's no "next up" row -- without this, jumpToProgress
+  // had nothing to scroll to and silently left the page at the top instead.
+  // Falls back to the most recently watched episode in the season instead,
+  // so landing here still shows exactly where you left off.
+  const lastWatchedEpisode = season?.episodes
+    .filter((ep) => watched[watchedKey(ep.season_number, ep.episode_number)])
+    .at(-1)
+  const scrollTargetEpisode = nextUpEpisode ?? lastWatchedEpisode
+
   useEffect(() => {
-    if (!jumpToProgress || hasJumpedRef.current || loadingSeason || !nextUpEpisode) return
+    if (!jumpToProgress || hasJumpedRef.current || loadingSeason || !scrollTargetEpisode) return
     hasJumpedRef.current = true
     // Season loads right after mount -- wait a frame so layout has settled
     // before measuring where to scroll to.
@@ -82,7 +92,7 @@ export default function ShowDetailSeasons({
       nextUpRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'center' })
     })
     return () => cancelAnimationFrame(raf)
-  }, [jumpToProgress, loadingSeason, nextUpEpisode])
+  }, [jumpToProgress, loadingSeason, scrollTargetEpisode])
 
   return (
     <div className="mt-8 border-t border-hairline pt-6">
@@ -145,7 +155,7 @@ export default function ShowDetailSeasons({
                 watchedAtUnknown={Boolean(watched[watchedKey(ep.season_number, ep.episode_number)]?.watched_at_unknown)}
                 onToggleWatched={() => onToggleWatched(ep.episode_number, ep.name, ep.runtime)}
                 onMarkWatchedWithDate={(input) => onMarkWatchedWithDate(ep.episode_number, ep.name, ep.runtime, input)}
-                rootRef={ep.episode_number === nextUpEpisode?.episode_number ? nextUpRef : undefined}
+                rootRef={ep.episode_number === scrollTargetEpisode?.episode_number ? nextUpRef : undefined}
               />
             ))}
       </div>
