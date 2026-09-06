@@ -19,6 +19,9 @@
 - `npm run build` — typecheck (`tsc -b`) then production build to `dist/`.
 - `npm run lint` — oxlint.
 - `npm run preview` — serve the production build locally.
+- `npm test` — run the test suite once (Vitest + React Testing Library).
+- `npm run test:watch` — run tests in watch mode.
+- `npm run test:coverage` — run tests with a coverage report.
 
 ## Deployment
 
