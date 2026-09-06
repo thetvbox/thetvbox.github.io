@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { checkPasscode, markGatePassed } from '../lib/siteGate'
 import { EASE_OUT_EXPO } from '../lib/motion'
+import { PASSCODE_LENGTH } from '../lib/constants'
 import AppLogo from './AppLogo'
 import PrimaryButton from './PrimaryButton'
 
@@ -51,7 +52,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              maxLength={6}
+              maxLength={PASSCODE_LENGTH}
               value={code}
               onChange={(e) => {
                 setCode(e.target.value.replace(/\D/g, ''))

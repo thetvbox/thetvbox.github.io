@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
+import { TABLE_SHOW_STARTED } from './constants'
 import type { ShowStarted } from '../types'
 
 /** Fetches all shows one user has explicitly started. */
 export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]> {
-  const { data, error } = await supabase.from('show_started').select('*').eq('user_id', userId)
+  const { data, error } = await supabase.from(TABLE_SHOW_STARTED).select('*').eq('user_id', userId)
 
   if (error) throw error
   return (data ?? []) as ShowStarted[]
@@ -12,7 +13,7 @@ export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]
 /** Fetches one user's started status for a single show, or null if not started. */
 export async function fetchStartedItem(userId: string, showId: number): Promise<ShowStarted | null> {
   const { data, error } = await supabase
-    .from('show_started')
+    .from(TABLE_SHOW_STARTED)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -33,7 +34,7 @@ export interface StartShowInput {
 /** Records a "start watching" declaration without touching episode_watched. */
 export async function startShow(input: StartShowInput): Promise<ShowStarted> {
   const { data, error } = await supabase
-    .from('show_started')
+    .from(TABLE_SHOW_STARTED)
     .upsert(
       {
         user_id: input.userId,

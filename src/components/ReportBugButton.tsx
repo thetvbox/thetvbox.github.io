@@ -19,6 +19,7 @@ import {
   MODAL_PANEL_INITIAL,
   MODAL_PANEL_TRANSITION,
 } from '../lib/motion'
+import { BUG_REPORT_DESCRIPTION_MAX_LENGTH, BUG_REPORT_TITLE_MAX_LENGTH } from '../lib/constants'
 
 interface ReportBugButtonProps {
   open: boolean
@@ -175,7 +176,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What went wrong, in a few words"
-              maxLength={200}
+              maxLength={BUG_REPORT_TITLE_MAX_LENGTH}
               className="rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
             />
             <textarea
@@ -184,7 +185,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happened, and what did you expect instead?"
               rows={5}
-              maxLength={4000}
+              maxLength={BUG_REPORT_DESCRIPTION_MAX_LENGTH}
               className="resize-none rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
             />
             <p className="text-xs text-base-600">

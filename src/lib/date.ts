@@ -1,3 +1,5 @@
+import { MS_PER_DAY } from './constants'
+
 /** Returns a local calendar-day key (YYYY-MM-DD), independent of time-of-day. */
 export function dayKey(iso: string): string {
   const d = new Date(iso)
@@ -9,7 +11,7 @@ export function formatDiaryHeading(iso: string): string {
   const date = new Date(iso)
   const now = new Date()
   const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  const diffDays = Math.round((startOf(now) - startOf(date)) / 86_400_000)
+  const diffDays = Math.round((startOf(now) - startOf(date)) / MS_PER_DAY)
 
   if (diffDays === 0) return 'Today'
   if (diffDays === 1) return 'Yesterday'

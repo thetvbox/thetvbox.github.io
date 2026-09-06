@@ -1,6 +1,9 @@
 import { useId, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
+import { MAX_RATING, RATING_STEP } from '../lib/constants'
+
+const STAR_INDEXES = Array.from({ length: MAX_RATING }, (_, i) => i + 1)
 
 interface StarRatingProps {
   value: number
@@ -70,13 +73,14 @@ export default function StarRating({
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0) return value
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    return Math.max(0.5, Math.min(5, Math.round(ratio * 10) / 2))
+    const steps = Math.round((ratio * MAX_RATING) / RATING_STEP)
+    return Math.max(RATING_STEP, Math.min(MAX_RATING, steps * RATING_STEP))
   }
 
   /** Commits a tap/click pick, clearing the rating if the same value is picked again. */
   function handlePick(starIndex: number, half: boolean) {
     if (!interactive || !onChange) return
-    const picked = half ? starIndex - 0.5 : starIndex
+    const picked = half ? starIndex - RATING_STEP : starIndex
     onChange(picked === value ? 0 : picked)
   }
 
@@ -123,9 +127,9 @@ export default function StarRating({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       role={interactive ? 'radiogroup' : undefined}
-      aria-label={interactive ? label : `Rated ${value} out of 5 stars`}
+      aria-label={interactive ? label : `Rated ${value} out of ${MAX_RATING} stars`}
     >
-      {[1, 2, 3, 4, 5].map((starIndex) => {
+      {STAR_INDEXES.map((starIndex) => {
         const fillForStar = Math.max(0, Math.min(1, displayValue - (starIndex - 1)))
         return (
           <motion.div
@@ -140,10 +144,10 @@ export default function StarRating({
               <span className="absolute inset-0 flex">
                 <button
                   type="button"
-                  aria-label={`${starIndex - 0.5} stars`}
+                  aria-label={`${starIndex - RATING_STEP} stars`}
                   className="h-full w-1/2 cursor-pointer"
-                  onMouseEnter={() => setHoverValue(starIndex - 0.5)}
-                  onFocus={() => setHoverValue(starIndex - 0.5)}
+                  onMouseEnter={() => setHoverValue(starIndex - RATING_STEP)}
+                  onFocus={() => setHoverValue(starIndex - RATING_STEP)}
                   onClick={() => handlePick(starIndex, true)}
                 />
                 <button

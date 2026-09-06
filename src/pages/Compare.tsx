@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
-import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
+import { LARGE_ACTIVITY_FETCH_LIMIT, MAX_RATING_DIFF, SKELETON_ROWS } from '../lib/constants'
 import { showRoute } from '../lib/routes'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
@@ -86,7 +86,7 @@ export default function Compare() {
       rows.length === 0
         ? null
         : Math.round(
-            (rows.reduce((sum, r) => sum + (1 - Math.min(r.diff / 4.5, 1)), 0) / rows.length) * 100,
+            (rows.reduce((sum, r) => sum + (1 - Math.min(r.diff / MAX_RATING_DIFF, 1)), 0) / rows.length) * 100,
           )
 
     return { shared: rows, matchPercent: match }

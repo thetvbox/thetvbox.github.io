@@ -5,9 +5,10 @@ import StarGlyph from './StarGlyph'
 import PosterThumb from './PosterThumb'
 import InlinePanel from './InlinePanel'
 import { showRoute } from '../lib/routes'
+import { MAX_RATING, RATING_STEP } from '../lib/constants'
 import type { ShowRating } from '../types'
 
-const BUCKETS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const
+const BUCKETS = Array.from({ length: MAX_RATING / RATING_STEP }, (_, i) => (i + 1) * RATING_STEP)
 
 /** Rating histogram, one bar per half-star bucket; clicking a bar expands the shows behind it. */
 export default function RatingDistribution({ ratings }: { ratings: ShowRating[] }) {
@@ -17,7 +18,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
     const c = new Array(BUCKETS.length).fill(0)
     const groups = new Map<number, ShowRating[]>()
     for (const r of ratings) {
-      const idx = BUCKETS.indexOf(r.rating as (typeof BUCKETS)[number])
+      const idx = BUCKETS.indexOf(r.rating)
       if (idx === -1) continue
       c[idx]++
       const list = groups.get(r.rating)
@@ -58,11 +59,11 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
       <div className="mt-1.5 flex items-center justify-between text-[11px] text-base-500">
         <span className="flex items-center gap-1">
           <StarGlyph size={10} />
-          0.5
+          {RATING_STEP}
         </span>
         <span className="flex items-center gap-1">
           <StarGlyph size={10} />
-          5
+          {MAX_RATING}
         </span>
       </div>
 

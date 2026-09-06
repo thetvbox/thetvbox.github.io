@@ -1,12 +1,12 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
+import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_RATINGS } from './constants'
 import type { ShowRating, ShowRatingWithUser } from '../types'
 
 /** One user's rating for one show, or null if they haven't rated it. */
 export async function fetchShowRating(userId: string, showId: number): Promise<ShowRating | null> {
   const { data, error } = await supabase
-    .from('show_ratings')
+    .from(TABLE_SHOW_RATINGS)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -19,7 +19,7 @@ export async function fetchShowRating(userId: string, showId: number): Promise<S
 /** Every rating (from every user) for a given show, joined with usernames. */
 export async function fetchAllShowRatings(showId: number): Promise<ShowRatingWithUser[]> {
   const { data, error } = await supabase
-    .from('show_ratings')
+    .from(TABLE_SHOW_RATINGS)
     .select('*, users(username)')
     .eq('show_id', showId)
 
@@ -34,7 +34,7 @@ export async function fetchRecentShowRatings(
   return fetchPaginated<ShowRating>(
     (from, to) =>
       supabase
-        .from('show_ratings')
+        .from(TABLE_SHOW_RATINGS)
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('rated_at', { ascending: false })
@@ -50,7 +50,7 @@ export async function fetchRecentShowRatingsAllUsers(
 ): Promise<ShowRatingWithUser[]> {
   return fetchPaginated<ShowRatingWithUser>(async (from, to) => {
     const { data, error, count } = await supabase
-      .from('show_ratings')
+      .from(TABLE_SHOW_RATINGS)
       .select('*, users(username)', { count: 'exact' })
       .order('rated_at', { ascending: false })
       .order('id')
@@ -69,7 +69,7 @@ export interface UpsertShowRatingInput {
 
 export async function upsertShowRating(input: UpsertShowRatingInput): Promise<ShowRating> {
   const { data, error } = await supabase
-    .from('show_ratings')
+    .from(TABLE_SHOW_RATINGS)
     .upsert(
       {
         user_id: input.userId,
@@ -90,7 +90,7 @@ export async function upsertShowRating(input: UpsertShowRatingInput): Promise<Sh
 
 export async function deleteShowRating(userId: string, showId: number): Promise<void> {
   const { error } = await supabase
-    .from('show_ratings')
+    .from(TABLE_SHOW_RATINGS)
     .delete()
     .eq('user_id', userId)
     .eq('show_id', showId)

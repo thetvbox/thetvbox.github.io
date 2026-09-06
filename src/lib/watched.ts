@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT } from './constants'
+import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, TABLE_EPISODE_WATCHED } from './constants'
 import type { EpisodeWatched, EpisodeWatchedWithUser, WatchedMap } from '../types'
 
 /** Builds the season-episode lookup key used by WatchedMap. */
@@ -16,7 +16,7 @@ export async function fetchWatchedForUserAndShow(
   showId: number,
 ): Promise<EpisodeWatched[]> {
   const { data, error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -43,7 +43,7 @@ export async function fetchRecentWatched(
   return fetchPaginated<EpisodeWatched>(
     (from, to) =>
       supabase
-        .from('episode_watched')
+        .from(TABLE_EPISODE_WATCHED)
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('watched_at', { ascending: false })
@@ -61,7 +61,7 @@ export async function fetchRecentDatedWatched(
   return fetchPaginated<EpisodeWatched>(
     (from, to) =>
       supabase
-        .from('episode_watched')
+        .from(TABLE_EPISODE_WATCHED)
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .eq('watched_at_unknown', false)
@@ -78,7 +78,7 @@ export async function fetchRecentWatchedAllUsers(
 ): Promise<EpisodeWatchedWithUser[]> {
   return fetchPaginated<EpisodeWatchedWithUser>(async (from, to) => {
     const { data, error, count } = await supabase
-      .from('episode_watched')
+      .from(TABLE_EPISODE_WATCHED)
       .select('*, users(username)', { count: 'exact' })
       .order('watched_at', { ascending: false })
       .order('id')
@@ -102,7 +102,7 @@ export interface MarkWatchedInput {
 /** Marks a single episode watched, upserting on the user/show/season/episode key. */
 export async function markWatched(input: MarkWatchedInput): Promise<EpisodeWatched> {
   const { data, error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .upsert(
       {
         user_id: input.userId,
@@ -160,7 +160,7 @@ export async function bulkMarkWatched(input: BulkMarkWatchedInput): Promise<Epis
   }))
 
   const { data, error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .upsert(rows, { onConflict: 'user_id,show_id,season_number,episode_number' })
     .select()
 
@@ -175,7 +175,7 @@ export async function unmarkWatched(
   episodeNumber: number,
 ): Promise<void> {
   const { error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .delete()
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -201,7 +201,7 @@ export async function restoreWatched(rows: EpisodeWatched[]): Promise<EpisodeWat
     watched_at_unknown: r.watched_at_unknown,
   }))
   const { data, error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .upsert(payload, { onConflict: 'user_id,show_id,season_number,episode_number' })
     .select()
 
@@ -220,7 +220,7 @@ export async function bulkUnmarkWatched(
     .map((e) => `and(season_number.eq.${e.seasonNumber},episode_number.eq.${e.episodeNumber})`)
     .join(',')
   const { error } = await supabase
-    .from('episode_watched')
+    .from(TABLE_EPISODE_WATCHED)
     .delete()
     .eq('user_id', userId)
     .eq('show_id', showId)

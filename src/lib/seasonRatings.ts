@@ -1,12 +1,12 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { GROUP_ACTIVITY_FETCH_LIMIT } from './constants'
+import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SEASON_RATINGS } from './constants'
 import type { SeasonRating, SeasonRatingWithUser } from '../types'
 
 /** Fetches every season rating for a show, joined with usernames. */
 export async function fetchAllSeasonRatingsForShow(showId: number): Promise<SeasonRatingWithUser[]> {
   const { data, error } = await supabase
-    .from('season_ratings')
+    .from(TABLE_SEASON_RATINGS)
     .select('*, users(username)')
     .eq('show_id', showId)
 
@@ -20,7 +20,7 @@ export async function fetchRecentSeasonRatingsAllUsers(
 ): Promise<SeasonRatingWithUser[]> {
   return fetchPaginated<SeasonRatingWithUser>(async (from, to) => {
     const { data, error, count } = await supabase
-      .from('season_ratings')
+      .from(TABLE_SEASON_RATINGS)
       .select('*, users(username)', { count: 'exact' })
       .order('rated_at', { ascending: false })
       .order('id')
@@ -41,7 +41,7 @@ export interface UpsertSeasonRatingInput {
 
 export async function upsertSeasonRating(input: UpsertSeasonRatingInput): Promise<SeasonRating> {
   const { data, error } = await supabase
-    .from('season_ratings')
+    .from(TABLE_SEASON_RATINGS)
     .upsert(
       {
         user_id: input.userId,
@@ -68,7 +68,7 @@ export async function deleteSeasonRating(
   seasonNumber: number,
 ): Promise<void> {
   const { error } = await supabase
-    .from('season_ratings')
+    .from(TABLE_SEASON_RATINGS)
     .delete()
     .eq('user_id', userId)
     .eq('show_id', showId)

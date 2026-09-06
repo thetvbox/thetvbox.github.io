@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
+import { TABLE_WATCHLIST } from './constants'
 import type { WatchlistItem } from '../types'
 
 export async function fetchWatchlist(userId: string): Promise<WatchlistItem[]> {
   const { data, error } = await supabase
-    .from('watchlist')
+    .from(TABLE_WATCHLIST)
     .select('*')
     .eq('user_id', userId)
     .order('added_at', { ascending: false })
@@ -15,7 +16,7 @@ export async function fetchWatchlist(userId: string): Promise<WatchlistItem[]> {
 /** One user's watchlist status for a single show, or null if it's not on there. */
 export async function fetchWatchlistItem(userId: string, showId: number): Promise<WatchlistItem | null> {
   const { data, error } = await supabase
-    .from('watchlist')
+    .from(TABLE_WATCHLIST)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -34,7 +35,7 @@ export interface AddToWatchlistInput {
 
 export async function addToWatchlist(input: AddToWatchlistInput): Promise<WatchlistItem> {
   const { data, error } = await supabase
-    .from('watchlist')
+    .from(TABLE_WATCHLIST)
     .upsert(
       {
         user_id: input.userId,
@@ -53,6 +54,6 @@ export async function addToWatchlist(input: AddToWatchlistInput): Promise<Watchl
 }
 
 export async function removeFromWatchlist(userId: string, showId: number): Promise<void> {
-  const { error } = await supabase.from('watchlist').delete().eq('user_id', userId).eq('show_id', showId)
+  const { error } = await supabase.from(TABLE_WATCHLIST).delete().eq('user_id', userId).eq('show_id', showId)
   if (error) throw error
 }

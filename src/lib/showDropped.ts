@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { TABLE_SHOW_DROPPED } from './constants'
 import type { ShowDropped } from '../types'
 
 /** Fetches all shows one user has dropped. */
 export async function fetchDroppedForUser(userId: string): Promise<ShowDropped[]> {
   const { data, error } = await supabase
-    .from('show_dropped')
+    .from(TABLE_SHOW_DROPPED)
     .select('*')
     .eq('user_id', userId)
     .order('dropped_at', { ascending: false })
@@ -16,7 +17,7 @@ export async function fetchDroppedForUser(userId: string): Promise<ShowDropped[]
 /** Fetches one user's dropped status for a single show, or null if not dropped. */
 export async function fetchDroppedItem(userId: string, showId: number): Promise<ShowDropped | null> {
   const { data, error } = await supabase
-    .from('show_dropped')
+    .from(TABLE_SHOW_DROPPED)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -36,7 +37,7 @@ export interface DropShowInput {
 /** Marks a show as deliberately dropped, upserting so a repeat drop no-ops. */
 export async function dropShow(input: DropShowInput): Promise<ShowDropped> {
   const { data, error } = await supabase
-    .from('show_dropped')
+    .from(TABLE_SHOW_DROPPED)
     .upsert(
       {
         user_id: input.userId,
@@ -56,6 +57,6 @@ export async function dropShow(input: DropShowInput): Promise<ShowDropped> {
 
 /** Resumes a dropped show. */
 export async function undropShow(userId: string, showId: number): Promise<void> {
-  const { error } = await supabase.from('show_dropped').delete().eq('user_id', userId).eq('show_id', showId)
+  const { error } = await supabase.from(TABLE_SHOW_DROPPED).delete().eq('user_id', userId).eq('show_id', showId)
   if (error) throw error
 }

@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { TABLE_SHOW_LIST_ITEMS, TABLE_SHOW_LISTS } from './constants'
 import type { ShowList, ShowListItem, ShowListWithCount } from '../types'
 
 /** Fetches one user's lists, each with how many shows are on it. */
 export async function fetchListsForUser(userId: string): Promise<ShowListWithCount[]> {
   const { data, error } = await supabase
-    .from('show_lists')
+    .from(TABLE_SHOW_LISTS)
     .select('*, show_list_items(count)')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
@@ -17,14 +18,14 @@ export async function fetchListsForUser(userId: string): Promise<ShowListWithCou
 }
 
 export async function fetchList(listId: string): Promise<ShowList | null> {
-  const { data, error } = await supabase.from('show_lists').select('*').eq('id', listId).maybeSingle()
+  const { data, error } = await supabase.from(TABLE_SHOW_LISTS).select('*').eq('id', listId).maybeSingle()
   if (error) throw error
   return (data as ShowList) ?? null
 }
 
 export async function fetchListItems(listId: string): Promise<ShowListItem[]> {
   const { data, error } = await supabase
-    .from('show_list_items')
+    .from(TABLE_SHOW_LIST_ITEMS)
     .select('*')
     .eq('list_id', listId)
     .order('added_at', { ascending: false })
@@ -36,7 +37,7 @@ export async function fetchListItems(listId: string): Promise<ShowListItem[]> {
 /** Fetches every list a show appears on, for a given user. */
 export async function fetchListMembershipForShow(userId: string, showId: number): Promise<Set<string>> {
   const { data, error } = await supabase
-    .from('show_list_items')
+    .from(TABLE_SHOW_LIST_ITEMS)
     .select('list_id, show_lists!inner(user_id)')
     .eq('show_id', showId)
     .eq('show_lists.user_id', userId)
@@ -51,7 +52,7 @@ export async function createList(
   description?: string | null,
 ): Promise<ShowList> {
   const { data, error } = await supabase
-    .from('show_lists')
+    .from(TABLE_SHOW_LISTS)
     .insert({ user_id: userId, name, description: description ?? null })
     .select()
     .single()
@@ -61,7 +62,7 @@ export async function createList(
 }
 
 export async function deleteList(listId: string): Promise<void> {
-  const { error } = await supabase.from('show_lists').delete().eq('id', listId)
+  const { error } = await supabase.from(TABLE_SHOW_LISTS).delete().eq('id', listId)
   if (error) throw error
 }
 
@@ -74,7 +75,7 @@ export interface AddToListInput {
 
 export async function addShowToList(input: AddToListInput): Promise<ShowListItem> {
   const { data, error } = await supabase
-    .from('show_list_items')
+    .from(TABLE_SHOW_LIST_ITEMS)
     .upsert(
       {
         list_id: input.listId,
@@ -92,6 +93,6 @@ export async function addShowToList(input: AddToListInput): Promise<ShowListItem
 }
 
 export async function removeShowFromList(listId: string, showId: number): Promise<void> {
-  const { error } = await supabase.from('show_list_items').delete().eq('list_id', listId).eq('show_id', showId)
+  const { error } = await supabase.from(TABLE_SHOW_LIST_ITEMS).delete().eq('list_id', listId).eq('show_id', showId)
   if (error) throw error
 }

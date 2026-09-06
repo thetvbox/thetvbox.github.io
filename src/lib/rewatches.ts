@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { ACTIVITY_FETCH_LIMIT } from './constants'
+import { ACTIVITY_FETCH_LIMIT, TABLE_SHOW_REWATCHES } from './constants'
 import type { ShowRewatch } from '../types'
 
 /** Sorts a rewatch list newest-first by rewatchedAt. */
@@ -10,7 +10,7 @@ export function sortRewatchesDesc(rows: ShowRewatch[]): ShowRewatch[] {
 
 export async function fetchRewatchesForShow(userId: string, showId: number): Promise<ShowRewatch[]> {
   const { data, error } = await supabase
-    .from('show_rewatches')
+    .from(TABLE_SHOW_REWATCHES)
     .select('*')
     .eq('user_id', userId)
     .eq('show_id', showId)
@@ -27,7 +27,7 @@ export async function fetchRecentRewatches(
   return fetchPaginated<ShowRewatch>(
     (from, to) =>
       supabase
-        .from('show_rewatches')
+        .from(TABLE_SHOW_REWATCHES)
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('rewatched_at', { ascending: false })
@@ -48,7 +48,7 @@ export interface LogRewatchInput {
 /** Logs one rewatch event as a plain insert, since duplicate rewatches are expected. */
 export async function logRewatch(input: LogRewatchInput): Promise<ShowRewatch> {
   const { data, error } = await supabase
-    .from('show_rewatches')
+    .from(TABLE_SHOW_REWATCHES)
     .insert({
       user_id: input.userId,
       show_id: input.showId,
@@ -64,14 +64,14 @@ export async function logRewatch(input: LogRewatchInput): Promise<ShowRewatch> {
 }
 
 export async function deleteRewatch(id: string): Promise<void> {
-  const { error } = await supabase.from('show_rewatches').delete().eq('id', id)
+  const { error } = await supabase.from(TABLE_SHOW_REWATCHES).delete().eq('id', id)
   if (error) throw error
 }
 
 /** Re-inserts a deleted rewatch, preserving its original rewatched_at, to undo deleteRewatch. */
 export async function restoreRewatch(row: ShowRewatch): Promise<ShowRewatch> {
   const { data, error } = await supabase
-    .from('show_rewatches')
+    .from(TABLE_SHOW_REWATCHES)
     .insert({
       user_id: row.user_id,
       show_id: row.show_id,

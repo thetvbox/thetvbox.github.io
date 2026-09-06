@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { TABLE_SHOW_STREAMING_OVERRIDES } from './constants'
 import type { StreamingOverride } from '../types'
 
 /** The group's manually-corrected "where to watch" answer for a show, if anyone has set one. */
 export async function fetchStreamingOverride(showId: number): Promise<StreamingOverride | null> {
   const { data, error } = await supabase
-    .from('show_streaming_overrides')
+    .from(TABLE_SHOW_STREAMING_OVERRIDES)
     .select('*')
     .eq('show_id', showId)
     .maybeSingle()
@@ -23,7 +24,7 @@ export interface SetStreamingOverrideInput {
 
 export async function setStreamingOverride(input: SetStreamingOverrideInput): Promise<StreamingOverride> {
   const { data, error } = await supabase
-    .from('show_streaming_overrides')
+    .from(TABLE_SHOW_STREAMING_OVERRIDES)
     .upsert(
       {
         show_id: input.showId,
@@ -43,6 +44,6 @@ export async function setStreamingOverride(input: SetStreamingOverrideInput): Pr
 }
 
 export async function clearStreamingOverride(showId: number): Promise<void> {
-  const { error } = await supabase.from('show_streaming_overrides').delete().eq('show_id', showId)
+  const { error } = await supabase.from(TABLE_SHOW_STREAMING_OVERRIDES).delete().eq('show_id', showId)
   if (error) throw error
 }
