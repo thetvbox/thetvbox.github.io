@@ -306,6 +306,20 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
   }
 
+  /** Same idea again, but for the watchlist -- "want to watch this" and
+   * "actually watching this" shouldn't both be true, so any real progress
+   * graduates the show off the watchlist automatically. No undo offered
+   * here (unlike handleToggleWatchlist's own manual remove) since this is a
+   * side effect of a different action, not a deliberate "remove" tap. */
+  function clearWatchlist() {
+    if (!user || !show || !watchlistItem) return
+    removeFromWatchlist(user.id, show.id)
+      .then(() => setWatchlistItem(null))
+      .catch(() => {
+        // Best-effort, see comment above -- fail silently.
+      })
+  }
+
   async function handleToggleWatched(episodeNumber: number, episodeName: string, runtimeMinutes: number | null) {
     if (!user || !show || activeSeason === null) return
     const key = watchedKey(activeSeason, episodeNumber)
@@ -360,6 +374,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       setWatched((prev) => ({ ...prev, [key]: saved }))
       clearDismissed()
       clearDropped()
+      clearWatchlist()
     } catch {
       setWatched((prev) => {
         const next = { ...prev }
@@ -443,6 +458,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
       clearDismissed()
       clearDropped()
+      clearWatchlist()
       showUndo(
         previousRows.length > 0
           ? `Marked ${saved.length} episodes watched (${previousRows.length} overwritten)`
@@ -475,6 +491,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       setStarted(row)
       clearDismissed()
       clearDropped()
+      clearWatchlist()
     } catch {
       showError('Failed to start watching. Try again.')
     } finally {
@@ -629,6 +646,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         setWatched((prev) => ({ ...prev, [key]: saved[0] }))
         clearDismissed()
         clearDropped()
+        clearWatchlist()
       }
     } catch {
       showError('Failed to mark this episode watched. Try again.')
@@ -665,6 +683,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
       clearDismissed()
       clearDropped()
+      clearWatchlist()
       showUndo(
         previousRows.length > 0
           ? `Marked ${saved.length} episodes watched (${previousRows.length} overwritten)`
