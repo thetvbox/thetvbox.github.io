@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
 import type { DiaryEntry } from '../../lib/showActivity'
 import { showDiaryRoute, showRoute } from '../../lib/routes'
+import { pluralSuffix } from '../../lib/format'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
 import StarGlyph from '../StarGlyph'
@@ -87,7 +88,7 @@ function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number
                   <>Watched {entry.episodeLabel}</>
                 ) : (
                   <>
-                    Watched {entry.episodeCount} episode{entry.episodeCount === 1 ? '' : 's'}
+                    Watched {entry.episodeCount} episode{pluralSuffix(entry.episodeCount)}
                     {entry.seasonLabel ? ` · ${entry.seasonLabel}` : ''}
                   </>
                 )}

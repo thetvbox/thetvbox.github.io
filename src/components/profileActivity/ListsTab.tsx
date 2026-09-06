@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
 import { listDetailRoute } from '../../lib/routes'
+import { pluralSuffix } from '../../lib/format'
 import EmptyState from '../EmptyState'
 import type { ShowListWithCount } from '../../types'
 
@@ -96,7 +97,7 @@ export default function ListsTab({
                   {l.description && <p className="truncate text-xs text-base-500">{l.description}</p>}
                 </div>
                 <span className="shrink-0 text-xs text-base-500">
-                  {l.itemCount} show{l.itemCount === 1 ? '' : 's'}
+                  {l.itemCount} show{pluralSuffix(l.itemCount)}
                 </span>
               </Link>
             </motion.li>

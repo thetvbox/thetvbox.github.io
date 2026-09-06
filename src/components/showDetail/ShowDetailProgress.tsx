@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import DateMarkControl from '../DateMarkControl'
 import RewatchLogControl from '../RewatchLogControl'
 import { formatShortDate } from '../../lib/date'
+import { pluralSuffix } from '../../lib/format'
 import { TRIGGER_SWAP_MOTION } from '../../lib/motion'
 import type { ShowRewatch } from '../../types'
 
@@ -47,7 +48,7 @@ export default function ShowDetailProgress({
               onConfirm={onMarkAllWatched}
               confirmSummary={
                 watchedCount > 0
-                  ? `This will overwrite the date on ${watchedCount} already-watched episode${watchedCount === 1 ? '' : 's'}.`
+                  ? `This will overwrite the date on ${watchedCount} already-watched episode${pluralSuffix(watchedCount)}.`
                   : undefined
               }
             />

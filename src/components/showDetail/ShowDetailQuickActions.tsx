@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import AddToListPicker from '../AddToListPicker'
 import { ListGlyph, PlayGlyph, BookmarkGlyph, DropGlyph } from '../ShowDetailGlyphs'
+import { pluralSuffix } from '../../lib/format'
 import type { AppUser, ShowDropped, ShowWatchingDismissed, TmdbShowDetail, WatchlistItem } from '../../types'
 
 interface ShowDetailQuickActionsProps {
@@ -98,7 +99,7 @@ export default function ShowDetailQuickActions({
           className={`${pillBase} ${listMembership.size > 0 ? pillActive : pillInactive}`}
         >
           <ListGlyph />
-          {listMembership.size > 0 ? `On ${listMembership.size} list${listMembership.size === 1 ? '' : 's'}` : 'Add to a list'}
+          {listMembership.size > 0 ? `On ${listMembership.size} list${pluralSuffix(listMembership.size)}` : 'Add to a list'}
         </button>
       </div>
 

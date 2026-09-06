@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { posterUrl, yearFromDate } from '../../lib/tmdb'
+import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
 import type { ShowRatingWithUser, TmdbShowDetail } from '../../types'
 
@@ -49,7 +50,7 @@ export default function ShowDetailHero({
                 <h1 className="font-display text-xl font-semibold text-base-100 sm:text-3xl">{show.name}</h1>
                 <p className="mt-1 text-xs text-base-400 sm:text-sm">
                   {yearFromDate(show.first_air_date)} · {show.number_of_seasons} season
-                  {show.number_of_seasons === 1 ? '' : 's'} · {show.status}
+                  {pluralSuffix(show.number_of_seasons)} · {show.status}
                 </p>
               </>
             )

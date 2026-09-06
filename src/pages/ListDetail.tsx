@@ -12,6 +12,7 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
+import { pluralSuffix } from '../lib/format'
 import { profileRoute, showRoute } from '../lib/routes'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
@@ -128,7 +129,7 @@ export default function ListDetail() {
                 </motion.h1>
                 {list.description && <p className="mt-1 text-sm text-base-400">{list.description}</p>}
                 <p className="mt-1 text-xs text-base-500">
-                  {items.length} show{items.length === 1 ? '' : 's'}
+                  {items.length} show{pluralSuffix(items.length)}
                 </p>
               </div>
               {isMine && (

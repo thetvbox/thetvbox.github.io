@@ -6,6 +6,7 @@ import DateMarkControl from '../DateMarkControl'
 import EpisodeRow from '../EpisodeRow'
 import { EpisodeRowSkeleton } from '../Skeletons'
 import { formatShortDate, isFutureDate } from '../../lib/date'
+import { pluralSuffix } from '../../lib/format'
 import { scrollBehavior } from '../../lib/motion'
 import { watchedKey } from '../../lib/watched'
 import type { SeasonRatingWithUser, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
@@ -102,7 +103,7 @@ export default function ShowDetailSeasons({
                   onConfirm={onMarkSeasonWatched}
                   confirmSummary={
                     seasonWatchedCount > 0
-                      ? `This will overwrite the date on ${seasonWatchedCount} already-watched episode${seasonWatchedCount === 1 ? '' : 's'} in this season.`
+                      ? `This will overwrite the date on ${seasonWatchedCount} already-watched episode${pluralSuffix(seasonWatchedCount)} in this season.`
                       : undefined
                   }
                 />

@@ -6,6 +6,7 @@ import PosterThumb from './PosterThumb'
 import InlinePanel from './InlinePanel'
 import { showRoute } from '../lib/routes'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
+import { pluralSuffix } from '../lib/format'
 import type { ShowRating } from '../types'
 
 const BUCKETS = Array.from({ length: MAX_RATING / RATING_STEP }, (_, i) => (i + 1) * RATING_STEP)
@@ -45,8 +46,8 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
               type="button"
               disabled={!hasShows}
               aria-pressed={isSelected}
-              aria-label={`${counts[i]} show${counts[i] === 1 ? '' : 's'} rated ${b.toFixed(1)} stars${hasShows ? ' -- show list' : ''}`}
-              title={`${counts[i]} show${counts[i] === 1 ? '' : 's'} rated ${b.toFixed(1)}`}
+              aria-label={`${counts[i]} show${pluralSuffix(counts[i])} rated ${b.toFixed(1)} stars${hasShows ? ' -- show list' : ''}`}
+              title={`${counts[i]} show${pluralSuffix(counts[i])} rated ${b.toFixed(1)}`}
               onClick={() => setSelected((prev) => (prev === b ? null : b))}
               className={`flex-1 rounded-t-sm transition-[height,background-color] duration-300 disabled:cursor-default ${
                 isSelected ? 'bg-star' : 'bg-star/70 enabled:hover:bg-star/90'
@@ -75,7 +76,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
                 {selected.toFixed(1)}
                 <StarGlyph size={11} />
                 <span className="text-base-500">
-                  · {selectedShows.length} show{selectedShows.length === 1 ? '' : 's'}
+                  · {selectedShows.length} show{pluralSuffix(selectedShows.length)}
                 </span>
               </p>
               <button
