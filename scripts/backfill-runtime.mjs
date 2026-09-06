@@ -1,31 +1,5 @@
 #!/usr/bin/env node
-// One-off backfill for episode_watched.runtime_minutes on rows logged
-// before that column existed, so "Hours watched" on Profile is accurate
-// for older history instead of showing 0 until new episodes get marked.
-//
-// NOT run automatically by anything -- this repo's build/CI never touches
-// it. Run it yourself, once, whenever you're ready. Either:
-//
-//   node --env-file=.env.local scripts/backfill-runtime.mjs
-//
-// or, since this file has a shebang, make it executable once and run it
-// directly (still needs the env vars, e.g. via `set -a; source .env.local; set +a` first):
-//
-//   chmod +x scripts/backfill-runtime.mjs
-//   ./scripts/backfill-runtime.mjs
-//
-// (or export VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY / VITE_TMDB_API_KEY
-// yourself first -- same variable names as .env.local.)
-//
-// Safe to re-run: it only touches rows where runtime_minutes is still
-// null, and leaves a row null (rather than guessing) if TMDB doesn't have
-// a runtime for that episode.
-//
-// Talks to Supabase's REST API (PostgREST) directly via fetch, rather than
-// the @supabase/supabase-js client -- that client also spins up a realtime
-// websocket client on construction, which this script never needs but
-// which throws on Node < 22 (no native WebSocket). Plain fetch avoids that
-// entirely and needs nothing beyond what Node already ships.
+/** One-off backfill of episode_watched.runtime_minutes for pre-existing rows. Run manually: node --env-file=.env.local scripts/backfill-runtime.mjs */
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
@@ -82,7 +56,6 @@ async function main() {
 
   console.log(`${rows.length} row(s) missing runtime_minutes.`)
 
-  // Group by show+season so each TMDB season is fetched once, not once per episode.
   const bySeason = new Map()
   for (const row of rows) {
     const key = `${row.show_id}:${row.season_number}`
