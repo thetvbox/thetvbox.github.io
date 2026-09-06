@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-/** Escape-to-close and focus-return-to-trigger for this app's toggled panels
- * and its one centered modal (ReportBugButton). Captures whatever had focus
- * when the panel opened and restores it on close, however that close
- * happened. */
+/** Escape-to-close and focus-return-to-trigger for this app's toggled panels and modal. */
 export function useEscapeAndFocusReturn(active: boolean, onClose: () => void) {
   const triggerRef = useRef<HTMLElement | null>(null)
   const onCloseRef = useRef(onClose)

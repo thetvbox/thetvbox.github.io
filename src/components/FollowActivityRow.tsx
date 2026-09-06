@@ -4,11 +4,7 @@ import type { FollowActivityEvent } from '../lib/showActivity'
 import { profileRoute } from '../lib/routes'
 import Avatar from './Avatar'
 
-/** One "X started following Y" row -- same layout language as ActivityRow
- * (avatar, thumbnail slot, text block, right-aligned bit) but the thumbnail
- * slot holds a follow glyph instead of a poster, since there's no show
- * involved. Links to the person who was followed, mirroring ActivityRow
- * linking to the show that was rated/finished. */
+/** One "X started following Y" row, linking to the person who was followed. */
 export default function FollowActivityRow({ event }: { event: FollowActivityEvent }) {
   return (
     <Link

@@ -9,9 +9,7 @@ interface State {
   error: Error | null
 }
 
-/** Catches render-time exceptions below it so one bad component can't
- * white-screen the whole app. Must be a class component -- React has no
- * hook equivalent for error boundaries. */
+/** Catches render-time exceptions below it so one bad component can't white-screen the whole app. */
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null }
 

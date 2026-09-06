@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react'
 import { getShowDetailsBulk } from '../lib/tmdb'
 import type { TmdbShowDetail } from '../types'
 
-/** Bulk TMDB show details (genre, year, country, language, status) for the
- * History filters. `enabled` gates the fetch so it only fires once someone
- * expands Filters, not on every History tab visit. */
+/** Fetches bulk TMDB show details for the History filters, gated by `enabled`. */
 export function useShowDetails(
   showIds: number[],
   enabled: boolean,
@@ -23,9 +21,7 @@ export function useShowDetails(
       .then((map) => {
         if (!cancelled) setDetails(map)
       })
-      .catch(() => {
-        // Degrades gracefully -- a missing show just won't match any facet.
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setLoading(false)
       })

@@ -7,9 +7,7 @@ export interface ToastState {
   action?: ToastAction
 }
 
-/** One toast slot per page, shared by every mutating action -- a new toast
- * replaces the last un-actioned one rather than stacking. `onUndo` should
- * handle its own errors via showError; this hook doesn't guess at those. */
+/** One toast slot per page; a new toast replaces the last un-actioned one rather than stacking. */
 export function useToast() {
   const [toast, setToast] = useState<ToastState | null>(null)
 

@@ -1,8 +1,4 @@
-/** The single star-rating icon used everywhere a numeric rating is shown
- * (ActivityRow, RatingSummary, diary/history rows, the rating distribution
- * graph, etc). Previously redefined identically in seven different files at
- * seven different fixed sizes -- consolidated here with a `size` prop so
- * there's one shape to keep in sync instead of seven. */
+/** The single star-rating icon used everywhere a numeric rating is shown. */
 export default function StarGlyph({ size = 12 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--color-star)">

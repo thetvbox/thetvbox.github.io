@@ -61,11 +61,7 @@ export default function DiaryTab({ groups, undatedEntries, username }: DiaryTabP
   )
 }
 
-/** One row in the diary -- shape (poster, name, link) is shared across all
- * three entry kinds; only the subtitle and the right-side badge differ. The
- * row's main body links to the show itself; the small icon on the end is a
- * separate link to this show's own diary (the aggregate feed here has no
- * other way to reach it) -- two siblings, not nested anchors. */
+/** One diary row: shared poster/name/link shape across all three entry kinds. */
 function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number; username: string }) {
   return (
     <motion.li

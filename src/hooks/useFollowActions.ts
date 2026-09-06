@@ -2,11 +2,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { followUser, unfollowUser } from '../lib/follows'
 import { useToast } from './useToast'
 
-/** Shared follow/unfollow mutation logic -- optimistic update, error rollback,
- * and an undo toast on unfollow -- used by every follow surface (Members,
- * FollowListPanel, ProfileFollowSection). Callers own their own state shape
- * (a `Set` of ids for a list, a single boolean for one profile); `onChange`
- * is how each applies the optimistic flip. */
+/** Shared follow/unfollow mutation logic: optimistic update, error rollback, undo toast on unfollow. */
 export function useFollowActions() {
   const { user: me } = useAuth()
   const { toast, showUndo, showError, dismiss } = useToast()

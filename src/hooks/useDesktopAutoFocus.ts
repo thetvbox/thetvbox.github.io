@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-/** Focuses the input on `active`, desktop (fine pointer) only -- auto-focus
- * on touch pops the keyboard and shifts the layout before the user's done anything. */
+/** Focuses the input on `active`, desktop (fine pointer) only. */
 export function useDesktopAutoFocus(active: boolean) {
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => {

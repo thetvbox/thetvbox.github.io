@@ -3,8 +3,7 @@ import { detectRegion } from '../lib/tmdb'
 import { resolveShowPlatforms } from '../lib/streamingProvider'
 import type { ResolvedProvider } from '../lib/streamingProvider'
 
-/** Resolves "where to watch" for a batch of shows (cached, so repeat calls
- * are free) and keeps it as component state. */
+/** Resolves "where to watch" for a batch of shows and keeps it as component state. */
 export function useStreamingPlatforms(showIds: number[]): {
   platforms: Map<number, ResolvedProvider | null>
   loading: boolean
@@ -24,9 +23,7 @@ export function useStreamingPlatforms(showIds: number[]): {
       .then((map) => {
         if (!cancelled) setPlatforms(map)
       })
-      .catch(() => {
-        // Badges are a nice-to-have -- callers just render nothing per show.
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setLoading(false)
       })

@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-/** Closes an always-mounted top-bar dropdown on route change -- Navbar never
- * unmounts between pages, so nothing else would close it. */
+/** Closes an always-mounted top-bar dropdown on route change. */
 export function useCloseOnNavigate(onClose: () => void) {
   const location = useLocation()
   useEffect(() => {
