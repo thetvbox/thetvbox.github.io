@@ -19,7 +19,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 ## 2. DRY and SRP
 
 - New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, etc.) should reuse or extend it, not hand-roll a near-duplicate.
-- A component or hook taking on more than one clear responsibility (e.g. a page component that also owns unrelated data-fetching logic that could be its own hook) is a split candidate -- `useShowDetail.ts` and `ProfileActivity.tsx`'s tab split are the precedent for what "already split appropriately" looks like here.
+- A component or hook taking on more than one clear responsibility (e.g. a page component that also owns unrelated data-fetching logic that could be its own hook) is a split candidate -- `src/hooks/showDetail/` (one hook per concern, composed by `useShowDetail.ts`) and `ProfileActivity.tsx`'s tab split are the precedent for what "already split appropriately" looks like here.
 - Flag copy-pasted logic across two or more files that isn't already using a shared helper in `src/lib/`.
 
 ## 3. Magic numbers and strings
@@ -46,7 +46,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 ## 7. Error handling and optimistic UI
 
 - A mutation that updates local state optimistically must roll back on failure and surface the failure via `useToast`'s `showError`, not swallow it.
-- A bulk action that can silently overwrite existing data (like a bulk mark-watched) should offer an "Undo" toast (`showUndo`) backed by a pre-mutation snapshot, following the pattern in `useShowDetail.ts`'s `handleMarkAllWatched`/`undoBulkMark`.
+- A bulk action that can silently overwrite existing data (like a bulk mark-watched) should offer an "Undo" toast (`showUndo`) backed by a pre-mutation snapshot, following the pattern in `useEpisodeWatchHandlers.ts`'s `handleMarkAllWatched`/`undoBulkMark`.
 - No `window.confirm()` -- destructive/bulk confirmation is the inline expand-to-confirm pattern (`DateMarkControl`, `InlineConfirmCancel`).
 - Never fabricate a plausible-looking value (a guessed date, a made-up name) to paper over a display bug in a real user's data -- use the app's actual "unknown" representation.
 
