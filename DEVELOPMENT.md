@@ -25,7 +25,7 @@
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds with the four `VITE_*` variables above (set as repository secrets) and publishes `dist/` to GitHub Pages.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which lints, tests, and builds with the four `VITE_*` variables above (set as repository secrets) before publishing `dist/` to GitHub Pages. A failing lint or test run blocks the deploy.
 
 ## Project structure
 
