@@ -14,8 +14,7 @@ interface ShowDetailProgressProps {
   onDeleteRewatch: (id: string) => void
 }
 
-/** Overall watch-progress bar, "mark it all watched" backfill control, and
- * the rewatch log (offered once the show is finished). */
+/** Overall watch-progress bar, "mark it all watched" backfill control, and the rewatch log. */
 export default function ShowDetailProgress({
   watchedCount,
   totalEpisodes,

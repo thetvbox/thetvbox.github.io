@@ -7,8 +7,7 @@ const SIZE_CLASSES = {
   lg: 'h-16 w-11',
 } as const
 
-/** Small poster thumbnail for list rows (Activity, Upcoming, Compare, Recap,
- * Diary, Watchlist) -- the row equivalent of PosterTile's grid-card art box. */
+/** Small poster thumbnail for list rows, the row equivalent of PosterTile's grid-card art box. */
 export default function PosterThumb({
   posterPath,
   size = 'md',

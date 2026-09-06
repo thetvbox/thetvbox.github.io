@@ -1,6 +1,4 @@
-/** Shared Confirm/Cancel button pair for inline expand-to-confirm controls
- * (DateMarkControl, RewatchLogControl) -- no native confirm(), since opening
- * the control and tapping Confirm is already the confirmation step. */
+/** Shared Confirm/Cancel button pair for inline expand-to-confirm controls. */
 export default function InlineConfirmCancel({
   saving,
   savingLabel,

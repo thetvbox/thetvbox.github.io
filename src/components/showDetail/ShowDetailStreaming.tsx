@@ -5,9 +5,6 @@ import type { StreamingOverride, TmdbProviderListItem, TmdbWatchProviderRegion }
 
 interface ShowDetailStreamingProps {
   effectiveProvider: { provider_name: string; logo_path: string | null } | null
-  /** True while the initial watch-providers fetch is still in flight --
-   * distinct from "loaded but genuinely empty," which now gets its own
-   * message instead of silently rendering nothing. */
   loading: boolean
   override: StreamingOverride | null
   regionProviders: TmdbWatchProviderRegion | null

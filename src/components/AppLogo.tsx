@@ -1,11 +1,6 @@
 import { useId } from 'react'
 
-/**
- * The TV Box mark -- shared by the navbar, login screen, and passcode gate
- * (previously copy-pasted identically into all three). useId (not a fixed
- * gradient id) keeps multiple instances from clashing if two ever render
- * on the same page at once.
- */
+/** The TV Box mark, shared by the navbar, login screen, and passcode gate. */
 export default function AppLogo({ size = 32, className = '' }: { size?: number; className?: string }) {
   const gradientId = useId()
   return (

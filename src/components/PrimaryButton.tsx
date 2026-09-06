@@ -1,7 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-/** Full-width accent CTA button shared by every auth/gate form (Login,
- * PasscodeGate) -- press-scale feedback, one class list to keep in sync. */
+/** Full-width accent CTA button shared by every auth/gate form. */
 export default function PrimaryButton({
   className = '',
   ...props

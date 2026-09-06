@@ -5,13 +5,7 @@ const SIZE_CLASSES = {
   lg: 'h-12 w-12 text-base',
 } as const
 
-/** The circular initials avatar used anywhere a person shows up without a
- * real profile photo (this app has none) -- rows in People/Members,
- * activity/follow feed items, follower lists, the notifications bell, and
- * both profile headers. Previously hand-rolled at seven different call
- * sites with the same markup and only the size class differing;
- * consolidated here so the shape (and any future change to it) only needs
- * to happen once. */
+/** The circular initials avatar used anywhere a person shows up without a real profile photo. */
 export default function Avatar({
   username,
   size = 'md',

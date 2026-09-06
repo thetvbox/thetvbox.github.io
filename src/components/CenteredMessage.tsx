@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom'
 
-/**
- * Centered message + back link -- the shared shape behind every
- * not-found/failed-to-load page in the app (missing member, missing list,
- * network failure, etc.), so each page doesn't reimplement the same block.
- */
+/** Centered message plus back link, shared by every not-found/failed-to-load page. */
 export default function CenteredMessage({
   message,
   backTo = '/members',

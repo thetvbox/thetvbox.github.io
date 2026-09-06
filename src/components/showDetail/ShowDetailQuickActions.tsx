@@ -29,8 +29,7 @@ const pillBase = 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1
 const pillActive = 'border-accent-500/40 bg-accent-500/15 text-accent-300'
 const pillInactive = 'border-hairline-strong text-base-400 hover:border-accent-500/40 hover:text-base-200'
 
-/** Now Watching / watchlist / list toggles -- independent of each other and
- * available regardless of watch progress -- plus the list picker panel. */
+/** Now Watching / watchlist / list toggles, independent of each other, plus the list picker panel. */
 export default function ShowDetailQuickActions({
   show,
   user,

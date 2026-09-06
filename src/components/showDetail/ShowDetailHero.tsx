@@ -13,8 +13,7 @@ interface ShowDetailHeroProps {
   onRateShow: (value: number) => void
 }
 
-/** Poster, title/meta, and the show-level rating summary. Rendered inside
- * the page's own backdrop + max-width container, not its own. */
+/** Poster, title/meta, and the show-level rating summary. */
 export default function ShowDetailHero({
   show,
   loadingShow,

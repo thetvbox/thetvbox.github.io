@@ -1,6 +1,4 @@
-/** One stat tile (big number + small label) -- used across Compare, Recap,
- * and a profile's own stats row. Previously defined identically in each of
- * those three files. */
+/** One stat tile: a big number with a small label below it. */
 export default function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl border border-hairline bg-base-850/60 p-3.5 text-center">

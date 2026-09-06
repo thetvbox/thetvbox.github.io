@@ -12,9 +12,7 @@ export interface UpcomingItem {
   airDate: string
 }
 
-/** One "what's airing next" row for Home's Upcoming list -- mirrors
- * ActivityRow's layout (poster thumbnail, text block, right-aligned pill) so
- * the two sections read as the same visual language. */
+/** One "what's airing next" row for Home's Upcoming list. */
 export default function UpcomingRow({ item }: { item: UpcomingItem }) {
   return (
     <Link
