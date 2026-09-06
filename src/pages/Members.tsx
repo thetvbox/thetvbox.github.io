@@ -12,6 +12,7 @@ import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import Toast from '../components/Toast'
+import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
 /** People directory: search plus a Follow/Following button and "Follows you" badge per row. */
@@ -56,7 +57,7 @@ export default function Members() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load members.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load members.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

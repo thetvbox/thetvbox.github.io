@@ -10,6 +10,7 @@ import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
 import InlinePanel from './InlinePanel'
+import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
 interface FollowListPanelProps {
@@ -50,7 +51,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load this list.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load this list.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

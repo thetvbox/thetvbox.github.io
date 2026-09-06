@@ -7,6 +7,7 @@ import ProfileFollowSection from '../components/ProfileFollowSection'
 import CenteredMessage from '../components/CenteredMessage'
 import Avatar from '../components/Avatar'
 import { compareRoute } from '../lib/routes'
+import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
 export default function PublicProfile() {
@@ -26,7 +27,7 @@ export default function PublicProfile() {
         if (!cancelled) setProfile(found)
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load this profile.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load this profile.'))
       })
 
     return () => {

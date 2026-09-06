@@ -12,6 +12,7 @@ import { staggerRowMotion } from '../lib/motion'
 import { profileRoute, showRoute } from '../lib/routes'
 import CenteredMessage from '../components/CenteredMessage'
 import StarGlyph from '../components/StarGlyph'
+import { errorMessage } from '../lib/format'
 import type { AppUser, EpisodeWatched, ShowRating, ShowRewatch } from '../types'
 
 export default function ShowDiary() {
@@ -50,7 +51,7 @@ export default function ShowDiary() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load this show.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load this show.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

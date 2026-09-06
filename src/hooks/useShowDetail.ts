@@ -10,6 +10,7 @@ import { fetchDroppedItem } from '../lib/showDropped'
 import { fetchRewatchesForShow } from '../lib/rewatches'
 import { fetchListMembershipForShow } from '../lib/lists'
 import { computeSeasonProgress, countWatchedBySeason } from '../lib/seasonProgress'
+import { errorMessage } from '../lib/format'
 import { useToast } from './useToast'
 import { useStreamingProvider } from './showDetail/useStreamingProvider'
 import { useCorrectedAirDates } from './showDetail/useCorrectedAirDates'
@@ -107,7 +108,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         const defaultSeason = progress?.currentSeasonNumber ?? firstRealSeason?.season_number ?? null
         setActiveSeason(defaultSeason)
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load show.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load show.'))
       } finally {
         if (!cancelled) setLoadingShow(false)
       }
@@ -130,7 +131,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         if (!cancelled) setSeason(data)
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load season.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load season.'))
       })
       .finally(() => {
         if (!cancelled) setLoadingSeason(false)

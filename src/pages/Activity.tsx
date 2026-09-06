@@ -16,6 +16,7 @@ import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import { useAuth } from '../contexts/AuthContext'
+import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
 interface DayGroup {
@@ -67,7 +68,7 @@ export default function Activity() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load activity.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load activity.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

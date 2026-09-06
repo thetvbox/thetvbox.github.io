@@ -11,6 +11,7 @@ import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StatCard from '../components/StatCard'
+import { errorMessage } from '../lib/format'
 import type { AppUser, ShowRating } from '../types'
 
 interface SharedShow {
@@ -53,7 +54,7 @@ export default function Compare() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load comparison.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load comparison.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

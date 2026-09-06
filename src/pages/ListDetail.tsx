@@ -12,7 +12,7 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
-import { pluralSuffix } from '../lib/format'
+import { errorMessage, pluralSuffix } from '../lib/format'
 import { profileRoute, showRoute } from '../lib/routes'
 import type { AppUser, ShowList, ShowListItem } from '../types'
 
@@ -50,7 +50,7 @@ export default function ListDetail() {
         setItems(itemRows)
       })
       .catch((err) => {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Failed to load this list.')
+        if (!cancelled) setLoadError(errorMessage(err, 'Failed to load this list.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

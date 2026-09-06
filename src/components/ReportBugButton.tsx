@@ -20,6 +20,7 @@ import {
   MODAL_PANEL_TRANSITION,
 } from '../lib/motion'
 import { BUG_REPORT_DESCRIPTION_MAX_LENGTH, BUG_REPORT_TITLE_MAX_LENGTH } from '../lib/constants'
+import { errorMessage } from '../lib/format'
 
 interface ReportBugButtonProps {
   open: boolean
@@ -106,7 +107,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
       setResult(res)
       setStatus('success')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit your report. Try again.')
+      setError(errorMessage(err, 'Failed to submit your report. Try again.'))
       setStatus('error')
     }
   }

@@ -29,6 +29,7 @@ import type { UpcomingItem } from '../components/UpcomingRow'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
+import { errorMessage } from '../lib/format'
 import type {
   EpisodeWatched,
   ShowDropped,
@@ -86,7 +87,7 @@ export default function Home() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load your shows.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load your shows.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

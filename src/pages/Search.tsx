@@ -8,6 +8,7 @@ import { searchShows, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
+import { errorMessage } from '../lib/format'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
@@ -46,7 +47,7 @@ export default function Search() {
         }
       } catch (err) {
         if (id === requestId.current) {
-          setError(err instanceof Error ? err.message : 'Search failed.')
+          setError(errorMessage(err, 'Search failed.'))
           setResults([])
         }
       } finally {

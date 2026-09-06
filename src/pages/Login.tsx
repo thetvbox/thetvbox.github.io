@@ -9,6 +9,7 @@ import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
+import { errorMessage } from '../lib/format'
 
 type Step = 'email' | 'username'
 
@@ -40,7 +41,7 @@ export default function Login() {
         setStep('username')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
+      setError(errorMessage(err, 'Something went wrong. Try again.'))
     } finally {
       setBusy(false)
     }
@@ -59,7 +60,7 @@ export default function Login() {
       await register(email, trimmed)
       // Successful registration updates the auth state; the Navigate above will fire.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create your account. Try again.')
+      setError(errorMessage(err, 'Could not create your account. Try again.'))
     } finally {
       setBusy(false)
     }

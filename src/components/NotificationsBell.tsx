@@ -21,6 +21,7 @@ import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
 import { profileRoute, showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
+import { errorMessage } from '../lib/format'
 import type { Notification } from '../types'
 
 interface NotificationsBellProps {
@@ -186,7 +187,7 @@ function NotificationsPanel({
         if (!cancelled) setNotifications(rows)
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load notifications.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load notifications.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -206,7 +207,7 @@ function NotificationsPanel({
       await clearAllNotifications(userId)
       setNotifications([])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear notifications.')
+      setError(errorMessage(err, 'Failed to clear notifications.'))
     } finally {
       setClearing(false)
     }

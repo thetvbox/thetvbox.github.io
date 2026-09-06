@@ -28,6 +28,7 @@ import DroppedTab from './profileActivity/DroppedTab'
 import ListsTab from './profileActivity/ListsTab'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import { errorMessage } from '../lib/format'
 import type {
   EpisodeWatched,
   ShowDropped,
@@ -120,7 +121,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         },
       )
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load activity.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load activity.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

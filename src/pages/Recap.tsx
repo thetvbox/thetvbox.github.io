@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StarGlyph from '../components/StarGlyph'
 import StatCard from '../components/StatCard'
+import { errorMessage } from '../lib/format'
 import type { EpisodeWatched, ShowRating, ShowRewatch } from '../types'
 
 export default function Recap() {
@@ -42,7 +43,7 @@ export default function Recap() {
         setRewatches(rw)
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load your recap.')
+        if (!cancelled) setError(errorMessage(err, 'Failed to load your recap.'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
