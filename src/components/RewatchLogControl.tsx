@@ -5,12 +5,7 @@ import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlineConfirmCancel from './InlineConfirmCancel'
 import { TRIGGER_SWAP_MOTION } from '../lib/motion'
 
-/** Expand-to-confirm control for logging a rewatch -- same shape as
- * DateMarkControl (no native confirm(): opening it and tapping Confirm *is*
- * the confirmation) so a stray double-tap can't insert a second rewatch.
- * logRewatch is a plain insert since rewatching twice is the point of the
- * log, so nothing else guards against an accidental extra tap. Doesn't reuse
- * DateMarkControl directly: its "date unknown" checkbox doesn't apply here. */
+/** Expand-to-confirm control for logging a rewatch on a chosen date. */
 export default function RewatchLogControl({
   count,
   onConfirm,
@@ -32,8 +27,6 @@ export default function RewatchLogControl({
           key="trigger"
           type="button"
           onClick={() => {
-            // Reset to today -- this control stays mounted across repeat
-            // opens, so without this it'd keep the last-used date.
             setDate(todayLocalDateInput())
             setOpen(true)
           }}
@@ -56,9 +49,6 @@ export default function RewatchLogControl({
             saving={saving}
             savingLabel="Logging…"
             onConfirm={async () => {
-              // See DateMarkControl's identical blur -- lets iOS Safari's
-              // native date-picker finish dismissing before this form
-              // collapses, instead of both reflows landing at once.
               ;(document.activeElement as HTMLElement | null)?.blur()
               setSaving(true)
               try {

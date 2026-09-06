@@ -8,19 +8,12 @@ interface FollowButtonProps {
   size?: 'sm' | 'md'
 }
 
-// Checked once at module load -- gates the hover-to-"Unfollow" relabel below.
-// Touch browsers fire a synthetic mouseenter on tap with no matching
-// mouseleave, which would otherwise leave the button stuck showing
-// "Unfollow" styling after a tap (same class of bug useDesktopAutoFocus
-// exists to avoid). `hover: hover` checks for real hover events specifically.
 const supportsHover =
   typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
     : false
 
-/** Follow/Unfollow toggle, controlled by the caller so list pages can share
- * one following-set instead of each row re-fetching its own status. Hovering
- * "Following" relabels it "Unfollow" on desktop only. */
+/** Follow/Unfollow toggle; hovering "Following" relabels it "Unfollow" on desktop only. */
 export default function FollowButton({
   isFollowing,
   saving = false,

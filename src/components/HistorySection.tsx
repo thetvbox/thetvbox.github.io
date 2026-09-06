@@ -37,12 +37,9 @@ const NOT_STREAMING_LABEL = 'Not free to stream'
 
 interface HistorySectionProps {
   activity: ShowActivity[]
-  /** Whose history this is, for building /u/:username/shows/:showId links. */
   username: string
   emptyIcon?: string
   emptyMessage: string
-  /** Default sort -- lets Home start on "Recent" while a profile's History
-   * tab can do the same without every caller repeating the default. */
   defaultSort?: HistorySort
 }
 
@@ -58,12 +55,7 @@ export default function HistorySection({
   const [filters, setFilters] = useState<HistoryFilters>(emptyHistoryFilters)
 
   const showIds = useMemo(() => activity.map((s) => s.showId), [activity])
-  // Resolved unconditionally (not just for the "Platform" sort) -- every
-  // card gets a streaming badge regardless of how the grid's currently sorted.
   const { platforms, loading: loadingPlatforms } = useStreamingPlatforms(showIds)
-  // Genre/year/country/language/status all come from TMDB show details,
-  // which nothing else on this list needs -- only fetched once someone
-  // actually opens Filters (or already has one active), not on every visit.
   const detailsEnabled = filtersOpen || isHistoryFiltersActive(filters)
   const { details, loading: loadingDetails } = useShowDetails(showIds, detailsEnabled)
 

@@ -1,9 +1,7 @@
 import { supabase } from './supabase'
 import type { ShowStarted } from '../types'
 
-/** All shows one user has explicitly started (0/x or otherwise) -- merged
- * into Now Watching by summarizeShowActivity, alongside real episode_watched
- * progress. */
+/** Fetches all shows one user has explicitly started. */
 export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]> {
   const { data, error } = await supabase.from('show_started').select('*').eq('user_id', userId)
 
@@ -11,8 +9,7 @@ export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]
   return (data ?? []) as ShowStarted[]
 }
 
-/** One user's started status for a single show, or null if they haven't
- * declared they're starting it. */
+/** Fetches one user's started status for a single show, or null if not started. */
 export async function fetchStartedItem(userId: string, showId: number): Promise<ShowStarted | null> {
   const { data, error } = await supabase
     .from('show_started')
@@ -33,9 +30,7 @@ export interface StartShowInput {
   showTotalEpisodes: number | null
 }
 
-/** "Start watching" -- records the declaration without touching
- * episode_watched, so Now Watching can show 0/x instead of faking progress
- * by marking episode 1. */
+/** Records a "start watching" declaration without touching episode_watched. */
 export async function startShow(input: StartShowInput): Promise<ShowStarted> {
   const { data, error } = await supabase
     .from('show_started')

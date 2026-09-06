@@ -14,19 +14,13 @@ import EmptyState from '../components/EmptyState'
 import Toast from '../components/Toast'
 import type { AppUser } from '../types'
 
-/** People directory: every row gets a Follow/Following button and a "Follows
- * you" badge, layered on top of the original searchable list. */
+/** People directory: search plus a Follow/Following button and "Follows you" badge per row. */
 export default function Members() {
   const { user: me } = useAuth()
   const [users, setUsers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())
-  // Set, not a single id -- following/unfollowing two different rows at once
-  // shouldn't have the one that resolves first clear the other's spinner.
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
-  // Kept in the URL (not just component state) so the search survives
-  // navigating to a profile and back -- Members otherwise fully remounts on
-  // return, losing whatever was typed.
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const [loading, setLoading] = useState(true)

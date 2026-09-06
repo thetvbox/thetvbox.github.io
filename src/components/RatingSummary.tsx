@@ -5,8 +5,6 @@ import StarRating from './StarRating'
 import StarGlyph from './StarGlyph'
 import { profileRoute } from '../lib/routes'
 
-/** Minimal shape both ShowRatingWithUser and SeasonRatingWithUser satisfy --
- * this component doesn't care which kind of rating it's showing. */
 interface RatingEntry {
   id: string
   user_id: string
@@ -22,13 +20,10 @@ interface RatingSummaryProps {
   currentUserId?: string
   size?: 'sm' | 'md' | 'lg'
   emptyLabel?: string
-  /** Screen-reader label for the star input, e.g. "Rate this show" or "Rate
-   * this season" -- passed through to StarRating's aria-label. */
   ratingLabel: string
 }
 
-/** Star input + "here's what everyone else thought" -- shared by the show-
- * level rating and the per-season one; same interaction, different rating list. */
+/** Star input plus "here's what everyone else thought", shared by show- and season-level ratings. */
 export default function RatingSummary({
   ratings,
   myRating,
@@ -51,8 +46,6 @@ export default function RatingSummary({
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-base-600 border-t-accent-400" />
         )}
         {myRating > 0 && (
-          // The star row also supports clearing via re-tap, but that's a
-          // hidden gesture -- this is the visible way to undo a rating.
           <button
             type="button"
             onClick={() => onChange(0)}

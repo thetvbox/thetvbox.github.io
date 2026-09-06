@@ -9,14 +9,11 @@ import Toast from './Toast'
 
 interface ProfileFollowSectionProps {
   profileId: string
-  /** For the unfollow toast's message -- optional since it's never used on
-   * your own profile (no follow button renders there). */
   username?: string
   isMe: boolean
 }
 
-/** Follower/following counts (clickable, opening FollowListPanel) plus a
- * Follow/Unfollow button, shared between Profile.tsx and PublicProfile.tsx. */
+/** Follower/following counts plus a Follow/Unfollow button, shared between Profile pages. */
 export default function ProfileFollowSection({ profileId, username, isMe }: ProfileFollowSectionProps) {
   const { user: me } = useAuth()
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
@@ -37,9 +34,7 @@ export default function ProfileFollowSection({ profileId, username, isMe }: Prof
           setIsFollowing(following)
         }
       })
-      .catch(() => {
-        // Silent -- a failed fetch just leaves counts at 0.
-      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -62,8 +57,6 @@ export default function ProfileFollowSection({ profileId, username, isMe }: Prof
     setSaving(false)
   }
 
-  // Only meaningful on your own profile: the only count that can change from
-  // actions inside the panel is your own following count.
   function handlePanelFollowingCountChange(delta: number) {
     setCounts((c) => ({ ...c, following: Math.max(0, c.following + delta) }))
   }
@@ -87,8 +80,6 @@ export default function ProfileFollowSection({ profileId, username, isMe }: Prof
           <span className="font-semibold text-base-200">{counts.following}</span> following
         </button>
         {!isMe && me && (
-          // Default (md) size -- a primary action on a spacious profile
-          // header, not a dense list row like Members.tsx/FollowListPanel.
           <FollowButton isFollowing={isFollowing} saving={saving} onFollow={handleFollow} onUnfollow={handleUnfollow} />
         )}
       </div>

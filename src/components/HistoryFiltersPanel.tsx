@@ -10,9 +10,6 @@ import {
   type HistoryFilters,
 } from '../lib/historyFilters'
 
-// Built once, reused for every .of() call -- ISO-code to readable-name
-// lookups (e.g. "KR" -> "South Korea"). Guarded since Intl.DisplayNames
-// isn't universally available.
 const countryNames =
   typeof Intl !== 'undefined' && 'DisplayNames' in Intl
     ? new Intl.DisplayNames(['en'], { type: 'region' })
@@ -171,9 +168,7 @@ export default function HistoryFiltersPanel({
   )
 }
 
-/** Free-typed year bounds, committed to the real filter (and the list it
- * re-filters) only after a pause in typing -- typing "2020" straight into
- * the live filter re-ran it against "2", "20", "202" first. */
+/** Free-typed year bounds, committed to the real filter only after a pause in typing. */
 function YearRangeFilter({
   minYear,
   maxYear,
@@ -191,9 +186,6 @@ function YearRangeFilter({
   const [toText, setToText] = useState(yearTo === null ? '' : String(yearTo))
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Only overwrite what's on screen when the committed value actually
-  // diverges from it -- otherwise this would fight the user's own typing
-  // every time our own debounced commit below lands.
   useEffect(() => {
     setFromText((prev) => (Number(prev) === yearFrom || (prev === '' && yearFrom === null) ? prev : String(yearFrom ?? '')))
   }, [yearFrom])

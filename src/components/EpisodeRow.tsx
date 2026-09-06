@@ -11,12 +11,8 @@ interface EpisodeRowProps {
   watched: boolean
   watchedAt: string | null
   watchedAtUnknown: boolean
-  /** One click, always "today" -- the fast path right after watching. */
   onToggleWatched: () => Promise<void>
-  /** The slower path: pick a specific date (or "don't remember"). */
   onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
-  /** Set on whichever row is the season's next-unwatched episode, so
-   * ShowDetailSeasons can scroll straight to it -- see jumpToProgress. */
   rootRef?: Ref<HTMLDivElement>
 }
 
@@ -31,8 +27,6 @@ export default function EpisodeRow({
 }: EpisodeRowProps) {
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  // Whether the clamped overview overflows 2 lines -- measured while still
-  // collapsed, so "Show more" only appears when there's really more to reveal.
   const [isTruncated, setIsTruncated] = useState(false)
   const overviewRef = useRef<HTMLParagraphElement>(null)
   const still = stillUrl(episode.still_path)
@@ -42,11 +36,9 @@ export default function EpisodeRow({
     if (!el) return
     setIsTruncated(el.scrollHeight > el.clientHeight + 1)
   }, [episode.overview])
-  // TMDB lists placeholder rows for unaired episodes of still-airing shows --
-  // only flagged upcoming with a real, known future date, so an obscure
-  // already-released episode with a missing air_date isn't swept up in this.
   const isUpcoming = Boolean(episode.air_date && isFutureDate(episode.air_date))
 
+  /** Marks the episode watched as of now. */
   async function handleToggle() {
     setSaving(true)
     try {
@@ -66,14 +58,11 @@ export default function EpisodeRow({
         watched ? 'ring-1 ring-inset ring-accent-500/20' : ''
       } ${isUpcoming ? 'opacity-60' : ''}`}
     >
-      {/* Stacked (image full-width, text below) on mobile; side-by-side from sm: up. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-base-800 sm:w-40 sm:shrink-0">
           {still ? (
             <img
               src={still}
-              // w300 alone looks soft on high-DPR phones; let the browser
-              // pick a density-matched variant.
               srcSet={`${stillUrl(episode.still_path, 'w300')} 1x, ${stillUrl(episode.still_path, 'w780')} 2x, ${stillUrl(episode.still_path, 'w1280')} 3x`}
               alt=""
               loading="lazy"
@@ -85,7 +74,6 @@ export default function EpisodeRow({
               No image
             </div>
           )}
-          {/* Corner badge on the still, same place every streaming app puts it. */}
           {episode.runtime ? (
             <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
               {episode.runtime}m
@@ -144,8 +132,6 @@ export default function EpisodeRow({
                     <span className="ml-0.5 h-3 w-3 animate-spin rounded-full border-2 border-current/30 border-t-current" />
                   )}
                 </button>
-                {/* Always rendered (hidden via `invisible`, not unmounted) so
-                    marking watched doesn't shrink the row and jump cards below it. */}
                 <DateMarkControl
                   label="Watched in the past"
                   onConfirm={onMarkWatchedWithDate}
