@@ -46,9 +46,7 @@ import type {
   WatchlistItem,
 } from '../types'
 
-/** Splits a batch of (season, episode) targets into ones that already had a
- * watched row (captured in full, so undo can restore their exact prior date)
- * and ones that don't exist yet (captured as keys, so undo just deletes them). */
+/** Splits bulk mark-watched targets into ones to snapshot-and-restore vs. ones to delete on undo. */
 function snapshotBulkTargets(
   watched: WatchedMap,
   episodes: { seasonNumber: number; episodeNumber: number }[],
@@ -63,10 +61,7 @@ function snapshotBulkTargets(
   return { previousRows, addedKeys }
 }
 
-/** All data loading, derived state, and mutation handlers for the ShowDetail
- * page. Kept as one hook (rather than several) since nearly every handler
- * needs `show`/`user` plus a mix of the other pieces of state -- splitting
- * further would mostly just move the same coupling into extra parameters. */
+/** All data loading, derived state, and mutation handlers for the ShowDetail page. */
 export function useShowDetail(showId: number, user: AppUser | null) {
   const [show, setShow] = useState<TmdbShowDetail | null>(null)
   const [season, setSeason] = useState<TmdbSeasonDetail | null>(null)
@@ -96,7 +91,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const [listPickerOpen, setListPickerOpen] = useState(false)
   const [correctedAirDates, setCorrectedAirDates] = useState<Map<string, string>>(new Map())
 
-  // Load show detail + my watch progress + everyone's show/season ratings, in parallel.
   useEffect(() => {
     let cancelled = false
     setLoadingShow(true)
@@ -138,8 +132,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         setStarted(startedRow)
         setDismissedItem(dismissedRow)
         setDroppedItem(droppedRow)
-        // Default to whichever season you're actually on (same "current
-        // season" logic as Home's Now Watching card), not always Season 1.
         const firstRealSeason = showData.seasons.find((s) => s.season_number > 0) ?? showData.seasons[0]
         const watchedBySeasonCount = countWatchedBySeason(Object.values(watchedMap))
         const progress = computeSeasonProgress(showData.seasons, watchedBySeasonCount)
@@ -158,7 +150,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }, [showId, user])
 
-  // Load episodes whenever the active season changes.
   useEffect(() => {
     if (activeSeason === null) return
     let cancelled = false
@@ -180,8 +171,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }, [showId, activeSeason])
 
-  // Where-to-watch is a nice-to-have -- fetch separately so a hiccup here
-  // never blocks or errors out the rest of the page.
   useEffect(() => {
     if (Number.isNaN(showId)) return
     let cancelled = false
@@ -190,9 +179,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       .then((data) => {
         if (!cancelled) setProviders(data)
       })
-      .catch(() => {
-        // Silently skip the section rather than surfacing an error for this.
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setLoadingProviders(false)
       })
@@ -206,8 +193,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }, [showId])
 
-  // Air-date correction is also a nice-to-have -- see lib/tvmaze.ts. Waits on
-  // `show` (not showId directly) since it needs external_ids from the show fetch.
   useEffect(() => {
     if (!show) return
     let cancelled = false
@@ -221,9 +206,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }, [show])
 
-  /** TVmaze's correction for one episode's air date, or its own TMDB date
-   * unchanged if there's no match -- shared by the "next episode" banner and
-   * every EpisodeRow so the two can never disagree. */
+  /** Returns TVmaze's correction for one episode's air date, or its own TMDB date unchanged. */
   function effectiveAirDate(ep: { season_number: number; episode_number: number; air_date: string | null }): string | null {
     if (!ep.air_date) return null
     return correctedAirDates.get(tvmazeEpisodeKey(ep.season_number, ep.episode_number)) ?? ep.air_date
@@ -232,11 +215,8 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const region = useMemo(() => detectRegion(), [])
   const regionProviders = providers?.results[region] ?? null
 
-  // The single best-guess "free to you" answer -- shared with the History/
-  // Activity "sort by platform" grouping so the two never disagree.
   const bestFreeProvider = useMemo(() => pickBestFreeProvider(regionProviders), [regionProviders])
 
-  // A manual correction always wins over the automatic guess.
   const effectiveProvider: { provider_name: string; logo_path: string | null } | null = override
     ? { provider_name: override.provider_name, logo_path: override.provider_logo_path }
     : bestFreeProvider
@@ -244,14 +224,9 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const watchedCount = Object.keys(watched).length
   const totalEpisodes = show?.number_of_episodes ?? null
 
-  // Mirrors nowWatching()'s own filter in lib/showActivity.ts -- kept as a
-  // simple boolean here since this only ever needs the one show already loaded.
   const isFinished = totalEpisodes !== null && watchedCount >= totalEpisodes
   const inNowWatching = (started !== null || watchedCount > 0) && !dismissedItem && !droppedItem && !isFinished
   const canTrackNowWatching = totalEpisodes !== null && totalEpisodes > 0 && !isFinished
-  // The Drop pill only makes sense once there's something to drop (real
-  // progress or a "started" declaration) or it's already dropped (so the
-  // pill can offer "Resume watching" instead).
   const canDropShow = canTrackNowWatching && (started !== null || watchedCount > 0 || droppedItem !== null)
 
   const seasonWatchedCount = useMemo(() => {
@@ -259,9 +234,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     return season.episodes.filter((ep) => watched[watchedKey(ep.season_number, ep.episode_number)]).length
   }, [season, watched])
 
-  // The active season's episode list is already loaded (has air_date), so
-  // this is just a client-side scan. "Is it upcoming" still goes by TMDB's
-  // own date -- only the *displayed* date gets TVmaze's correction.
   const nextUpcomingEpisode = useMemo(() => {
     if (!season) return null
     const ep = season.episodes.find((e) => e.air_date && isFutureDate(e.air_date)) ?? null
@@ -281,43 +253,28 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     [seasonRatingsForActive, user],
   )
 
-  /** Best-effort "un-hide from Now Watching", fired after any action meaning
-   * the person is actively picking this show back up. Not worth a loading
-   * state or error toast -- worst case the show stays hidden until removed
-   * and re-added another way. */
+  /** Best-effort un-hide from Now Watching, fired after any action that resumes a show. */
   function clearDismissed() {
     if (!user || !show) return
     undismissShow(user.id, show.id)
       .then(() => setDismissedItem(null))
-      .catch(() => {
-        // Best-effort, see comment above -- fail silently.
-      })
+      .catch(() => {})
   }
 
-  /** Same idea as clearDismissed, but for Dropped -- new progress on a
-   * dropped show means you're back on it, so auto-resume it rather than
-   * leaving it stuck out of Now Watching until a separate manual tap. */
+  /** Same idea as clearDismissed, but auto-resumes a dropped show once new progress is logged. */
   function clearDropped() {
     if (!user || !show) return
     undropShow(user.id, show.id)
       .then(() => setDroppedItem(null))
-      .catch(() => {
-        // Best-effort, see comment above -- fail silently.
-      })
+      .catch(() => {})
   }
 
-  /** Same idea again, but for the watchlist -- "want to watch this" and
-   * "actually watching this" shouldn't both be true, so any real progress
-   * graduates the show off the watchlist automatically. No undo offered
-   * here (unlike handleToggleWatchlist's own manual remove) since this is a
-   * side effect of a different action, not a deliberate "remove" tap. */
+  /** Same idea again, but graduates a show off the watchlist once real progress exists. */
   function clearWatchlist() {
     if (!user || !show || !watchlistItem) return
     removeFromWatchlist(user.id, show.id)
       .then(() => setWatchlistItem(null))
-      .catch(() => {
-        // Best-effort, see comment above -- fail silently.
-      })
+      .catch(() => {})
   }
 
   async function handleToggleWatched(episodeNumber: number, episodeName: string, runtimeMinutes: number | null) {
@@ -325,7 +282,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     const key = watchedKey(activeSeason, episodeNumber)
 
     if (watched[key]) {
-      // Snapshot so a failed unmark can be put back exactly as it was.
       const previous = watched[key]
       setWatched((prev) => {
         const next = { ...prev }
@@ -341,7 +297,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       return
     }
 
-    // Optimistic placeholder, swapped for the real row once the write resolves.
     const optimisticRow: EpisodeWatched = {
       id: `optimistic-${key}`,
       user_id: user.id,
@@ -385,9 +340,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** Undoes a bulk mark-watched action: restores episodes that were already
-   * watched to their exact prior date, and deletes episodes the action itself
-   * created. Owns its own error reporting since the toast fires it un-awaited. */
+  /** Undoes a bulk mark-watched action, restoring overwritten rows and deleting newly-created ones. */
   async function undoBulkMark(
     previousRows: EpisodeWatched[],
     addedKeys: { seasonNumber: number; episodeNumber: number }[],
@@ -409,13 +362,10 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
+  /** Marks every real-season episode of the show watched in one action. */
   async function handleMarkAllWatched(input: { watchedAt: string; unknownDate: boolean }) {
     if (!user || !show) return
     const realSeasons = show.seasons.filter((s) => s.season_number > 0)
-    // Fetch every season's episode list so each row can carry its real
-    // runtime -- without it, a show logged this way would silently
-    // contribute 0 to "hours watched" forever. One extra TMDB call per
-    // season, but this action only runs once per show.
     const seasonDetails = await Promise.all(
       realSeasons.map((s) => getSeasonDetail(show.id, s.season_number).catch(() => null)),
     )
@@ -432,13 +382,10 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         return {
           seasonNumber: s.season_number,
           episodeNumber,
-          // Falls back to null only if that season's fetch itself failed above.
           runtimeMinutes: runtimeByKey.get(watchedKey(s.season_number, episodeNumber)) ?? null,
         }
       }),
     )
-    // Snapshot what's about to change before the write, so a mis-tap can be
-    // undone instead of requiring a manual fix.
     const { previousRows, addedKeys } = snapshotBulkTargets(watched, episodes)
     try {
       const saved = await bulkMarkWatched({
@@ -466,17 +413,11 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         () => undoBulkMark(previousRows, addedKeys),
       )
     } catch {
-      // Nothing was applied locally, so there's nothing to roll back.
       showError('Failed to mark episodes watched. Try again.')
     }
   }
 
-  /** "Start watching" -- the manual add-to-Now-Watching entry point for a
-   * show you haven't logged any episodes for yet. Records a standalone
-   * "started" declaration (show_started) rather than faking progress by
-   * marking episode 1, so Now Watching shows 0/x until a real episode is
-   * marked watched. One tap, stamped "now" -- unlike the bulk actions it
-   * skips the date picker entirely. */
+  /** Records a standalone "started watching" declaration for a show with no logged episodes yet. */
   async function handleStartWatching() {
     if (!user || !show) return
     setSavingNowWatching(true)
@@ -499,9 +440,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** Un-hides a show that already has real progress or a "started"
-   * declaration but was previously removed from Now Watching. Deliberate
-   * user action, so unlike clearDismissed this reports failure. */
+  /** Un-hides a show that was previously removed from Now Watching. */
   async function handleAddBackToNowWatching() {
     if (!user || !show) return
     setSavingNowWatching(true)
@@ -517,9 +456,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** "Remove from Now Watching" -- hides the show without touching
-   * show_started/episode_watched; resuming the show brings it back
-   * automatically via clearDismissed. A soft "not right now," not a reset. */
+  /** Hides the show from Now Watching without touching its progress. */
   async function handleRemoveFromNowWatching() {
     if (!user || !show) return
     setSavingNowWatching(true)
@@ -550,17 +487,14 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     })
   }
 
-  /** Single entry point for the Now Watching pill -- picks the right handler
-   * above based on current state, so the button doesn't need to know the model. */
+  /** Single entry point for the Now Watching pill; picks the right handler for the current state. */
   function handleToggleNowWatching() {
     if (inNowWatching) handleRemoveFromNowWatching()
     else if (dismissedItem) handleAddBackToNowWatching()
     else handleStartWatching()
   }
 
-  /** "Drop this show" -- a separate, deliberate pill from Now Watching (see
-   * ShowDetailQuickActions), not a rename of dismiss/remove. Same
-   * optimistic-update-then-undo shape as handleRemoveFromNowWatching. */
+  /** Marks the show as deliberately dropped, with an undo offered via toast. */
   async function handleDropShow() {
     if (!user || !show) return
     setSavingDropped(true)
@@ -598,8 +532,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     })
   }
 
-  /** Explicit "Resume watching" from the Dropped pill/tab -- deliberate user
-   * action, so unlike clearDropped this reports failure. */
+  /** Explicit "Resume watching" from the Dropped pill/tab. */
   async function handleResumeFromDropped() {
     if (!user || !show) return
     setSavingDropped(true)
@@ -615,14 +548,13 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** Single entry point for the Drop pill -- mirrors handleToggleNowWatching. */
+  /** Single entry point for the Drop pill; mirrors handleToggleNowWatching. */
   function handleToggleDropped() {
     if (droppedItem) handleResumeFromDropped()
     else handleDropShow()
   }
 
-  /** Same idea as handleToggleWatched, but for logging a single episode on a
-   * specific past date instead of always stamping "now". */
+  /** Same idea as handleToggleWatched, but logs a single episode on a specific past date. */
   async function handleMarkWatchedWithDate(
     episodeNumber: number,
     episodeName: string,
@@ -653,9 +585,9 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
+  /** Marks every aired episode of the active season watched in one action. */
   async function handleMarkSeasonWatched(input: { watchedAt: string; unknownDate: boolean }) {
     if (!user || !show || !season) return
-    // Skip TMDB's not-yet-aired placeholder episodes -- same check as EpisodeRow.tsx.
     const episodes = season.episodes
       .filter((ep) => !(ep.air_date && isFutureDate(ep.air_date)))
       .map((ep) => ({
@@ -741,8 +673,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** Logs a rewatch -- a separate, append-only event, not a change to
-   * episode_watched. Only ever offered once a show is finished. */
+  /** Logs a rewatch as a separate, append-only event, offered only once a show is finished. */
   async function handleLogRewatch(rewatchedAt: string) {
     if (!user || !show) return
     try {
@@ -753,7 +684,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
         showPosterPath: show.poster_path,
         rewatchedAt,
       })
-      // sortRewatchesDesc, not a plain prepend -- rewatchedAt can be backdated.
       setRewatches((prev) => sortRewatchesDesc([saved, ...prev]))
     } catch {
       showError('Failed to log this rewatch. Try again.')
@@ -794,8 +724,6 @@ export function useShowDetail(showId: number, user: AppUser | null) {
       })
       setOverride(saved)
       setPickerOpen(false)
-      // Poster badges on Home/History/Search read from a cached answer --
-      // without this they'd keep showing the old provider until a hard reload.
       invalidatePlatformCache(show.id)
     } catch {
       showError('Failed to set streaming provider. Try again.')
@@ -846,9 +774,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
   }
 
-  /** Same shape as handleRateShow, but scoped to whichever season tab is
-   * active -- a separate, independent rating rather than a component of the
-   * show-level one. */
+  /** Same shape as handleRateShow, but scoped to whichever season tab is active. */
   async function handleRateSeason(value: number) {
     if (!user || !show || activeSeason === null) return
     setSavingSeasonRating(true)

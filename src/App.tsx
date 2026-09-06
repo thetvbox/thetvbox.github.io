@@ -13,10 +13,6 @@ import { ROUTES } from './lib/routes'
 import { useScrollRestoration } from './hooks/useScrollRestoration'
 import Login from './pages/Login'
 
-// Every other page is code-split from the login bundle -- most sessions
-// only ever touch a couple of these, so there's no reason to ship all of
-// them (plus TMDB/Supabase calls, plus framer-motion usage) in the first
-// paint's JS.
 const Home = lazy(() => import('./pages/Home'))
 const Activity = lazy(() => import('./pages/Activity'))
 const Search = lazy(() => import('./pages/Search'))
@@ -37,9 +33,7 @@ function PageLoader() {
   )
 }
 
-/** Lazy pages need their own Suspense boundary that sits *inside* Routes,
- * so Routes itself (keyed on pathname) stays AnimatePresence's direct
- * child and route-change exit/enter animations keep working. */
+/** Wraps a lazy page in its own Suspense boundary inside Routes. */
 function Page({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>
 }
@@ -50,10 +44,6 @@ function AppShell() {
   const showNav = Boolean(user) && location.pathname !== ROUTES.login
   const [gatePassed, setGatePassed] = useState(hasPassedGate)
 
-  // Tapping a nav item (bottom tab bar on mobile, top bar on desktop) lands
-  // on the top of the destination page, the same way a fresh page load
-  // would. Hitting the browser's back/forward button instead restores
-  // wherever you'd scrolled to on that page -- see useScrollRestoration.
   useScrollRestoration()
 
   if (loading) {
@@ -64,8 +54,6 @@ function AppShell() {
     )
   }
 
-  // Unauthenticated visitors have to clear the shared passcode before they
-  // can even see the login/registration screen, for any URL they land on.
   if (!user && isGateConfigured && !gatePassed) {
     return <PasscodeGate onSuccess={() => setGatePassed(true)} />
   }
@@ -74,9 +62,6 @@ function AppShell() {
     <div className="min-h-dvh bg-base-950">
       {showNav && <Navbar />}
       <AnimatePresence mode="wait">
-        {/* Keyed on pathname so a crash on one route doesn't strand later
-            navigation -- HashRouter never remounts the app, so this key is
-            what resets ErrorBoundary's state each time the route changes. */}
         <ErrorBoundary key={location.pathname}>
           <Routes location={location}>
             <Route path={ROUTES.login} element={<Login />} />
@@ -201,10 +186,6 @@ function AppShell() {
 
 export default function App() {
   return (
-    // "user" respects the OS-level prefers-reduced-motion setting for every
-    // motion.* element in the app (crossfades instead of the usual
-    // slide/scale), without having to thread a check through each of them
-    // individually -- see https://motion.dev/docs/react-motion-config.
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
         <ThemeProvider>

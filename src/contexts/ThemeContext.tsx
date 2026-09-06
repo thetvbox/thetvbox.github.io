@@ -2,12 +2,11 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { STORAGE_KEYS } from '../lib/constants'
 
-export type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark'
 
 const THEME_COLOR = { dark: '#08080c', light: '#f8fafc' } as const
 
-/** Reads the class index.html's boot script already applied pre-paint, so
- * there's no mismatch flash between the two. */
+/** Reads the theme index.html's boot script already applied, to avoid a flash. */
 function getInitialTheme(): Theme {
   if (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) {
     return 'light'
@@ -34,9 +33,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const meta = document.querySelector('meta[name="theme-color"]')
     meta?.setAttribute('content', THEME_COLOR[theme])
 
-    // iOS reads this link's href only at "Add to Home Screen" time (ignoring
-    // the prefers-color-scheme variants in index.html), so keep it in sync on
-    // every toggle -- re-add the shortcut afterward to pick up a later change.
     const appleTouchIcon = document.getElementById('apple-touch-icon')
     appleTouchIcon?.setAttribute(
       'href',
@@ -46,7 +42,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEYS.theme, theme)
     } catch {
-      // Private browsing / storage disabled -- theme just won't persist.
+      /* noop */
     }
   }, [theme])
 

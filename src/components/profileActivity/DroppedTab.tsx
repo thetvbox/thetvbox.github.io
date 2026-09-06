@@ -13,8 +13,7 @@ interface DroppedTabProps {
   onResume: (item: ShowDropped) => void
 }
 
-/** Dropped tab body -- shows deliberately stopped, with a resume action for
- * the owner. Same layout as WatchlistTab; "Remove" becomes "Resume". */
+/** Dropped tab body: deliberately-stopped shows with a resume action. */
 export default function DroppedTab({ items, isMe, onResume }: DroppedTabProps) {
   if (items.length === 0) {
     return (
