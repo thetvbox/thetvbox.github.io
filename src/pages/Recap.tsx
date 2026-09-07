@@ -55,16 +55,18 @@ export default function Recap() {
 
   const years = useMemo(() => availableRecapYears(ratings, watched, rewatches), [ratings, watched, rewatches])
 
-  useEffect(() => {
-    if (year === null && years.length > 0) setYear(years[0])
-  }, [years, year])
+  // Derived, not stateful: falls back to the most recent year whenever there's no explicit
+  // pick yet (or the pick no longer exists in `years`, e.g. after data reloads), with no extra
+  // render in between -- setting this from an effect left a real frame where every year button
+  // rendered unpressed before the effect caught up, which is what made this flaky under test.
+  const selectedYear = year !== null && years.includes(year) ? year : (years[0] ?? null)
 
   const activity = useMemo(() => summarizeShowActivity(ratings, watched), [ratings, watched])
 
   const recap = useMemo(() => {
-    if (year === null) return null
-    return buildYearRecap(year, activity, ratings, watched, rewatches)
-  }, [year, activity, ratings, watched, rewatches])
+    if (selectedYear === null) return null
+    return buildYearRecap(selectedYear, activity, ratings, watched, rewatches)
+  }, [selectedYear, activity, ratings, watched, rewatches])
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
@@ -79,9 +81,9 @@ export default function Recap() {
                 key={y}
                 type="button"
                 onClick={() => setYear(y)}
-                aria-pressed={year === y}
+                aria-pressed={selectedYear === y}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
-                  year === y
+                  selectedYear === y
                     ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
                     : 'text-base-400 hover:bg-hover hover:text-base-200'
                 }`}
