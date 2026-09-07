@@ -65,7 +65,7 @@ describe('RatingDistribution', () => {
   it('the Close button in the expanded panel collapses it', () => {
     renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
     fireEvent.click(screen.getByRole('button', { name: /1 show rated 4\.0/ }))
-    fireEvent.click(screen.getByText('Close'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByText('Show One')).not.toBeInTheDocument()
   })
 

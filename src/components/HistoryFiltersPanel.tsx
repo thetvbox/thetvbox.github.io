@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 import { FILTER_DEBOUNCE_MS } from '../lib/constants'
 import {
   emptyHistoryFilters,
@@ -61,23 +62,21 @@ export default function HistoryFiltersPanel({
 
   return (
     <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-base-500">Filters</p>
-        <div className="flex items-center gap-3">
-          {isHistoryFiltersActive(filters) && (
+      <PanelHeader
+        title="Filters"
+        onClose={onClose}
+        actions={
+          isHistoryFiltersActive(filters) && (
             <button
               type="button"
               onClick={() => onChange(emptyHistoryFilters())}
-              className="text-xs text-accent-400 hover:underline"
+              className="text-xs font-medium text-accent-400 hover:underline"
             >
               Clear all
             </button>
-          )}
-          <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-            Close
-          </button>
-        </div>
-      </div>
+          )
+        }
+      />
 
       <FilterSection title="Rating">
         <div className="flex flex-wrap gap-1.5">

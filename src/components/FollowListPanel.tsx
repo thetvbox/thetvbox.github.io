@@ -10,6 +10,7 @@ import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
@@ -94,14 +95,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
 
   return (
     <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-base-500">
-          {mode === 'followers' ? 'Followers' : 'Following'}
-        </p>
-        <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-          Close
-        </button>
-      </div>
+      <PanelHeader title={mode === 'followers' ? 'Followers' : 'Following'} onClose={onClose} />
 
       {error && <p className="mb-3 text-xs text-danger">{error}</p>}
 

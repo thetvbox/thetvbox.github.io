@@ -25,6 +25,11 @@ All notable changes to TV Box are documented here. Format loosely follows
   aggregation into two Postgres views instead of paginating raw rows
   client-side.
 - Desktop navbar widened to feel less boxed-in on wide screens.
+- Modernized the notifications panel and every other dropdown/inline panel
+  (add to list, filters, followers/following, changelog, "where to watch",
+  rating breakdown): softer rounded corners, real elevation, a frosted-glass
+  background on the notifications dropdown, and a consistent icon close
+  button instead of a bare "Close" link.
 
 ### Fixed
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getAllTvProviders, providerLogoUrl } from '../lib/tmdb'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 import type { TmdbProviderListItem } from '../types'
 
 const WELL_KNOWN_PROVIDER_PREFIXES = [
@@ -71,24 +72,16 @@ export default function ProviderPicker({
   }, [allProviders, query])
 
   return (
-    <InlinePanel className="p-3">
-      <div className="flex items-center justify-between gap-2">
-        <input
-          autoFocus
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search platforms (Netflix, Hulu, Max...)"
-          className="w-full rounded-lg border border-hairline-strong bg-base-950 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
-        />
-        <button
-          type="button"
-          onClick={onClose}
-          className="shrink-0 text-xs text-base-500 hover:text-base-300"
-        >
-          Close
-        </button>
-      </div>
+    <InlinePanel className="p-3.5">
+      <PanelHeader title="Where to watch" onClose={onClose} />
+      <input
+        autoFocus
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search platforms (Netflix, Hulu, Max...)"
+        className="w-full rounded-lg border border-hairline-strong bg-base-950 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
+      />
       <div className="mt-2 max-h-56 overflow-y-auto">
         {loading ? (
           <p className="px-1 py-2 text-xs text-base-500">Loading platforms…</p>

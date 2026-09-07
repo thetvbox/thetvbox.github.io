@@ -21,6 +21,7 @@ import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
 import { profileRoute, showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
+import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
 import type { Notification } from '../types'
 
@@ -66,6 +67,7 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
         onClick={() => onOpenChange(!open)}
         aria-label={unseen > 0 ? `Notifications, ${unseen} new` : 'Notifications'}
         aria-expanded={open}
+        aria-haspopup="true"
         title="Notifications"
         className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
       >
@@ -220,26 +222,26 @@ function NotificationsPanel({
       animate={DROPDOWN_PANEL_ANIMATE}
       exit={DROPDOWN_PANEL_EXIT}
       transition={DROPDOWN_PANEL_TRANSITION}
-      className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-hairline-strong bg-base-900 p-3.5 shadow-xl shadow-black/20"
+      role="dialog"
+      aria-label="Notifications"
+      className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-base-500">Notifications</p>
-        <div className="flex items-center gap-3">
-          {notifications.length > 0 && (
+      <PanelHeader
+        title="Notifications"
+        onClose={onClose}
+        actions={
+          notifications.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
               disabled={clearing}
-              className="text-xs text-base-500 hover:text-base-300 disabled:opacity-40"
+              className="text-xs font-medium text-base-500 transition-colors duration-200 hover:text-accent-400 disabled:opacity-40"
             >
               {clearing ? 'Clearing…' : 'Clear all'}
             </button>
-          )}
-          <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-            Close
-          </button>
-        </div>
-      </div>
+          )
+        }
+      />
 
       {error && <p className="mb-2 text-xs text-danger">{error}</p>}
 
@@ -247,12 +249,15 @@ function NotificationsPanel({
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
-              <div key={i} className="h-10 animate-pulse rounded-lg bg-base-850/70" />
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-base-850/70" />
             ))}
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-center text-xs text-base-500">
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-base-850/70 text-base-500">
+              <BellGlyph />
+            </span>
+            <p className="max-w-[15rem] text-xs leading-relaxed text-base-500">
               Nothing yet -- follow some people to see their activity here.
             </p>
           </div>
@@ -263,7 +268,7 @@ function NotificationsPanel({
                 <Link
                   to={notificationHref(n)}
                   onClick={onClose}
-                  className={`flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover ${
+                  className={`flex items-center gap-2.5 rounded-xl p-2 transition-colors duration-200 hover:bg-hover ${
                     n.seen_at ? '' : 'bg-accent-500/5'
                   }`}
                 >

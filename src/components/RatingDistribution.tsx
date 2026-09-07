@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import StarGlyph from './StarGlyph'
 import PosterThumb from './PosterThumb'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 import { showRoute } from '../lib/routes'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
 import { pluralSuffix } from '../lib/format'
@@ -71,22 +72,18 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
       <AnimatePresence initial={false}>
         {selected !== null && (
           <InlinePanel key={selected} className="max-h-80 overflow-y-auto p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="flex items-center gap-1 text-xs font-semibold text-base-300">
-                {selected.toFixed(1)}
-                <StarGlyph size={11} />
-                <span className="text-base-500">
-                  · {selectedShows.length} show{pluralSuffix(selectedShows.length)}
+            <PanelHeader
+              title={
+                <span className="flex items-center gap-1">
+                  {selected.toFixed(1)}
+                  <StarGlyph size={11} />
+                  <span className="font-normal text-base-500">
+                    · {selectedShows.length} show{pluralSuffix(selectedShows.length)}
+                  </span>
                 </span>
-              </p>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="text-xs text-base-500 hover:text-base-300"
-              >
-                Close
-              </button>
-            </div>
+              }
+              onClose={() => setSelected(null)}
+            />
             <ul className="space-y-1">
               {selectedShows.map((r) => (
                 <li key={r.id}>

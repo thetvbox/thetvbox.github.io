@@ -3,6 +3,7 @@ import { changelogReleases } from '../lib/changelog'
 import type { ChangelogBlock } from '../lib/changelog'
 import { formatShortDate } from '../lib/date'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 
 /** Inline read-only "What's new" panel. */
 export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
@@ -10,16 +11,7 @@ export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <InlinePanel className="max-h-[70vh] overflow-y-auto p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-base-500">What&apos;s new</p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="shrink-0 text-xs text-base-500 hover:text-base-300"
-        >
-          Close
-        </button>
-      </div>
+      <PanelHeader title="What's new" onClose={onClose} />
 
       {changelogReleases.length === 0 ? (
         <p className="text-xs text-base-500">Nothing logged yet.</p>

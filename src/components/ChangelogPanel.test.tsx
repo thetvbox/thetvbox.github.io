@@ -30,7 +30,7 @@ describe('ChangelogPanel', () => {
   it('calls onClose when Close is clicked, and on Escape', () => {
     const onClose = vi.fn()
     render(<ChangelogPanel onClose={onClose} />)
-    fireEvent.click(screen.getByText('Close'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalledTimes(1)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(2)

@@ -73,7 +73,7 @@ describe('ProviderPicker', () => {
     const onClose = vi.fn()
     vi.mocked(getAllTvProviders).mockResolvedValue([])
     render(<ProviderPicker region="US" onPick={vi.fn()} onClose={onClose} />)
-    fireEvent.click(screen.getByText('Close'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 

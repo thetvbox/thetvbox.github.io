@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { addShowToList, createList, deleteList, fetchListsForUser, removeShowFromList } from '../lib/lists'
 import Toast from './Toast'
 import InlinePanel from './InlinePanel'
+import PanelHeader from './PanelHeader'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import type { ShowListWithCount } from '../types'
@@ -124,15 +125,10 @@ export default function AddToListPicker({
 
   return (
     <>
-      <InlinePanel className="p-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-base-300">Add to a list</p>
-          <button type="button" onClick={onClose} className="text-xs text-base-500 hover:text-base-300">
-            Close
-          </button>
-        </div>
+      <InlinePanel className="p-3.5">
+        <PanelHeader title="Add to a list" onClose={onClose} />
 
-        <div className="mt-2 max-h-56 overflow-y-auto">
+        <div className="max-h-56 overflow-y-auto">
           {lists === null ? (
             <p className="px-1 py-2 text-xs text-base-500">
               {loadError ? "Couldn't load your lists. Try closing and reopening this panel." : 'Loading your lists…'}

@@ -11,7 +11,7 @@ export default function InlinePanel({ className = '', children }: { className?: 
       animate={INLINE_PANEL_ANIMATE}
       exit={INLINE_PANEL_EXIT}
       transition={INLINE_PANEL_TRANSITION}
-      className={`mt-2 rounded-xl border border-hairline-strong bg-base-900 ${className}`}
+      className={`mt-2 rounded-2xl border border-hairline-strong bg-base-900 shadow-lg shadow-black/20 ${className}`}
     >
       {children}
     </motion.div>
