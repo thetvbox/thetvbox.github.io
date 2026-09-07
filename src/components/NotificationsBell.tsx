@@ -23,6 +23,7 @@ import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
 import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
+import ErrorText from './ErrorText'
 import type { Notification } from '../types'
 
 interface NotificationsBellProps {
@@ -243,7 +244,7 @@ function NotificationsPanel({
         }
       />
 
-      {error && <p className="mb-2 text-xs text-danger">{error}</p>}
+      {error && <ErrorText className="mb-2 text-xs">{error}</ErrorText>}
 
       <div className="h-64 overflow-y-auto">
         {loading ? (

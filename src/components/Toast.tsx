@@ -38,6 +38,8 @@ function ToastBody({ toast, onDismiss }: { toast: ToastState; onDismiss: () => v
 
   return (
     <div
+      role="status"
+      aria-live={toast.tone === 'error' ? 'assertive' : 'polite'}
       className={`flex items-center gap-3 rounded-full border px-4 py-2.5 shadow-2xl shadow-black/40 ${
         toast.tone === 'error' ? 'border-danger/40 bg-base-850' : 'border-hairline-strong bg-base-850'
       }`}

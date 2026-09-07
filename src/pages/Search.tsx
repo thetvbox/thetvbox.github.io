@@ -9,6 +9,7 @@ import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
@@ -98,7 +99,7 @@ export default function Search() {
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading && <ShowGridSkeleton />}
 

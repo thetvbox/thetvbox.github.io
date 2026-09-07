@@ -12,6 +12,7 @@ import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StatCard from '../components/StatCard'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type { AppUser, ShowRating } from '../types'
 
 interface SharedShow {
@@ -120,7 +121,7 @@ export default function Compare() {
       </motion.h1>
       <p className="mb-6 text-sm text-base-500">How your ratings stack up on shows you&apos;ve both rated.</p>
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {shared.length === 0 ? (
         <EmptyState icon="🤝">

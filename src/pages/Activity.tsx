@@ -17,6 +17,7 @@ import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type { AppUser } from '../types'
 
 interface DayGroup {
@@ -171,7 +172,7 @@ export default function Activity() {
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
         <div className="space-y-2">

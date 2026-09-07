@@ -8,6 +8,7 @@ import ShowDetailSeasons from '../components/showDetail/ShowDetailSeasons'
 import { backdropUrl } from '../lib/tmdb'
 import { useAuth } from '../contexts/AuthContext'
 import { useShowDetail } from '../hooks/useShowDetail'
+import ErrorText from '../components/ErrorText'
 
 export default function ShowDetail() {
   const { id } = useParams<{ id: string }>()
@@ -18,11 +19,11 @@ export default function ShowDetail() {
   const jumpToProgress = Boolean((location.state as { jumpToProgress?: boolean } | null)?.jumpToProgress)
 
   if (Number.isNaN(showId)) {
-    return <p className="p-8 text-center text-sm text-danger">Invalid show.</p>
+    return <ErrorText className="p-8 text-center text-sm">Invalid show.</ErrorText>
   }
 
   if (d.error && !d.show) {
-    return <p className="p-8 text-center text-sm text-danger">{d.error}</p>
+    return <ErrorText className="p-8 text-center text-sm">{d.error}</ErrorText>
   }
 
   return (

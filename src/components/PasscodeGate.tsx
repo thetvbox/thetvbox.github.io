@@ -6,6 +6,7 @@ import { EASE_OUT_EXPO } from '../lib/motion'
 import { PASSCODE_LENGTH } from '../lib/constants'
 import AppLogo from './AppLogo'
 import PrimaryButton from './PrimaryButton'
+import ErrorText from './ErrorText'
 
 export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
   const [code, setCode] = useState('')
@@ -62,7 +63,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
               className="w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-3 text-center text-lg font-semibold tracking-[0.5em] text-base-100 placeholder:tracking-normal placeholder:text-base-500 focus:border-accent-500/60"
             />
           </div>
-          {error && <p className="text-xs text-danger">{error}</p>}
+          {error && <ErrorText className="text-xs">{error}</ErrorText>}
           <PrimaryButton disabled={busy || code.length === 0}>Continue</PrimaryButton>
         </form>
       </motion.div>

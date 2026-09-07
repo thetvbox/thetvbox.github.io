@@ -10,6 +10,7 @@ import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 
 type Step = 'email' | 'username'
 
@@ -114,7 +115,7 @@ export default function Login() {
                     className="w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-2.5 text-base text-base-100 placeholder:text-base-500 focus:border-accent-500/60 sm:text-sm"
                   />
                 </div>
-                {error && <p className="text-xs text-danger">{error}</p>}
+                {error && <ErrorText className="text-xs">{error}</ErrorText>}
                 <PrimaryButton disabled={busy}>{busy ? 'Checking…' : 'Continue'}</PrimaryButton>
                 <p className="text-center text-xs text-base-500">
                   New here? We&apos;ll ask you to pick a username next. Returning? You&apos;re
@@ -147,7 +148,7 @@ export default function Login() {
                     className="mt-3 w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-2.5 text-base text-base-100 placeholder:text-base-500 focus:border-accent-500/60 sm:text-sm"
                   />
                 </div>
-                {error && <p className="text-xs text-danger">{error}</p>}
+                {error && <ErrorText className="text-xs">{error}</ErrorText>}
                 <PrimaryButton disabled={busy}>
                   {busy ? 'Creating account…' : 'Create account'}
                 </PrimaryButton>

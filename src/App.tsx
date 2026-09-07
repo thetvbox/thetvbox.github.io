@@ -1,15 +1,17 @@
 import { lazy, Suspense, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AnimatePresence, MotionConfig } from 'framer-motion'
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import PasscodeGate from './components/PasscodeGate'
 import ErrorBoundary from './components/ErrorBoundary'
+import Spinner from './components/Spinner'
 import { hasPassedGate, isGateConfigured } from './lib/siteGate'
 import { ROUTES } from './lib/routes'
+import { ROUTE_TRANSITION_MOTION } from './lib/motion'
 import { useScrollRestoration } from './hooks/useScrollRestoration'
 import Login from './pages/Login'
 
@@ -28,7 +30,7 @@ const Recap = lazy(() => import('./pages/Recap'))
 function PageLoader() {
   return (
     <div className="flex h-[70vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-base-700 border-t-accent-400" />
+      <Spinner />
     </div>
   )
 }
@@ -49,7 +51,7 @@ function AppShell() {
   if (loading) {
     return (
       <div className="flex h-dvh items-center justify-center bg-base-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-base-700 border-t-accent-400" />
+        <Spinner />
       </div>
     )
   }
@@ -62,123 +64,125 @@ function AppShell() {
     <div className="min-h-dvh bg-base-950">
       {showNav && <Navbar />}
       <AnimatePresence mode="wait">
-        <ErrorBoundary key={location.pathname}>
-          <Routes location={location}>
-            <Route path={ROUTES.login} element={<Login />} />
-            <Route
-              path={ROUTES.home}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Home />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.activity}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Activity />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.search}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Search />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.show}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <ShowDetail />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.profile}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Profile />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.members}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Members />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.publicProfile}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <PublicProfile />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.showDiary}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <ShowDiary />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.compare}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Compare />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.listDetail}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <ListDetail />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.recap}
-              element={
-                <ProtectedRoute>
-                  <Page>
-                    <Recap />
-                  </Page>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
-            <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
-          </Routes>
-        </ErrorBoundary>
+        <motion.div key={location.pathname} {...ROUTE_TRANSITION_MOTION}>
+          <ErrorBoundary>
+            <Routes location={location}>
+              <Route path={ROUTES.login} element={<Login />} />
+              <Route
+                path={ROUTES.home}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Home />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.activity}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Activity />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.search}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Search />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.show}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <ShowDetail />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.profile}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Profile />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.members}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Members />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.publicProfile}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <PublicProfile />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.showDiary}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <ShowDiary />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.compare}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Compare />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.listDetail}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <ListDetail />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.recap}
+                element={
+                  <ProtectedRoute>
+                    <Page>
+                      <Recap />
+                    </Page>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
+              <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
+            </Routes>
+          </ErrorBoundary>
+        </motion.div>
       </AnimatePresence>
     </div>
   )

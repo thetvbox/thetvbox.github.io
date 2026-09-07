@@ -30,6 +30,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   rating breakdown): softer rounded corners, real elevation, a frosted-glass
   background on the notifications dropdown, and a consistent icon close
   button instead of a bare "Close" link.
+- Navigating between pages now cross-fades instead of cutting instantly.
+- Every inline error message (forms, panels, page banners) and the toast
+  are now announced to screen readers immediately instead of relying on
+  sighted users noticing new text on the page.
 
 ### Fixed
 

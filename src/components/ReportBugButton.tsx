@@ -21,6 +21,7 @@ import {
 } from '../lib/motion'
 import { BUG_REPORT_DESCRIPTION_MAX_LENGTH, BUG_REPORT_TITLE_MAX_LENGTH } from '../lib/constants'
 import { errorMessage } from '../lib/format'
+import ErrorText from './ErrorText'
 
 interface ReportBugButtonProps {
   open: boolean
@@ -192,7 +193,7 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
             <p className="text-xs text-base-600">
               Sent with the page you&apos;re on, your username, and the app version — no screenshot needed.
             </p>
-            {error && <p className="text-xs text-danger">{error}</p>}
+            {error && <ErrorText className="text-xs">{error}</ErrorText>}
             <div className="mt-1 flex items-center gap-3">
               <button
                 type="submit"

@@ -13,6 +13,7 @@ import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import Toast from '../components/Toast'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type { AppUser } from '../types'
 
 /** People directory: search plus a Follow/Following button and "Follows you" badge per row. */
@@ -132,7 +133,7 @@ export default function Members() {
         />
       </div>
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
         <div className="space-y-2">

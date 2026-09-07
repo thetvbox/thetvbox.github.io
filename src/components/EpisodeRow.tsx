@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
 import DateMarkControl from './DateMarkControl'
+import Spinner from './Spinner'
 import type { TmdbEpisode } from '../types'
 
 interface EpisodeRowProps {
@@ -128,9 +129,7 @@ export default function EpisodeRow({
                       ? 'Watched a while ago'
                       : `Watched${watchedAt ? ` ${formatShortDate(watchedAt)}` : ''}`
                     : 'Mark watched'}
-                  {saving && (
-                    <span className="ml-0.5 h-3 w-3 animate-spin rounded-full border-2 border-current/30 border-t-current" />
-                  )}
+                  {saving && <Spinner size="xs" tone="current" className="ml-0.5" />}
                 </button>
                 <DateMarkControl
                   label="Watched in the past"

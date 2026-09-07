@@ -29,6 +29,7 @@ import ListsTab from './profileActivity/ListsTab'
 import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type {
   EpisodeWatched,
   ShowDropped,
@@ -262,7 +263,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         </TabButton>
       </div>
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
         <div className="space-y-2">

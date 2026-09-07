@@ -30,6 +30,7 @@ import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { errorMessage } from '../lib/format'
+import ErrorText from '../components/ErrorText'
 import type {
   EpisodeWatched,
   ShowDropped,
@@ -201,7 +202,7 @@ export default function Home() {
         </p>
       </motion.div>
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
         <ShowGridSkeleton count={5} progress />

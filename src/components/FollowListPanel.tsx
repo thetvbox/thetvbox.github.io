@@ -12,6 +12,7 @@ import Toast from './Toast'
 import InlinePanel from './InlinePanel'
 import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
+import ErrorText from './ErrorText'
 import type { AppUser } from '../types'
 
 interface FollowListPanelProps {
@@ -97,7 +98,7 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
     <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
       <PanelHeader title={mode === 'followers' ? 'Followers' : 'Following'} onClose={onClose} />
 
-      {error && <p className="mb-3 text-xs text-danger">{error}</p>}
+      {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
 
       {loading ? (
         <div className="space-y-2">

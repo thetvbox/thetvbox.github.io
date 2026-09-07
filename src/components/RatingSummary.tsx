@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import StarRating from './StarRating'
 import StarGlyph from './StarGlyph'
+import Spinner from './Spinner'
 import { profileRoute } from '../lib/routes'
 
 interface RatingEntry {
@@ -42,9 +43,7 @@ export default function RatingSummary({
     <div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <StarRating value={myRating} onChange={onChange} size={size} label={ratingLabel} />
-        {saving && (
-          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-base-600 border-t-accent-400" />
-        )}
+        {saving && <Spinner size="sm" tone="muted" />}
         {myRating > 0 && (
           <button
             type="button"
