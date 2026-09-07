@@ -18,16 +18,11 @@ interface ModalProps {
   onClose: () => void
   label: string
   children: ReactNode
-  /** Tailwind max-width class for the panel. Defaults to a compact form width. */
   maxWidth?: string
   className?: string
 }
 
-/**
- * App-wide centered overlay: portals to document.body, dims the page behind a blurred backdrop,
- * and never reflows page content -- unlike an in-flow panel, opening or closing one can't shift
- * anything above or below it. Handles escape-to-close, focus return, and body-scroll lock.
- */
+/** App-wide centered overlay portaled to document.body, with escape-to-close, focus return, and scroll lock. */
 export default function Modal({ onClose, label, children, maxWidth = 'max-w-md', className = '' }: ModalProps) {
   useEscapeAndFocusReturn(true, onClose)
 

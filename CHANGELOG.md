@@ -6,6 +6,11 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Recap's year-selector buttons could briefly flash as unselected right
+  after the page finished loading.
+
 ## [1.2.0] - 2026-09-07
 
 ### Added
