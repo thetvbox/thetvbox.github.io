@@ -55,10 +55,6 @@ export default function Recap() {
 
   const years = useMemo(() => availableRecapYears(ratings, watched, rewatches), [ratings, watched, rewatches])
 
-  // Derived, not stateful: falls back to the most recent year whenever there's no explicit
-  // pick yet (or the pick no longer exists in `years`, e.g. after data reloads), with no extra
-  // render in between -- setting this from an effect left a real frame where every year button
-  // rendered unpressed before the effect caught up, which is what made this flaky under test.
   const selectedYear = year !== null && years.includes(year) ? year : (years[0] ?? null)
 
   const activity = useMemo(() => summarizeShowActivity(ratings, watched), [ratings, watched])
