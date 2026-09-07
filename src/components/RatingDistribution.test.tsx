@@ -48,25 +48,33 @@ describe('RatingDistribution', () => {
     expect(bucket1).toBeDisabled()
   })
 
-  it('clicking a populated bucket expands the shows behind it', () => {
+  it('clicking a populated bucket opens an overlay with the shows behind it', () => {
     renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
     fireEvent.click(screen.getByRole('button', { name: /1 show rated 4\.0/ }))
+    expect(screen.getByRole('dialog', { name: 'Shows rated 4.0 stars' })).toBeInTheDocument()
     expect(screen.getByText('Show One')).toBeInTheDocument()
   })
 
-  it('clicking the same bucket again collapses it', () => {
+  it('clicking the same bucket again closes the overlay', () => {
     renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
     const bucket = screen.getByRole('button', { name: /1 show rated 4\.0/ })
     fireEvent.click(bucket)
     fireEvent.click(bucket)
-    expect(screen.queryByText('Show One')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('the Close button in the expanded panel collapses it', () => {
+  it('the Close button in the overlay closes it', () => {
     renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
     fireEvent.click(screen.getByRole('button', { name: /1 show rated 4\.0/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-    expect(screen.queryByText('Show One')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('closes the overlay on Escape', () => {
+    renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
+    fireEvent.click(screen.getByRole('button', { name: /1 show rated 4\.0/ }))
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('groups multiple shows in the same bucket', () => {

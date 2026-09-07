@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import * as framerMotionMock from '../test/framerMotionMock'
 
+vi.mock('framer-motion', () => framerMotionMock)
 vi.mock('../lib/changelog', () => ({
   changelogReleases: [
     {
@@ -18,6 +20,11 @@ vi.mock('../lib/changelog', () => ({
 import ChangelogPanel from './ChangelogPanel'
 
 describe('ChangelogPanel', () => {
+  it('renders as a labeled overlay', () => {
+    render(<ChangelogPanel onClose={vi.fn()} />)
+    expect(screen.getByRole('dialog', { name: "What's new" })).toBeInTheDocument()
+  })
+
   it('renders the release version, date, and block content', () => {
     render(<ChangelogPanel onClose={vi.fn()} />)
     expect(screen.getByText('v1.2.0')).toBeInTheDocument()

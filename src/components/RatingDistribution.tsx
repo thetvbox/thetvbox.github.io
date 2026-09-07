@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import StarGlyph from './StarGlyph'
 import PosterThumb from './PosterThumb'
-import InlinePanel from './InlinePanel'
+import Modal from './Modal'
 import PanelHeader from './PanelHeader'
 import { showRoute } from '../lib/routes'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
@@ -12,7 +12,7 @@ import type { ShowRating } from '../types'
 
 const BUCKETS = Array.from({ length: MAX_RATING / RATING_STEP }, (_, i) => (i + 1) * RATING_STEP)
 
-/** Rating histogram, one bar per half-star bucket; clicking a bar expands the shows behind it. */
+/** Rating histogram, one bar per half-star bucket; clicking a bar opens the shows behind it in an overlay. */
 export default function RatingDistribution({ ratings }: { ratings: ShowRating[] }) {
   const [selected, setSelected] = useState<number | null>(null)
 
@@ -69,9 +69,15 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
         </span>
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence>
         {selected !== null && (
-          <InlinePanel key={selected} className="max-h-80 overflow-y-auto p-3">
+          <Modal
+            key={selected}
+            onClose={() => setSelected(null)}
+            label={`Shows rated ${selected.toFixed(1)} stars`}
+            maxWidth="max-w-sm"
+            className="max-h-[70vh] overflow-y-auto p-3"
+          >
             <PanelHeader
               title={
                 <span className="flex items-center gap-1">
@@ -89,6 +95,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
                 <li key={r.id}>
                   <Link
                     to={showRoute(r.show_id)}
+                    onClick={() => setSelected(null)}
                     className="flex items-center gap-2.5 rounded-lg p-1 transition-colors duration-200 hover:bg-hover"
                   >
                     <PosterThumb posterPath={r.show_poster_path} size="sm" />
@@ -97,7 +104,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
                 </li>
               ))}
             </ul>
-          </InlinePanel>
+          </Modal>
         )}
       </AnimatePresence>
     </div>

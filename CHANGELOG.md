@@ -6,6 +6,8 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-07
+
 ### Added
 
 - "Dropped" as a third watch status alongside Now Watching and Watchlist,
@@ -19,6 +21,9 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Changed
 
+- Followers/following, the rating breakdown, and "What's new" now open as
+  centered overlays instead of an inline panel, matching "Report a bug" --
+  the whole page used to shift down and visibly resize as each one loaded.
 - "Report a bug" now opens as a centered modal instead of a dropdown,
   fixing clipping on mobile.
 - Profile stats load in a fraction of the time — moved the heaviest
@@ -143,6 +148,7 @@ date pickers, mobile layout/keyboard/scroll bugs, error handling and
 optimistic-UI rollback, reduced-motion support, and accessibility
 (focus/escape handling, touch targets).
 
-[Unreleased]: https://github.com/thetvbox/thetvbox.github.io/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/thetvbox/thetvbox.github.io/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/thetvbox/thetvbox.github.io/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/thetvbox/thetvbox.github.io/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/thetvbox/thetvbox.github.io/releases/tag/v1.0.0

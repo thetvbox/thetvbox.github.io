@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useFollowActions } from '../hooks/useFollowActions'
 import { fetchFollowerIds, fetchFollowersWithUsers, fetchFollowingIds, fetchFollowingWithUsers } from '../lib/follows'
 import { SKELETON_ROWS_COMPACT } from '../lib/constants'
@@ -9,7 +8,7 @@ import { profileRoute } from '../lib/routes'
 import FollowButton from './FollowButton'
 import Avatar from './Avatar'
 import Toast from './Toast'
-import InlinePanel from './InlinePanel'
+import Modal from './Modal'
 import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
 import ErrorText from './ErrorText'
@@ -22,7 +21,7 @@ interface FollowListPanelProps {
   onMyFollowingCountChange?: (delta: number) => void
 }
 
-/** Inline followers/following list, with a Follow/Unfollow button and "Follows you" badge per row. */
+/** Followers/following list overlay, with a Follow/Unfollow button and "Follows you" badge per row. */
 export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCountChange }: FollowListPanelProps) {
   const { user: me } = useAuth()
   const [people, setPeople] = useState<AppUser[]>([])
@@ -32,8 +31,6 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { follow, unfollow, toast, dismiss } = useFollowActions()
-
-  useEscapeAndFocusReturn(true, onClose)
 
   useEffect(() => {
     if (!me) return
@@ -95,7 +92,12 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
   }
 
   return (
-    <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5">
+    <Modal
+      onClose={onClose}
+      label={mode === 'followers' ? 'Followers' : 'Following'}
+      maxWidth="max-w-sm"
+      className="max-h-[80vh] overflow-y-auto p-3.5"
+    >
       <PanelHeader title={mode === 'followers' ? 'Followers' : 'Following'} onClose={onClose} />
 
       {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
@@ -136,6 +138,6 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
       )}
 
       <Toast toast={toast} onDismiss={dismiss} />
-    </InlinePanel>
+    </Modal>
   )
 }

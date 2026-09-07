@@ -1,16 +1,13 @@
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { changelogReleases } from '../lib/changelog'
 import type { ChangelogBlock } from '../lib/changelog'
 import { formatShortDate } from '../lib/date'
-import InlinePanel from './InlinePanel'
+import Modal from './Modal'
 import PanelHeader from './PanelHeader'
 
-/** Inline read-only "What's new" panel. */
+/** Read-only "What's new" overlay. */
 export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
-  useEscapeAndFocusReturn(true, onClose)
-
   return (
-    <InlinePanel className="max-h-[70vh] overflow-y-auto p-4">
+    <Modal onClose={onClose} label="What's new" maxWidth="max-w-md" className="max-h-[80vh] overflow-y-auto p-4">
       <PanelHeader title="What's new" onClose={onClose} />
 
       {changelogReleases.length === 0 ? (
@@ -34,7 +31,7 @@ export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       )}
-    </InlinePanel>
+    </Modal>
   )
 }
 
