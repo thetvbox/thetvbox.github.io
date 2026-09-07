@@ -1,6 +1,6 @@
 ---
 name: tv-box-pr-review
-description: Review a diff, branch, or set of changes in the TV Box repo against its established hardening standards -- comment policy, DRY/SRP, magic numbers, dead code, accessibility, animation consistency, error handling, performance, and test coverage. Use this whenever asked to review a PR, review code before merging, do a code-quality pass, or check whether recent changes are safe/clean/consistent with the rest of this repo. Also consult tv-box-repo-knowledge alongside this for the conventions being checked against.
+description: Review a diff, branch, or set of changes in the TV Box repo against its established hardening standards -- comment policy, DRY/SRP/private-methods, magic numbers, dead code, accessibility, animation/UX polish, error handling, performance, correctness/bug-hunting, and test coverage (>80%). Use this whenever asked to review a PR, review code before merging, do a code-quality pass, or check whether recent changes are safe/clean/consistent with the rest of this repo. Also consult tv-box-repo-knowledge alongside this for the conventions being checked against.
 ---
 
 # TV Box PR review
@@ -16,11 +16,12 @@ Work through the checklist against the actual changed files, not the whole repo 
 - `eslint-disable-next-line` (and similar functional lint/compiler directives) are fine -- they aren't documentation.
 - Flag: any multi-line `/** */` block, any multi-line `//` block, any inline `//` comment explaining *why* rather than being itself the one-line function doc, any comment on a type/interface field.
 
-## 2. DRY and SRP
+## 2. DRY, SRP, and private methods
 
 - New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, etc.) should reuse or extend it, not hand-roll a near-duplicate.
 - A component or hook taking on more than one clear responsibility (e.g. a page component that also owns unrelated data-fetching logic that could be its own hook) is a split candidate -- `src/hooks/showDetail/` (one hook per concern, composed by `useShowDetail.ts`) and `ProfileActivity.tsx`'s tab split are the precedent for what "already split appropriately" looks like here.
 - Flag copy-pasted logic across two or more files that isn't already using a shared helper in `src/lib/`.
+- This codebase is almost entirely functional (hooks/components), not classes, so "no private methods unless absolutely needed" mostly shows up as: don't bury multi-step logic in a deeply nested inline closure inside a component when it could be a named, testable top-level function in `src/lib/` or its own hook. In the rare class case (currently just `ErrorBoundary`), avoid adding private instance methods unless the logic genuinely needs instance state -- prefer a plain exported function otherwise.
 
 ## 3. Magic numbers and strings
 
@@ -38,10 +39,12 @@ Work through the checklist against the actual changed files, not the whole repo 
 - Interactive touch targets should be roughly 44px or larger.
 - `alt` text on meaningful images; decorative images (backdrops, gradients) can use `alt=""`.
 
-## 6. Animation consistency
+## 6. Animation, UX, and UI polish
 
 - New framer-motion usage should reuse a named export from `src/lib/motion.ts` (durations, easings, enter/exit variants) rather than inlining a new one-off `transition`/`initial`/`animate` object, unless the new pattern is genuinely novel enough to warrant its own named constant (in which case, add it to `motion.ts` rather than leaving it local to one component).
 - `scrollBehavior()` (not a hardcoded `'smooth'`/`'auto'`) for any direct `window.scrollTo` call, so reduced-motion users are respected.
+- Beyond animation timing specifically, judge new UI against the "buttery smooth and modern" bar this repo has been held to: no abrupt state swaps where a transition would read as intentional (use `InlinePanel`/`TRIGGER_SWAP_MOTION` for trigger-vs-open-panel swaps), no layout jump on load (skeletons from `Skeletons.tsx` for anything with a network round-trip), no obviously dated patterns (native `confirm()`/`alert()`, unstyled default form controls, jarring instant show/hide with no transition at all).
+- Flag anything that looks visually inconsistent with the rest of the page it's on (spacing, radius, color usage) even if it isn't a hard rule violation -- this is one of the few sections where "does this feel like the rest of the app" is itself the standard.
 
 ## 7. Error handling and optimistic UI
 
@@ -56,14 +59,21 @@ Work through the checklist against the actual changed files, not the whole repo 
 - New TMDB/TVmaze calls that will be repeated for the same id within a session should follow the existing module-level cache pattern (see `tmdb.ts`, `seasonProgress.ts`, `tvmaze.ts`) rather than re-fetching.
 - Watch for new client-side loops over paginated data that could instead be pushed into a Postgres view or aggregate query.
 
-## 9. Tests
+## 9. Correctness and bug-hunting
+
+- Don't just check that the new code does what its diff intends -- trace at least one negative/edge-case path (empty state, error from Supabase/TMDB, a boundary value like 0 episodes or an unauthenticated user) that the diff's own tests may not exercise.
+- Check derived/computed state for off-by-one and stale-closure bugs, especially anything touching `summarizeShowActivity`/`nowWatching`/`watchHistory` in `showActivity.ts` -- this is the file most per-show status bugs have historically come from.
+- If a bug is found while reviewing, say so explicitly and describe the fix rather than only flagging the style issue nearby -- fixing bugs found in passing is expected, not optional, in this repo's process.
+
+## 10. Tests
 
 - New pure logic in `src/lib/` should have a colocated `.test.ts` covering the meaningful branches (positive and negative), not just a happy path -- see `showActivity.test.ts` or `pagination.test.ts` for the depth expected.
 - New Supabase-backed functions should be tested against `src/test/supabaseMock.ts`'s `createQueryBuilder`, verifying the query shape and error propagation, not just that it "returns something."
 - A component using `AnimatePresence` for conditional swapping needs `src/test/framerMotionMock.tsx` mocked in its test, or the test will silently hang on the pre-swap child (see `tv-box-repo-knowledge` for why).
+- The repo-wide bar is **>80% coverage on every metric** (statements, branch, functions, lines) -- run `npx vitest run --coverage --coverage.reportsDirectory=/tmp/tv-box-coverage` (see `reference_coverage-reports-dir-workaround` if you have repo memory access; the local `coverage/` dir can be corrupted in this sandbox) and check the diff doesn't drop any of the four metrics below 80% for a touched file, not just that some test exists.
 - `npm run lint`, `npm test`, and `npx tsc -b --noEmit` should all be clean before merge -- CI already gates deploy on the first two.
 
-## 10. Docs
+## 11. Docs
 
 - A shipped user-visible feature should be reflected in `README.md`'s feature list and `CHANGELOG.md`'s `[Unreleased]` section.
 - A new script, env var, or dev workflow step belongs in `DEVELOPMENT.md`.
