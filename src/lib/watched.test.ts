@@ -8,6 +8,9 @@ import {
   UNKNOWN_WATCHED_AT,
   bulkMarkWatched,
   bulkUnmarkWatched,
+  fetchRecentDatedWatched,
+  fetchRecentWatched,
+  fetchRecentWatchedAllUsers,
   fetchWatchedForShow,
   fetchWatchedForUserAndShow,
   markWatched,
@@ -82,6 +85,30 @@ describe('fetchWatchedForShow', () => {
     mockFrom({ data: [row({ season_number: 2, episode_number: 5 })], error: null })
     const map = await fetchWatchedForShow('u1', 1)
     expect(Object.keys(map)).toEqual(['2-5'])
+  })
+})
+
+describe('fetchRecentWatched', () => {
+  it('returns a single page of results', async () => {
+    const rows = [row()]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchRecentWatched('u1')).toEqual(rows)
+  })
+})
+
+describe('fetchRecentDatedWatched', () => {
+  it('returns a single page of results with real dates', async () => {
+    const rows = [row()]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchRecentDatedWatched('u1')).toEqual(rows)
+  })
+})
+
+describe('fetchRecentWatchedAllUsers', () => {
+  it('returns a single page of results across every user', async () => {
+    const rows = [row()]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchRecentWatchedAllUsers()).toEqual(rows)
   })
 })
 
