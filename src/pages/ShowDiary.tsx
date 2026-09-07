@@ -69,7 +69,7 @@ export default function ShowDiary() {
   const isMe = me?.username === username
   const showName = rating?.show_name ?? watched[0]?.show_name
   const posterPath = rating?.show_poster_path ?? watched[0]?.show_poster_path
-  const hasNothing = !loading && !rating && watched.length === 0
+  const hasNothing = !loading && !rating && watched.length === 0 && rewatches.length === 0
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
