@@ -61,6 +61,13 @@ describe('StarRating', () => {
     expect(screen.getByRole('radiogroup', { name: 'Rate this season' })).toBeInTheDocument()
   })
 
+  it('marks only the current value as checked, for screen readers', () => {
+    render(<StarRating value={3.5} onChange={vi.fn()} />)
+    expect(screen.getByLabelText('3.5 stars')).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByLabelText('4 stars')).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByLabelText('3 stars')).toHaveAttribute('aria-checked', 'false')
+  })
+
   it('commits a value by dragging past the drag threshold', () => {
     const onChange = vi.fn()
     const { container } = render(<StarRating value={0} onChange={onChange} />)

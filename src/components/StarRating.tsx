@@ -144,6 +144,8 @@ export default function StarRating({
               <span className="absolute inset-0 flex">
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={value === starIndex - RATING_STEP}
                   aria-label={`${starIndex - RATING_STEP} stars`}
                   className="h-full w-1/2 cursor-pointer"
                   onMouseEnter={() => setHoverValue(starIndex - RATING_STEP)}
@@ -152,6 +154,8 @@ export default function StarRating({
                 />
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={value === starIndex}
                   aria-label={`${starIndex} stars`}
                   className="h-full w-1/2 cursor-pointer"
                   onMouseEnter={() => setHoverValue(starIndex)}
