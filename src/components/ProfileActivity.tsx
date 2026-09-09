@@ -245,7 +245,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
       <RatingDistribution ratings={ratings} />
 
-      <div className="mb-4 flex items-center gap-1">
+      <div className="no-scrollbar -mx-4 mb-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <TabButton active={tab === 'diary'} onClick={() => setTab('diary')}>
           Diary
         </TabButton>
@@ -317,7 +317,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+      className={`relative shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
         active ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40' : 'text-base-400 hover:text-base-200'
       }`}
     >
