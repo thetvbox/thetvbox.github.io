@@ -89,6 +89,7 @@ export default function ProfileFollowSection({ profileId, username, isMe }: Prof
             key="follow-list"
             userId={profileId}
             mode={panel}
+            expectedCount={panel === 'followers' ? counts.followers : counts.following}
             onClose={() => setPanel(null)}
             onMyFollowingCountChange={isMe ? handlePanelFollowingCountChange : undefined}
           />

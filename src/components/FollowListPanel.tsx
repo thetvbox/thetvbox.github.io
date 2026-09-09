@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useFollowActions } from '../hooks/useFollowActions'
 import { fetchFollowerIds, fetchFollowersWithUsers, fetchFollowingIds, fetchFollowingWithUsers } from '../lib/follows'
-import { SKELETON_ROWS_COMPACT } from '../lib/constants'
 import { profileRoute } from '../lib/routes'
 import FollowButton from './FollowButton'
 import Avatar from './Avatar'
@@ -17,12 +16,23 @@ import type { AppUser } from '../types'
 interface FollowListPanelProps {
   userId: string
   mode: 'followers' | 'following'
+  /** The count already shown on the profile page before this panel opens -- used to size the
+   *  loading skeleton so it roughly matches the real list, instead of guessing a fixed count. */
+  expectedCount: number
   onClose: () => void
   onMyFollowingCountChange?: (delta: number) => void
 }
 
+const MAX_SKELETON_ROWS = 6
+
 /** Followers/following list overlay, with a Follow/Unfollow button and "Follows you" badge per row. */
-export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCountChange }: FollowListPanelProps) {
+export default function FollowListPanel({
+  userId,
+  mode,
+  expectedCount,
+  onClose,
+  onMyFollowingCountChange,
+}: FollowListPanelProps) {
   const { user: me } = useAuth()
   const [people, setPeople] = useState<AppUser[]>([])
   const [myFollowingIds, setMyFollowingIds] = useState<Set<string>>(new Set())
@@ -102,18 +112,22 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
 
       {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
 
-      {/* Fixed height regardless of loading/empty/list state, so the panel never visibly
-          resizes once it's open -- matches NotificationsPanel's h-64 content area. Long
-          lists scroll within this box instead of growing the modal. */}
-      <div className="h-64 overflow-y-auto">
+      {/* Capped, not fixed: sized to the count already known from the profile page (via
+          expectedCount) so a short list renders at its natural small height instead of
+          sitting in a big empty box, while a long list still caps out and scrolls within
+          this box instead of growing the modal unboundedly. */}
+      <div className="max-h-64 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
-            {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
+            {Array.from({ length: Math.min(Math.max(expectedCount, 1), MAX_SKELETON_ROWS) }).map((_, i) => (
               <div key={i} className="h-12 animate-pulse rounded-lg bg-base-850/70" />
             ))}
           </div>
         ) : people.length === 0 ? (
-          <div className="flex h-full items-center justify-center">
+          // No h-full here: the wrapper above is max-h-64 (auto height), not a fixed h-64,
+          // so a percentage height would collapse to 0. A little vertical padding instead
+          // keeps this from looking like a bare one-line message.
+          <div className="flex items-center justify-center py-8">
             <p className="text-center text-xs text-base-500">
               {mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
             </p>

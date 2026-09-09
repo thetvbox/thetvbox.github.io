@@ -25,8 +25,10 @@ All notable changes to TV Box are documented here. Format loosely follows
 - Profile's Diary/History/Watchlist/Dropped/Lists tabs could overflow the
   screen and make the whole page scroll sideways on mobile.
 - The followers/following list visibly resized once its loading skeleton
-  was replaced by the real list -- it now has one fixed-height content
-  area, matching the notifications dropdown, so it never resizes.
+  was replaced by the real list, and a fixed-height fix for that then
+  made short lists sit in an oversized empty box -- it's now capped, not
+  fixed: sized to the count already shown on the profile page, so small
+  lists stay small and large ones scroll within a sensible max height.
 - "Report a bug" closed itself the instant you clicked into the title or
   description field, instead of letting you type.
 

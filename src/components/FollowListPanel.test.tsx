@@ -22,10 +22,21 @@ import type { AppUser } from '../types'
 const me: AppUser = { id: 'me1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
 const bob: AppUser = { id: 'bob1', email: 'bob@example.com', username: 'bob', created_at: '2026-01-01T00:00:00Z' }
 
-function renderPanel(mode: 'followers' | 'following' = 'followers', onClose = vi.fn(), onMyFollowingCountChange?: (d: number) => void) {
+function renderPanel(
+  mode: 'followers' | 'following' = 'followers',
+  onClose = vi.fn(),
+  onMyFollowingCountChange?: (d: number) => void,
+  expectedCount = 0,
+) {
   return render(
     <MemoryRouter>
-      <FollowListPanel userId="target1" mode={mode} onClose={onClose} onMyFollowingCountChange={onMyFollowingCountChange} />
+      <FollowListPanel
+        userId="target1"
+        mode={mode}
+        expectedCount={expectedCount}
+        onClose={onClose}
+        onMyFollowingCountChange={onMyFollowingCountChange}
+      />
     </MemoryRouter>,
   )
 }
@@ -134,12 +145,32 @@ describe('FollowListPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps the same fixed-height content box while loading and once the list settles', async () => {
+  it('keeps the same capped-height content box while loading and once the list settles', async () => {
     vi.mocked(fetchFollowersWithUsers).mockResolvedValue([bob])
     renderPanel('followers')
     // Modal portals to document.body, so query the document rather than RTL's container.
-    expect(document.querySelector('.h-64')).toBeInTheDocument()
+    // Capped (max-h-64), not fixed (h-64): short lists shouldn't sit in a big empty box.
+    expect(document.querySelector('.max-h-64')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
-    expect(document.querySelector('.h-64')).toBeInTheDocument()
+    expect(document.querySelector('.max-h-64')).toBeInTheDocument()
+  })
+
+  it('sizes the loading skeleton to the already-known follower count', () => {
+    // fetch promises never resolve in this test, so the component stays in its loading state.
+    vi.mocked(fetchFollowersWithUsers).mockReturnValue(new Promise(() => {}))
+    renderPanel('followers', vi.fn(), undefined, 2)
+    expect(document.querySelectorAll('.animate-pulse')).toHaveLength(2)
+  })
+
+  it('caps the loading skeleton at a reasonable maximum for large counts', () => {
+    vi.mocked(fetchFollowersWithUsers).mockReturnValue(new Promise(() => {}))
+    renderPanel('followers', vi.fn(), undefined, 200)
+    expect(document.querySelectorAll('.animate-pulse')).toHaveLength(6)
+  })
+
+  it('still shows at least one skeleton row when the count is unknown', () => {
+    vi.mocked(fetchFollowersWithUsers).mockReturnValue(new Promise(() => {}))
+    renderPanel('followers', vi.fn(), undefined, 0)
+    expect(document.querySelectorAll('.animate-pulse')).toHaveLength(1)
   })
 })
