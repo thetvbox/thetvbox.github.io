@@ -26,6 +26,8 @@ All notable changes to TV Box are documented here. Format loosely follows
   screen and make the whole page scroll sideways on mobile.
 - The followers/following list could visibly snap to a new size right
   after opening, once its skeleton was replaced by the real list.
+- "Report a bug" closed itself the instant you clicked into the title or
+  description field, instead of letting you type.
 
 ## [1.2.0] - 2026-09-07
 

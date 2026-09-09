@@ -169,7 +169,11 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    if (!openPanel) return
+    // Only the notifications dropdown needs this: it renders inline with no backdrop of its
+    // own. "Report a bug" renders through the shared Modal, which is portaled to document.body
+    // and already closes itself on backdrop click/Escape -- listening here too would see every
+    // click *inside* that portaled panel as "outside" utilityRef and close it immediately.
+    if (openPanel !== 'notifications') return
     function handlePointerDown(e: PointerEvent) {
       if (utilityRef.current && !utilityRef.current.contains(e.target as Node)) {
         setOpenPanel(null)

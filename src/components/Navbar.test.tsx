@@ -72,12 +72,20 @@ describe('Navbar', () => {
     expect(screen.getByText('bug-closed')).toBeInTheDocument()
   })
 
-  it('closes an open panel on an outside pointerdown', () => {
+  it('closes the notifications dropdown on an outside pointerdown', () => {
+    renderNavbar()
+    fireEvent.click(screen.getByText('notifications-closed'))
+    expect(screen.getByText('notifications-open')).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.getByText('notifications-closed')).toBeInTheDocument()
+  })
+
+  it('does not close the bug-report panel on an outside pointerdown -- its Modal owns that itself', () => {
     renderNavbar()
     fireEvent.click(screen.getByText('bug-closed'))
     expect(screen.getByText('bug-open')).toBeInTheDocument()
     fireEvent.pointerDown(document.body)
-    expect(screen.getByText('bug-closed')).toBeInTheDocument()
+    expect(screen.getByText('bug-open')).toBeInTheDocument()
   })
 
   it('scrolls to top when clicking the tab already active', () => {
