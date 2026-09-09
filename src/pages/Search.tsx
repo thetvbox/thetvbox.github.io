@@ -110,8 +110,8 @@ export default function Search() {
               layout
               className={POSTER_GRID_CLASSES}
             >
-              {posterResults.map((show) => (
-                <ShowCard key={show.id} show={show} provider={platforms.get(show.id)} />
+              {posterResults.map((show, i) => (
+                <ShowCard key={show.id} show={show} provider={platforms.get(show.id)} index={i} />
               ))}
             </motion.div>
           ) : hasSearched && !error ? (

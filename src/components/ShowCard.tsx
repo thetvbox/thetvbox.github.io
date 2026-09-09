@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { yearFromDate } from '../lib/tmdb'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import { staggerTileMotion } from '../lib/motion'
 import type { ResolvedProvider } from '../lib/streamingProvider'
 import { showRoute } from '../lib/routes'
 import StreamingBadge from './StreamingBadge'
@@ -11,18 +11,17 @@ import type { TmdbShowSummary } from '../types'
 export default function ShowCard({
   show,
   provider,
+  index = 0,
 }: {
   show: TmdbShowSummary
   provider?: ResolvedProvider | null
+  /** Position in its grid, for a staggered entrance matching every other poster grid in the app. */
+  index?: number
 }) {
   const year = yearFromDate(show.first_air_date)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-    >
+    <motion.div {...staggerTileMotion(index)}>
       <Link
         to={showRoute(show.id)}
         className="group block"

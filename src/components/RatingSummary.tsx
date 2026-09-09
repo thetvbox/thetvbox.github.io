@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { INLINE_PANEL_ANIMATE, INLINE_PANEL_INITIAL, INLINE_PANEL_TRANSITION } from '../lib/motion'
 import StarRating from './StarRating'
 import StarGlyph from './StarGlyph'
 import Spinner from './Spinner'
@@ -78,8 +79,9 @@ export default function RatingSummary({
 
       {open && ratings.length > 0 && (
         <motion.ul
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={INLINE_PANEL_INITIAL}
+          animate={INLINE_PANEL_ANIMATE}
+          transition={INLINE_PANEL_TRANSITION}
           className="mt-2.5 max-w-xs space-y-1.5 border-t border-hairline pt-2.5"
         >
           {ratings

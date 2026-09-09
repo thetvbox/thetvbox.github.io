@@ -11,6 +11,7 @@ import { BUG_REPORT_DESCRIPTION_MAX_LENGTH, BUG_REPORT_TITLE_MAX_LENGTH } from '
 import { errorMessage } from '../lib/format'
 import ErrorText from './ErrorText'
 import Modal from './Modal'
+import PanelHeader from './PanelHeader'
 
 interface ReportBugButtonProps {
   open: boolean
@@ -112,64 +113,46 @@ function ReportBugPanel({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-display text-lg font-semibold text-base-100">Report a bug</p>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base-500 transition-colors duration-200 hover:bg-hover hover:text-base-200"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
+        <>
+          <PanelHeader title="Report a bug" onClose={onClose} />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+            <input
+              ref={titleInputRef}
+              type="text"
+              aria-label="Bug title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What went wrong, in a few words"
+              maxLength={BUG_REPORT_TITLE_MAX_LENGTH}
+              className="rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
+            />
+            <textarea
+              aria-label="Bug description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What happened, and what did you expect instead?"
+              rows={5}
+              maxLength={BUG_REPORT_DESCRIPTION_MAX_LENGTH}
+              className="resize-none rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
+            />
+            <p className="text-xs text-base-600">
+              Sent with the page you&apos;re on, your username, and the app version — no screenshot needed.
+            </p>
+            {error && <ErrorText className="text-xs">{error}</ErrorText>}
+            <div className="mt-1 flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={status === 'saving' || !title.trim() || !description.trim()}
+                className="rounded-lg bg-accent-500/15 px-4 py-2 text-sm font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-50"
               >
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </div>
-          <input
-            ref={titleInputRef}
-            type="text"
-            aria-label="Bug title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What went wrong, in a few words"
-            maxLength={BUG_REPORT_TITLE_MAX_LENGTH}
-            className="rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
-          />
-          <textarea
-            aria-label="Bug description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What happened, and what did you expect instead?"
-            rows={5}
-            maxLength={BUG_REPORT_DESCRIPTION_MAX_LENGTH}
-            className="resize-none rounded-lg border border-hairline-strong bg-base-950 px-3 py-2.5 text-sm text-base-200 placeholder:text-base-600"
-          />
-          <p className="text-xs text-base-600">
-            Sent with the page you&apos;re on, your username, and the app version — no screenshot needed.
-          </p>
-          {error && <ErrorText className="text-xs">{error}</ErrorText>}
-          <div className="mt-1 flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={status === 'saving' || !title.trim() || !description.trim()}
-              className="rounded-lg bg-accent-500/15 px-4 py-2 text-sm font-medium text-accent-300 ring-1 ring-accent-500/40 transition-opacity duration-150 disabled:opacity-50"
-            >
-              {status === 'saving' ? 'Sending…' : 'Send report'}
-            </button>
-            <button type="button" onClick={onClose} className="text-sm text-base-500 hover:text-base-300">
-              Cancel
-            </button>
-          </div>
-        </form>
+                {status === 'saving' ? 'Sending…' : 'Send report'}
+              </button>
+              <button type="button" onClick={onClose} className="text-sm text-base-500 hover:text-base-300">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </Modal>
   )

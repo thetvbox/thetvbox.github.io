@@ -18,8 +18,28 @@ All notable changes to TV Box are documented here. Format loosely follows
   rated. It's never saved as your actual rating of the show; it disappears
   the moment you do rate the show yourself.
 
+### Changed
+
+- The Diary tab now loads 40 entries at a time with a "Show more" button
+  instead of rendering a heavy watcher's entire history at once, which
+  could mean thousands of animated, image-bearing rows in the DOM on
+  first open.
+- The "Report a bug" and Search results poster grid now match the rest
+  of the app's motion/interaction conventions: the bug-report close
+  button uses the same shared header as every other panel (and is a
+  proper 44px touch target, not 32px), and search results cascade in
+  one-by-one instead of popping in as a flat block.
+
 ### Fixed
 
+- A full pass for consistency and polish: a close button shared by
+  several panels (and one hand-rolled one on "Report a bug") was 32px,
+  under the app's usual 44px minimum touch target. A handful of
+  animations (the mobile tab bar, an episode row, the show title on
+  Show Detail, Login's step transition) were missing the app's standard
+  easing curve, giving them a slightly different feel from everything
+  else. A streaming-platform icon in History wasn't lazy-loaded like
+  every other list image.
 - Recap's year-selector buttons could briefly flash as unselected right
   after the page finished loading.
 - The whole-show star rating didn't announce which rating was currently

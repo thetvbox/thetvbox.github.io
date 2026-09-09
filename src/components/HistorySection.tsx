@@ -183,6 +183,8 @@ export default function HistorySection({
                       <img
                         src={providerLogoUrl(group.provider.logo_path) ?? undefined}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover"
                       />
                     </div>

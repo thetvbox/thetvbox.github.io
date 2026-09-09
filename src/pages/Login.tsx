@@ -96,7 +96,7 @@ export default function Login() {
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
                 onSubmit={handleEmailSubmit}
                 className="space-y-4"
               >
@@ -128,7 +128,7 @@ export default function Login() {
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
                 onSubmit={handleUsernameSubmit}
                 className="space-y-4"
               >

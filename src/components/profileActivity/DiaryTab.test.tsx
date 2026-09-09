@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import * as framerMotionMock from '../../test/framerMotionMock'
@@ -7,6 +7,7 @@ import { vi } from 'vitest'
 vi.mock('framer-motion', () => framerMotionMock)
 
 import DiaryTab from './DiaryTab'
+import { DIARY_PAGE_SIZE } from '../../lib/constants'
 import type { DiaryEntry } from '../../lib/showActivity'
 import type { DiaryDayGroup } from './DiaryTab'
 
@@ -80,5 +81,59 @@ describe('DiaryTab', () => {
   it('links to the per-show diary via the history icon', () => {
     renderTab([{ heading: 'Today', entries: [entry({ showId: 42 })] }])
     expect(screen.getByLabelText("View this show's full diary")).toHaveAttribute('href', '/u/bob/shows/42')
+  })
+
+  describe('pagination', () => {
+    /** N single-entry day-groups, one entry per day so each group is easy to reason about. */
+    function manyGroups(n: number): DiaryDayGroup[] {
+      return Array.from({ length: n }, (_, i) => ({
+        heading: `Day ${i}`,
+        entries: [entry({ id: `e${i}`, showName: `Show ${i}` })],
+      }))
+    }
+
+    it('does not show a "Show more" button when everything already fits', () => {
+      renderTab(manyGroups(DIARY_PAGE_SIZE))
+      expect(screen.queryByText(/Show more/)).not.toBeInTheDocument()
+    })
+
+    it('shows only the first page of entries, with a "Show more" button, when there are more', () => {
+      renderTab(manyGroups(DIARY_PAGE_SIZE + 15))
+      expect(screen.getByText('Show 0')).toBeInTheDocument()
+      expect(screen.getByText(`Show ${DIARY_PAGE_SIZE - 1}`)).toBeInTheDocument()
+      expect(screen.queryByText(`Show ${DIARY_PAGE_SIZE}`)).not.toBeInTheDocument()
+      expect(screen.getByText('Show more (15 left)')).toBeInTheDocument()
+    })
+
+    it('reveals the next page when "Show more" is clicked', () => {
+      renderTab(manyGroups(DIARY_PAGE_SIZE + 15))
+      fireEvent.click(screen.getByText(/Show more/))
+      expect(screen.getByText(`Show ${DIARY_PAGE_SIZE}`)).toBeInTheDocument()
+      expect(screen.queryByText(/Show more/)).not.toBeInTheDocument()
+    })
+
+    it('splits the last visible day-group instead of cutting a whole day out', () => {
+      // One big group of DIARY_PAGE_SIZE + 5 entries, all on the same day.
+      renderTab([
+        {
+          heading: 'Today',
+          entries: Array.from({ length: DIARY_PAGE_SIZE + 5 }, (_, i) => entry({ id: `e${i}`, showName: `Show ${i}` })),
+        },
+      ])
+      expect(screen.getByText('Today')).toBeInTheDocument()
+      expect(screen.getByText(`Show ${DIARY_PAGE_SIZE - 1}`)).toBeInTheDocument()
+      expect(screen.queryByText(`Show ${DIARY_PAGE_SIZE}`)).not.toBeInTheDocument()
+      expect(screen.getByText('Show more (5 left)')).toBeInTheDocument()
+    })
+
+    it('counts undated entries toward the same page budget as dated groups', () => {
+      renderTab(
+        manyGroups(DIARY_PAGE_SIZE - 1),
+        [entry({ id: 'u1', showName: 'Undated A' }), entry({ id: 'u2', showName: 'Undated B' })],
+      )
+      expect(screen.getByText('Undated A')).toBeInTheDocument()
+      expect(screen.queryByText('Undated B')).not.toBeInTheDocument()
+      expect(screen.getByText('Show more (1 left)')).toBeInTheDocument()
+    })
   })
 })

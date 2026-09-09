@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { EASE_OUT_EXPO } from '../../lib/motion'
 import { posterUrl, yearFromDate } from '../../lib/tmdb'
 import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
@@ -42,7 +43,7 @@ export default function ShowDetailHero({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
           className="min-w-0 flex-1 self-end pb-1"
         >
           {loadingShow ? (

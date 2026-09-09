@@ -240,7 +240,7 @@ export default function Navbar() {
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
         className="fixed inset-x-0 bottom-0 z-40 flex transform-gpu border-t border-hairline bg-base-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md will-change-transform md:hidden"
       >
         {NAV_ITEMS.map(({ to, label, Icon }) => (

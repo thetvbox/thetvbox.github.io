@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Ref } from 'react'
 import { motion } from 'framer-motion'
+import { EASE_OUT_EXPO } from '../lib/motion'
 import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
 import DateMarkControl from './DateMarkControl'
@@ -54,7 +55,7 @@ export default function EpisodeRow({
       ref={rootRef}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
       className={`group rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70 sm:p-4 ${
         watched ? 'ring-1 ring-inset ring-accent-500/20' : ''
       } ${isUpcoming ? 'opacity-60' : ''}`}

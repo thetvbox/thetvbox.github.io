@@ -20,7 +20,7 @@ export default function PanelHeader({
           onClick={onClose}
           aria-label="Close"
           title="Close"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base-500 transition-colors duration-200 hover:bg-hover hover:text-base-200"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base-500 transition-colors duration-200 hover:bg-hover hover:text-base-200"
         >
           <CloseGlyph />
         </button>

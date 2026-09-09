@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
+import { DIARY_PAGE_SIZE } from '../../lib/constants'
 import type { DiaryEntry } from '../../lib/showActivity'
 import { showDiaryRoute, showRoute } from '../../lib/routes'
 import { pluralSuffix } from '../../lib/format'
@@ -19,9 +21,46 @@ interface DiaryTabProps {
   username: string
 }
 
-/** Diary tab body -- day-grouped entries, plus a trailing "date unknown" bucket. */
+/**
+ * Truncates day-groups plus the trailing undated bucket to at most `limit` entries total,
+ * splitting the last group rather than cutting mid-day-heading. A heavy watcher's full
+ * history can run into the thousands of rows -- rendering all of them as live (animated,
+ * image-bearing) DOM nodes at once would make the tab slow to open, so DiaryTab paginates.
+ */
+function sliceDiaryGroups(
+  groups: DiaryDayGroup[],
+  undatedEntries: DiaryEntry[],
+  limit: number,
+): { groups: DiaryDayGroup[]; undatedEntries: DiaryEntry[] } {
+  const visibleGroups: DiaryDayGroup[] = []
+  let remaining = limit
+  for (const group of groups) {
+    if (remaining <= 0) break
+    if (group.entries.length <= remaining) {
+      visibleGroups.push(group)
+      remaining -= group.entries.length
+    } else {
+      visibleGroups.push({ heading: group.heading, entries: group.entries.slice(0, remaining) })
+      remaining = 0
+    }
+  }
+  return { groups: visibleGroups, undatedEntries: remaining > 0 ? undatedEntries.slice(0, remaining) : [] }
+}
+
+/** Diary tab body -- day-grouped entries, plus a trailing "date unknown" bucket, paginated. */
 export default function DiaryTab({ groups, undatedEntries, username }: DiaryTabProps) {
-  if (groups.length === 0 && undatedEntries.length === 0) {
+  const [visibleCount, setVisibleCount] = useState(DIARY_PAGE_SIZE)
+
+  const totalCount = useMemo(
+    () => groups.reduce((sum, g) => sum + g.entries.length, 0) + undatedEntries.length,
+    [groups, undatedEntries],
+  )
+  const visible = useMemo(
+    () => sliceDiaryGroups(groups, undatedEntries, visibleCount),
+    [groups, undatedEntries, visibleCount],
+  )
+
+  if (totalCount === 0) {
     return (
       <EmptyState icon="📔">
         <p className="max-w-xs text-sm text-base-500">
@@ -37,7 +76,7 @@ export default function DiaryTab({ groups, undatedEntries, username }: DiaryTabP
 
   return (
     <div className="space-y-6">
-      {groups.map((group) => (
+      {visible.groups.map((group) => (
         <div key={group.heading + group.entries[0].id}>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">{group.heading}</h3>
           <ul className="space-y-2">
@@ -48,15 +87,25 @@ export default function DiaryTab({ groups, undatedEntries, username }: DiaryTabP
         </div>
       ))}
 
-      {undatedEntries.length > 0 && (
+      {visible.undatedEntries.length > 0 && (
         <div>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">Date unknown</h3>
           <ul className="space-y-2">
-            {undatedEntries.map((entry, i) => (
+            {visible.undatedEntries.map((entry, i) => (
               <DiaryRow key={entry.id} entry={entry} index={i} username={username} />
             ))}
           </ul>
         </div>
+      )}
+
+      {visibleCount < totalCount && (
+        <button
+          type="button"
+          onClick={() => setVisibleCount((c) => c + DIARY_PAGE_SIZE)}
+          className="w-full rounded-xl border border-hairline bg-base-850/60 py-2.5 text-sm font-medium text-base-300 transition-colors duration-200 hover:bg-base-800/70 hover:text-base-100"
+        >
+          Show more ({totalCount - visibleCount} left)
+        </button>
       )}
     </div>
   )
