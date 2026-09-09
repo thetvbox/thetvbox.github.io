@@ -46,6 +46,7 @@ export default function Modal({ onClose, label, children, maxWidth = 'max-w-md',
         aria-hidden="true"
       />
       <motion.div
+        layout
         role="dialog"
         aria-modal="true"
         aria-label={label}

@@ -38,7 +38,12 @@ export const MODAL_PANEL_EXIT = {
   y: 8,
   transition: { duration: 0.15, ease: EASE_OUT_EXPO },
 } as const
-export const MODAL_PANEL_TRANSITION = { duration: 0.22, ease: EASE_OUT_EXPO } as const
+export const MODAL_PANEL_TRANSITION = {
+  opacity: { duration: 0.22, ease: EASE_OUT_EXPO },
+  scale: { duration: 0.22, ease: EASE_OUT_EXPO },
+  y: { duration: 0.22, ease: EASE_OUT_EXPO },
+  layout: { duration: 0.22, ease: EASE_OUT_EXPO },
+} as const
 
 export const INLINE_PANEL_INITIAL = { opacity: 0, y: -6 } as const
 export const INLINE_PANEL_ANIMATE = { opacity: 1, y: 0 } as const
