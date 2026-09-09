@@ -8,6 +8,10 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Added
 
+- Show Detail now shows the IMDb rating and Rotten Tomatoes score next to
+  a show's year/seasons/status, sourced from OMDb -- requires an optional
+  free OMDb API key (see .env.example); scores just don't show up without
+  one, or for the rare show OMDb has no data for.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were

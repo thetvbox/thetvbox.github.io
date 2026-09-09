@@ -3,7 +3,8 @@ import { posterUrl, yearFromDate } from '../../lib/tmdb'
 import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
 import EstimatedShowRating from '../EstimatedShowRating'
-import type { SeasonRatingWithUser, ShowRatingWithUser, TmdbShowDetail } from '../../types'
+import ExternalRatings from '../ExternalRatings'
+import type { ExternalRatings as ExternalRatingsData, SeasonRatingWithUser, ShowRatingWithUser, TmdbShowDetail } from '../../types'
 
 interface ShowDetailHeroProps {
   show: TmdbShowDetail | null
@@ -11,6 +12,7 @@ interface ShowDetailHeroProps {
   showRatings: ShowRatingWithUser[]
   myRating: number
   estimatedShowRating?: { average: number; seasons: SeasonRatingWithUser[] } | null
+  externalRatings?: ExternalRatingsData | null
   savingRating: boolean
   currentUserId?: string
   onRateShow: (value: number) => void
@@ -23,6 +25,7 @@ export default function ShowDetailHero({
   showRatings,
   myRating,
   estimatedShowRating = null,
+  externalRatings = null,
   savingRating,
   currentUserId,
   onRateShow,
@@ -55,6 +58,7 @@ export default function ShowDetailHero({
                   {yearFromDate(show.first_air_date)} · {show.number_of_seasons} season
                   {pluralSuffix(show.number_of_seasons)} · {show.status}
                 </p>
+                <ExternalRatings ratings={externalRatings} imdbId={show.external_ids?.imdb_id} />
               </>
             )
           )}

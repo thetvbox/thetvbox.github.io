@@ -14,6 +14,7 @@ import { errorMessage } from '../lib/format'
 import { useToast } from './useToast'
 import { useStreamingProvider } from './showDetail/useStreamingProvider'
 import { useCorrectedAirDates } from './showDetail/useCorrectedAirDates'
+import { useExternalRatings } from './showDetail/useExternalRatings'
 import { useWatchlistState } from './showDetail/useWatchlistState'
 import { useNowWatchingState } from './showDetail/useNowWatchingState'
 import { useEpisodeWatchHandlers } from './showDetail/useEpisodeWatchHandlers'
@@ -36,6 +37,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const { toast, showUndo, showError, dismiss } = useToast()
   const streaming = useStreamingProvider(showId, show, user, showError)
   const airDates = useCorrectedAirDates(show, season)
+  const externalRatings = useExternalRatings(show)
   const watchlist = useWatchlistState(user, show, showError, showUndo)
   const watchedCount = Object.keys(watched).length
   const nowWatching = useNowWatchingState(user, show, watchedCount, showError, showUndo, watchlist.clearWatchlist)
@@ -191,6 +193,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     showRatings: ratings.showRatings,
     myShowRating: ratings.myShowRating,
     estimatedShowRating: ratings.estimatedShowRating,
+    externalRatings,
     savingRating: ratings.savingRating,
     handleRateShow: ratings.handleRateShow,
     seasonRatingsForActive: ratings.seasonRatingsForActive,

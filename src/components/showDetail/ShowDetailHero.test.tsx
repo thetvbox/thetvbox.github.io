@@ -93,4 +93,19 @@ describe('ShowDetailHero', () => {
     renderHero({ myRating: 4, estimatedShowRating: null })
     expect(screen.queryByText(/season rated/)).not.toBeInTheDocument()
   })
+
+  it('shows IMDb/Rotten Tomatoes scores next to the meta line when OMDb has resolved them', () => {
+    renderHero({
+      show: show({ external_ids: { imdb_id: 'tt1234567' } }),
+      externalRatings: { imdbRating: 8.4, rottenTomatoesScore: 92 },
+    })
+    expect(screen.getByText('IMDb')).toBeInTheDocument()
+    expect(screen.getByText('8.4')).toBeInTheDocument()
+    expect(screen.getByText('92%')).toBeInTheDocument()
+  })
+
+  it('does not show external ratings before OMDb has resolved (or when it has nothing)', () => {
+    renderHero({ externalRatings: null })
+    expect(screen.queryByText('IMDb')).not.toBeInTheDocument()
+  })
 })

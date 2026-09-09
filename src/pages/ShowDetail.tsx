@@ -49,6 +49,7 @@ export default function ShowDetail() {
           showRatings={d.showRatings}
           myRating={d.myShowRating?.rating ?? 0}
           estimatedShowRating={d.estimatedShowRating}
+          externalRatings={d.externalRatings}
           savingRating={d.savingRating}
           currentUserId={user?.id}
           onRateShow={d.handleRateShow}

@@ -70,6 +70,9 @@ vi.mock('../lib/tvmaze', () => ({
   getCorrectedAirDates: vi.fn(() => Promise.resolve(new Map())),
   tvmazeEpisodeKey: (s: number, e: number) => `${s}-${e}`,
 }))
+vi.mock('../lib/omdb', () => ({
+  getExternalRatings: vi.fn(() => Promise.resolve(null)),
+}))
 
 import { getShowDetail, getSeasonDetail } from '../lib/tmdb'
 import { fetchAllSeasonRatingsForShow } from '../lib/seasonRatings'
@@ -85,6 +88,7 @@ import { dismissShow } from '../lib/showDismissed'
 import { dropShow } from '../lib/showDropped'
 import { deleteRewatch, logRewatch, restoreRewatch } from '../lib/rewatches'
 import { setStreamingOverride, clearStreamingOverride } from '../lib/streamingOverrides'
+import { getExternalRatings } from '../lib/omdb'
 
 function makeShow(overrides: Partial<TmdbShowDetail> = {}): TmdbShowDetail {
   return {
@@ -144,6 +148,7 @@ beforeEach(() => {
   vi.mocked(undismissShow).mockResolvedValue(undefined)
   vi.mocked(undropShow).mockResolvedValue(undefined)
   vi.mocked(removeFromWatchlist).mockResolvedValue(undefined)
+  vi.mocked(getExternalRatings).mockResolvedValue(null)
 })
 
 describe('useShowDetail', () => {
@@ -451,6 +456,26 @@ describe('useShowDetail', () => {
       await result.current.handleRateShow(3)
     })
     expect(result.current.estimatedShowRating).toBeNull()
+  })
+
+  it('exposes the IMDb/Rotten Tomatoes scores OMDb resolves for the show', async () => {
+    vi.mocked(getExternalRatings).mockResolvedValue({ imdbRating: 8.4, rottenTomatoesScore: 92 })
+
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+    await waitFor(() => expect(result.current.externalRatings).not.toBeNull())
+
+    expect(getExternalRatings).toHaveBeenCalledWith(undefined)
+    expect(result.current.externalRatings).toEqual({ imdbRating: 8.4, rottenTomatoesScore: 92 })
+  })
+
+  it('leaves externalRatings null when OMDb has nothing for the show', async () => {
+    vi.mocked(getExternalRatings).mockResolvedValue(null)
+
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+
+    expect(result.current.externalRatings).toBeNull()
   })
 
   it('handleRateSeason upserts a season rating scoped to the active season', async () => {

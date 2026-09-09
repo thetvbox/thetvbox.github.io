@@ -89,6 +89,7 @@ function baseState(overrides: Partial<ReturnType<typeof useShowDetail>> = {}): R
     showRatings: [],
     myShowRating: null,
     estimatedShowRating: null,
+    externalRatings: null,
     savingRating: false,
     handleRateShow: vi.fn(),
     seasonRatingsForActive: [],
