@@ -133,4 +133,13 @@ describe('FollowListPanel', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('keeps the same fixed-height content box while loading and once the list settles', async () => {
+    vi.mocked(fetchFollowersWithUsers).mockResolvedValue([bob])
+    renderPanel('followers')
+    // Modal portals to document.body, so query the document rather than RTL's container.
+    expect(document.querySelector('.h-64')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
+    expect(document.querySelector('.h-64')).toBeInTheDocument()
+  })
 })

@@ -102,40 +102,47 @@ export default function FollowListPanel({ userId, mode, onClose, onMyFollowingCo
 
       {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
 
-      {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-lg bg-base-850/70" />
-          ))}
-        </div>
-      ) : people.length === 0 ? (
-        <p className="py-4 text-center text-xs text-base-500">
-          {mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
-        </p>
-      ) : (
-        <ul className="space-y-1.5">
-          {people.map((p) => (
-            <li key={p.id} className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover">
-              <Link to={profileRoute(p.username)} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-2.5">
-                <Avatar username={p.username} size="xs" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-base-100">@{p.username}</p>
-                  {myFollowerIds.has(p.id) && <p className="text-[10px] text-base-500">Follows you</p>}
-                </div>
-              </Link>
-              {me && me.id !== p.id && (
-                <FollowButton
-                  size="sm"
-                  isFollowing={myFollowingIds.has(p.id)}
-                  saving={savingIds.has(p.id)}
-                  onFollow={() => handleFollow(p.id)}
-                  onUnfollow={() => handleUnfollow(p.id)}
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Fixed height regardless of loading/empty/list state, so the panel never visibly
+          resizes once it's open -- matches NotificationsPanel's h-64 content area. Long
+          lists scroll within this box instead of growing the modal. */}
+      <div className="h-64 overflow-y-auto">
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
+              <div key={i} className="h-12 animate-pulse rounded-lg bg-base-850/70" />
+            ))}
+          </div>
+        ) : people.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-center text-xs text-base-500">
+              {mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {people.map((p) => (
+              <li key={p.id} className="flex items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-200 hover:bg-hover">
+                <Link to={profileRoute(p.username)} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <Avatar username={p.username} size="xs" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-base-100">@{p.username}</p>
+                    {myFollowerIds.has(p.id) && <p className="text-[10px] text-base-500">Follows you</p>}
+                  </div>
+                </Link>
+                {me && me.id !== p.id && (
+                  <FollowButton
+                    size="sm"
+                    isFollowing={myFollowingIds.has(p.id)}
+                    saving={savingIds.has(p.id)}
+                    onFollow={() => handleFollow(p.id)}
+                    onUnfollow={() => handleUnfollow(p.id)}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <Toast toast={toast} onDismiss={dismiss} />
     </Modal>
