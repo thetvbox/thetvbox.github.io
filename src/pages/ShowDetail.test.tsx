@@ -88,6 +88,7 @@ function baseState(overrides: Partial<ReturnType<typeof useShowDetail>> = {}): R
     effectiveAirDate: vi.fn(() => null),
     showRatings: [],
     myShowRating: null,
+    estimatedShowRating: null,
     savingRating: false,
     handleRateShow: vi.fn(),
     seasonRatingsForActive: [],

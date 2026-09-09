@@ -72,6 +72,7 @@ vi.mock('../lib/tvmaze', () => ({
 }))
 
 import { getShowDetail, getSeasonDetail } from '../lib/tmdb'
+import { fetchAllSeasonRatingsForShow } from '../lib/seasonRatings'
 import { fetchDismissedItem, undismissShow } from '../lib/showDismissed'
 import { fetchDroppedItem, undropShow } from '../lib/showDropped'
 import { fetchWatchlistItem, removeFromWatchlist } from '../lib/watchlist'
@@ -412,6 +413,44 @@ describe('useShowDetail', () => {
     })
     expect(deleteShowRating).toHaveBeenCalledWith('u1', 1)
     expect(result.current.myShowRating).toBeNull()
+  })
+
+  it('estimates the show rating from the seasons the user has rated so far', async () => {
+    vi.mocked(fetchAllSeasonRatingsForShow).mockResolvedValue([
+      { id: 'sr1', user_id: 'u1', show_id: 1, show_name: 'Show One', show_poster_path: null, season_number: 1, season_name: 'Season 1', rating: 4, rated_at: '2026-01-01T00:00:00Z', users: null },
+      { id: 'sr2', user_id: 'u1', show_id: 1, show_name: 'Show One', show_poster_path: null, season_number: 2, season_name: 'Season 2', rating: 5, rated_at: '2026-01-02T00:00:00Z', users: null },
+      { id: 'sr3', user_id: 'other', show_id: 1, show_name: 'Show One', show_poster_path: null, season_number: 1, season_name: 'Season 1', rating: 1, rated_at: '2026-01-01T00:00:00Z', users: null },
+    ])
+
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+
+    expect(result.current.estimatedShowRating?.average).toBe(4.5)
+    expect(result.current.estimatedShowRating?.seasons).toHaveLength(2)
+  })
+
+  it('clears the estimate once the show itself has been explicitly rated', async () => {
+    vi.mocked(fetchAllSeasonRatingsForShow).mockResolvedValue([
+      { id: 'sr1', user_id: 'u1', show_id: 1, show_name: 'Show One', show_poster_path: null, season_number: 1, season_name: 'Season 1', rating: 4, rated_at: '2026-01-01T00:00:00Z', users: null },
+    ])
+    vi.mocked(upsertShowRating).mockResolvedValue({
+      id: 'r1',
+      user_id: 'u1',
+      show_id: 1,
+      show_name: 'Show One',
+      show_poster_path: null,
+      rating: 3,
+      rated_at: '2026-01-01T00:00:00Z',
+    })
+
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+    expect(result.current.estimatedShowRating).not.toBeNull()
+
+    await act(async () => {
+      await result.current.handleRateShow(3)
+    })
+    expect(result.current.estimatedShowRating).toBeNull()
   })
 
   it('handleRateSeason upserts a season rating scoped to the active season', async () => {

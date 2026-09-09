@@ -2,13 +2,15 @@ import { motion } from 'framer-motion'
 import { posterUrl, yearFromDate } from '../../lib/tmdb'
 import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
-import type { ShowRatingWithUser, TmdbShowDetail } from '../../types'
+import EstimatedShowRating from '../EstimatedShowRating'
+import type { SeasonRatingWithUser, ShowRatingWithUser, TmdbShowDetail } from '../../types'
 
 interface ShowDetailHeroProps {
   show: TmdbShowDetail | null
   loadingShow: boolean
   showRatings: ShowRatingWithUser[]
   myRating: number
+  estimatedShowRating?: { average: number; seasons: SeasonRatingWithUser[] } | null
   savingRating: boolean
   currentUserId?: string
   onRateShow: (value: number) => void
@@ -20,6 +22,7 @@ export default function ShowDetailHero({
   loadingShow,
   showRatings,
   myRating,
+  estimatedShowRating = null,
   savingRating,
   currentUserId,
   onRateShow,
@@ -69,6 +72,9 @@ export default function ShowDetailHero({
             size="lg"
             ratingLabel="Rate this show"
           />
+          {estimatedShowRating && (
+            <EstimatedShowRating average={estimatedShowRating.average} seasons={estimatedShowRating.seasons} />
+          )}
         </div>
       )}
     </>

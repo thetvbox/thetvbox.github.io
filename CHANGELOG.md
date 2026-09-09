@@ -6,10 +6,26 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- A show you've rated one or more seasons of, but haven't rated overall,
+  now shows a live estimate (the average of just those seasons) next to
+  "Rate this show" -- click it to see which seasons and how they were
+  rated. It's never saved as your actual rating of the show; it disappears
+  the moment you do rate the show yourself.
+
 ### Fixed
 
 - Recap's year-selector buttons could briefly flash as unselected right
   after the page finished loading.
+- The whole-show star rating didn't announce which rating was currently
+  selected to screen readers.
+- The main "Continue" button on Login/the passcode gate was a few pixels
+  under the minimum recommended touch target on mobile.
+- Profile's Diary/History/Watchlist/Dropped/Lists tabs could overflow the
+  screen and make the whole page scroll sideways on mobile.
+- The followers/following list could visibly snap to a new size right
+  after opening, once its skeleton was replaced by the real list.
 
 ## [1.2.0] - 2026-09-07
 

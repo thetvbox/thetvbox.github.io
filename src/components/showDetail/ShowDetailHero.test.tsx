@@ -75,4 +75,22 @@ describe('ShowDetailHero', () => {
     renderHero()
     expect(screen.getByRole('radiogroup', { name: 'Rate this show' })).toBeInTheDocument()
   })
+
+  it('shows an estimated rating from season ratings when the show itself is unrated', () => {
+    renderHero({
+      estimatedShowRating: {
+        average: 4.25,
+        seasons: [
+          { id: 's1', user_id: 'me', show_id: 1, show_name: 'Show One', show_poster_path: null, season_number: 1, season_name: null, rating: 4, rated_at: '2026-01-01', users: null },
+        ],
+      },
+    })
+    expect(screen.getByText('~4.3')).toBeInTheDocument()
+    expect(screen.getByText('(1 season rated)')).toBeInTheDocument()
+  })
+
+  it('does not show an estimated rating once the show itself has been rated', () => {
+    renderHero({ myRating: 4, estimatedShowRating: null })
+    expect(screen.queryByText(/season rated/)).not.toBeInTheDocument()
+  })
 })

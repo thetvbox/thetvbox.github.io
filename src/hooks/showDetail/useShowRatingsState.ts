@@ -18,6 +18,18 @@ export function useShowRatingsState(
 
   const myShowRating = useMemo(() => showRatings.find((r) => r.user_id === user?.id) ?? null, [showRatings, user])
 
+  const mySeasonRatings = useMemo(
+    () => seasonRatings.filter((r) => r.user_id === user?.id),
+    [seasonRatings, user],
+  )
+
+  /** Average of the seasons the user has rated so far, shown only until they rate the whole show themselves. */
+  const estimatedShowRating = useMemo(() => {
+    if (myShowRating || mySeasonRatings.length === 0) return null
+    const average = mySeasonRatings.reduce((sum, r) => sum + r.rating, 0) / mySeasonRatings.length
+    return { average, seasons: mySeasonRatings }
+  }, [myShowRating, mySeasonRatings])
+
   const seasonRatingsForActive = useMemo(
     () => (activeSeason === null ? [] : seasonRatings.filter((r) => r.season_number === activeSeason)),
     [seasonRatings, activeSeason],
@@ -100,6 +112,7 @@ export function useShowRatingsState(
     showRatings,
     setShowRatings,
     myShowRating,
+    estimatedShowRating,
     savingRating,
     handleRateShow,
     seasonRatings,

@@ -190,6 +190,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     effectiveAirDate: airDates.effectiveAirDate,
     showRatings: ratings.showRatings,
     myShowRating: ratings.myShowRating,
+    estimatedShowRating: ratings.estimatedShowRating,
     savingRating: ratings.savingRating,
     handleRateShow: ratings.handleRateShow,
     seasonRatingsForActive: ratings.seasonRatingsForActive,
