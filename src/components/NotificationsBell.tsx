@@ -201,7 +201,7 @@ function NotificationsPanel({
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onSeen is a fresh closure every render; this should only run once per opening, not on every parent re-render
   }, [userId])
 
   async function handleClearAll() {

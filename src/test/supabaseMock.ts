@@ -40,10 +40,3 @@ export function createQueryBuilder(result: MockResult): QueryBuilderMock {
   builder.then = (onFulfilled, onRejected) => Promise.resolve(resolved).then(onFulfilled, onRejected)
   return builder
 }
-
-/** Builds a mock Supabase client whose `.from(table)` returns the given builder, recording the table name requested. */
-export function createSupabaseMock(result: MockResult) {
-  const builder = createQueryBuilder(result)
-  const from = vi.fn(() => builder)
-  return { supabase: { from }, builder, from }
-}

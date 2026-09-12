@@ -1,6 +1,6 @@
 /** True if the OS-level "reduce motion" setting is on. */
 export function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  return typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
 }
 
 /** Returns 'smooth' unless reduced motion is requested, for direct scrollTo calls. */
