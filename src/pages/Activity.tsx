@@ -329,7 +329,7 @@ function PersonFilterPanel({
   onClose: () => void
 }) {
   return (
-    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-2">
+    <DropdownPanel onClose={onClose} label="Filter by person" align="center" className="w-60 p-2">
       <ul className="max-h-64 space-y-1 overflow-y-auto">
         {members.map((u) => (
           <li key={u.id}>

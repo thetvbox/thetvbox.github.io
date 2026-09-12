@@ -18,6 +18,26 @@ describe('DropdownPanel', () => {
     expect(screen.getByText('Hello')).toBeInTheDocument()
   })
 
+  it('right-aligns to its trigger by default, for triggers that sit near a page/row edge', () => {
+    render(
+      <DropdownPanel onClose={vi.fn()} label="Notifications">
+        <p>Hello</p>
+      </DropdownPanel>,
+    )
+    expect(screen.getByRole('dialog', { name: 'Notifications' })).toHaveClass('right-0')
+  })
+
+  it('centers under its trigger when align="center" is given, for a trigger away from any edge', () => {
+    render(
+      <DropdownPanel onClose={vi.fn()} label="Filter by person" align="center">
+        <p>Hello</p>
+      </DropdownPanel>,
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Filter by person' })
+    expect(dialog).toHaveClass('inset-x-0', 'mx-auto')
+    expect(dialog).not.toHaveClass('right-0')
+  })
+
   it('calls onClose on Escape', () => {
     const onClose = vi.fn()
     render(
