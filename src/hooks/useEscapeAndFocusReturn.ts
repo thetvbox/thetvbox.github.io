@@ -1,10 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 
 /** Escape-to-close and focus-return-to-trigger for this app's toggled panels and modal. */
 export function useEscapeAndFocusReturn(active: boolean, onClose: () => void) {
   const triggerRef = useRef<HTMLElement | null>(null)
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  // Keep the ref current via a layout effect (not a render-body assignment) -- it still runs
+  // before the keydown listener below can ever fire, since layout effects commit before
+  // regular effects in the same pass.
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!active) return

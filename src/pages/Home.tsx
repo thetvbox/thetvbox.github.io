@@ -65,6 +65,9 @@ export default function Home() {
   useEffect(() => {
     if (!user) return
     let cancelled = false
+    // Genuinely synchronizing with an external system (a network fetch); known false positive
+    // for this pattern, see https://github.com/facebook/react/issues/34743
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
     Promise.all([
@@ -121,6 +124,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!watchingKey) {
+      // Nothing to fetch for an empty watching list -- resets to match, same reasoning as the
+      // fetch effect below.
+      // oxlint-disable-next-line react/set-state-in-effect
       setSeasonProgress(new Map())
       return
     }
@@ -148,6 +154,9 @@ export default function Home() {
 
   useEffect(() => {
     if (seasonProgress.size === 0) {
+      // Nothing to fetch with no in-progress seasons -- resets to match, same reasoning as the
+      // fetch effect below.
+      // oxlint-disable-next-line react/set-state-in-effect
       setNextEpisodes(new Map())
       return
     }

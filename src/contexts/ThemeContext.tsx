@@ -57,6 +57,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// useTheme is the intended pairing for ThemeProvider (same well-established pattern as
+// AuthContext's useAuth); splitting it into its own file purely for Fast Refresh isn't worth
+// the extra indirection for a dev-only nicety.
+// oxlint-disable-next-line react/only-export-components
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext)
   if (!ctx) throw new Error('useTheme must be used within a ThemeProvider')

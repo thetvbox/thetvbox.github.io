@@ -89,6 +89,19 @@ All notable changes to TV Box are documented here. Format loosely follows
   slightly different ones. All overlays and dropdowns also now trap Tab
   within themselves while open, instead of letting keyboard focus tab out
   to the page underneath.
+- A fully-watched season's checkmark badge is now the same solid,
+  filled accent circle used everywhere else in the app to mean "watched"
+  (previously a small hand-drawn outline), and hovering any season tab
+  shows its watched count as a tooltip, not just the fully-watched ones.
+  The "Click to see score" hint next to an unscored Rotten Tomatoes
+  entry is now a proper accent-colored pill instead of plain grey text,
+  and brightens on hover like the rest of the app's clickable badges.
+  An episode with no still image now shows a small icon alongside "No
+  image" instead of bare text on an empty tile. The "Next: airs" banner
+  is now "New episode: airs" and the per-season watched count now reads
+  "X/Y watched this season" -- both were easy to confuse with the
+  similarly-worded "Up next" episode badge and the whole-show watched
+  count elsewhere on the page.
 
 ### Fixed
 
@@ -123,6 +136,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   lists stay small and large ones scroll within a sensible max height.
 - "Report a bug" closed itself the instant you clicked into the title or
   description field, instead of letting you type.
+- Protected pages (Home, Profile, etc.) briefly showed a loading spinner
+  on every load before deciding whether you were signed in, even though
+  the check itself is instant -- it now resolves in the same render, so
+  the spinner no longer appears at all for that step.
 
 ## [1.2.0] - 2026-09-07
 

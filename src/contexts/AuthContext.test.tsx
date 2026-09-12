@@ -26,7 +26,7 @@ beforeEach(() => {
 })
 
 describe('AuthContext', () => {
-  it('starts with no user and loading true, then resolves to loading false with no stored session', async () => {
+  it('has no user and loading false when there is no stored session', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.user).toBeNull()

@@ -6,6 +6,7 @@ import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
 import DateMarkControl from './DateMarkControl'
 import Spinner from './Spinner'
+import { CheckGlyph } from './ShowDetailGlyphs'
 import type { TmdbEpisode } from '../types'
 
 interface EpisodeRowProps {
@@ -80,8 +81,9 @@ export default function EpisodeRow({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-[10px] text-base-500">
-              No image
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-base-600">
+              <NoStillGlyph />
+              <span className="text-[10px] text-base-500">No image</span>
             </div>
           )}
           {episode.runtime ? (
@@ -161,27 +163,19 @@ export default function EpisodeRow({
   )
 }
 
-function CheckGlyph({ filled }: { filled: boolean }) {
+/** Generic "no image" placeholder -- a stand-in for a missing episode still, not any brand mark. */
+function NoStillGlyph() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        fill={filled ? 'var(--color-accent-400)' : 'none'}
-        stroke={filled ? 'var(--color-accent-400)' : 'currentColor'}
-        strokeWidth="1.6"
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="8.5" cy="10" r="1.4" fill="currentColor" />
+      <path
+        d="M4.5 16.5l4.5-4 3 2.5 3.5-3 4 3.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      {filled && (
-        <path
-          d="M7.5 12.5l3 3 6-6.5"
-          stroke="var(--color-base-950)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      )}
     </svg>
   )
 }

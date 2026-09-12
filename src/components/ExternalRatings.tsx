@@ -49,7 +49,9 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
           <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
         </>
       ) : (
-        <span className="text-sm text-base-400">Click to see score</span>
+        <span className="rounded-full border border-accent-500/30 bg-accent-500/10 px-2.5 py-1 text-xs font-medium text-accent-300 transition-colors duration-150 group-hover:border-accent-500/50 group-hover:bg-accent-500/15">
+          Click to see score
+        </span>
       )}
     </>
   )
@@ -76,7 +78,7 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
             target="_blank"
             rel="noreferrer"
             title="Rotten Tomatoes"
-            className="flex items-center gap-1.5 text-base-300 transition-colors duration-150 hover:text-base-100"
+            className="group flex items-center gap-1.5 text-base-300 transition-colors duration-150 hover:text-base-100"
           >
             {rtContent}
           </a>

@@ -115,12 +115,12 @@ describe('ShowDetailSeasons', () => {
     renderSeasons({
       nextUpcomingEpisode: episode({ season_number: 2, episode_number: 1, air_date: '2026-05-01' }),
     })
-    expect(screen.getByText(/Next: S2E1 airs/)).toBeInTheDocument()
+    expect(screen.getByText(/New episode: S2E1 airs/)).toBeInTheDocument()
   })
 
   it('shows the watched fraction for the season', () => {
     renderSeasons({ seasonWatchedCount: 1 })
-    expect(screen.getByText('1/2 watched')).toBeInTheDocument()
+    expect(screen.getByText('1/2 watched this season')).toBeInTheDocument()
   })
 
   it('shows the mark-season-watched control only when the season is incomplete', () => {

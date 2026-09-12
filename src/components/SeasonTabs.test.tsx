@@ -99,4 +99,21 @@ describe('SeasonTabs', () => {
     )
     expect(screen.getByText('Season 1').closest('button')).not.toHaveAttribute('aria-label')
   })
+
+  it('shows a watched-count tooltip for a season with segment data', () => {
+    render(
+      <SeasonTabs
+        seasons={[season({ id: 1, season_number: 1 })]}
+        active={1}
+        onSelect={vi.fn()}
+        segments={[{ seasonNumber: 1, watched: 4, total: 10 }]}
+      />,
+    )
+    expect(screen.getByText('Season 1').closest('button')).toHaveAttribute('title', 'Season 1 · 4/10 watched')
+  })
+
+  it('has no tooltip for a season with no segment data', () => {
+    render(<SeasonTabs seasons={[season({ id: 1, season_number: 1 })]} active={1} onSelect={vi.fn()} />)
+    expect(screen.getByText('Season 1').closest('button')).not.toHaveAttribute('title')
+  })
 })

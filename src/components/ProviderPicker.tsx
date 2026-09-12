@@ -45,6 +45,9 @@ export default function ProviderPicker({
 
   useEffect(() => {
     let cancelled = false
+    // Genuinely synchronizing with an external system (a network fetch); known false positive
+    // for this pattern, see https://github.com/facebook/react/issues/34743
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     getAllTvProviders(region)
       .then((data) => {

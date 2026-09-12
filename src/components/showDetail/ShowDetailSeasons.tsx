@@ -92,7 +92,9 @@ export default function ShowDetailSeasons({
     <div className="mt-8 border-t border-hairline pt-6">
       {nextUpcomingEpisode && (
         <p className="mb-3 text-xs text-base-500">
-          Next: S{nextUpcomingEpisode.season_number}E{nextUpcomingEpisode.episode_number} airs{' '}
+          {/* "New episode" (not "Next"/"Up next") -- distinct from the per-episode "Up next"
+             badge below, which is about resuming where you left off, not new releases. */}
+          New episode: S{nextUpcomingEpisode.season_number}E{nextUpcomingEpisode.episode_number} airs{' '}
           {formatShortDate(nextUpcomingEpisode.air_date!)}
         </p>
       )}
@@ -105,7 +107,7 @@ export default function ShowDetailSeasons({
               <SeasonProgressBar segments={[{ seasonNumber: activeSeason, watched: seasonWatchedCount, total: season.episodes.length }]} />
             </div>
             <span>
-              {seasonWatchedCount}/{season.episodes.length} watched
+              {seasonWatchedCount}/{season.episodes.length} watched this season
             </span>
             <AnimatePresence initial={false}>
               {seasonWatchedCount < season.episodes.length && (

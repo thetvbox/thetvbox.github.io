@@ -136,6 +136,20 @@ describe('EpisodeRow', () => {
     expect(screen.getByText('No synopsis available.')).toBeInTheDocument()
   })
 
+  it('shows a "No image" placeholder when the episode has no still', () => {
+    render(
+      <EpisodeRow
+        episode={episode({ still_path: null })}
+        watched={false}
+        watchedAt={null}
+        watchedAtUnknown={false}
+        onToggleWatched={vi.fn()}
+        onMarkWatchedWithDate={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('No image')).toBeInTheDocument()
+  })
+
   it('shows an "Up next" badge when isUpNext is set', () => {
     render(
       <EpisodeRow

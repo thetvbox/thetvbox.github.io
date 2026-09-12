@@ -52,6 +52,9 @@ export default function Activity() {
 
   useEffect(() => {
     let cancelled = false
+    // Genuinely synchronizing with an external system (a network fetch); known false positive
+    // for this pattern, see https://github.com/facebook/react/issues/34743
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
     Promise.all([
@@ -115,6 +118,10 @@ export default function Activity() {
   // yet" when really they're just excluded by scope, not inactive.
   useEffect(() => {
     if (filterUsername && !filterableMembers.some((u) => u.username === filterUsername)) {
+      // Deliberately resets (not just hides) the stale selection so it doesn't silently
+      // reappear if the pool changes back; the array-shaped dependency here doesn't fit the
+      // "compare during render" alternative React suggests for simpler prop changes.
+      // oxlint-disable-next-line react/set-state-in-effect
       setFilterUsername(null)
     }
   }, [filterUsername, filterableMembers])
@@ -124,6 +131,9 @@ export default function Activity() {
   // disappearing instead of leaving it floating with nothing useful left to pick.
   useEffect(() => {
     if (personFilterOpen && filterableMembers.length <= 1) {
+      // Closes the panel in response to its own trigger disappearing; same reasoning as the
+      // filter reset above.
+      // oxlint-disable-next-line react/set-state-in-effect
       setPersonFilterOpen(false)
     }
   }, [personFilterOpen, filterableMembers])

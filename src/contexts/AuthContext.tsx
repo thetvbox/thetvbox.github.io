@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { STORAGE_KEYS, TABLE_USERS } from '../lib/constants'
@@ -39,20 +39,19 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
+  // Reading localStorage is synchronous, so the stored session can be the *initial* state
+  // rather than something an effect fetches after mount -- no loading flash, no extra render.
+  const [user, setUser] = useState<AppUser | null>(() => {
     const stored = readStoredUser()
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored) as AppUser)
-      } catch {
-        clearStoredUser()
-      }
+    if (!stored) return null
+    try {
+      return JSON.parse(stored) as AppUser
+    } catch {
+      clearStoredUser()
+      return null
     }
-    setLoading(false)
-  }, [])
+  })
+  const loading = false
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -103,6 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// useAuth is the intended pairing for AuthProvider; splitting it into its own file purely for
+// Fast Refresh isn't worth the extra indirection for a dev-only nicety.
+// oxlint-disable-next-line react/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within an AuthProvider')

@@ -1,3 +1,31 @@
+/** Filled accent checkmark when true, an outlined circle when false. Shared "done" indicator --
+ *  used for both an individual watched episode and a fully-watched season, so the two states
+ *  read as the same concept everywhere they appear. */
+export function CheckGlyph({ filled, size = 13 }: { filled: boolean; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="shrink-0">
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill={filled ? 'var(--color-accent-400)' : 'none'}
+        stroke={filled ? 'var(--color-accent-400)' : 'currentColor'}
+        strokeWidth="1.6"
+      />
+      {filled && (
+        <path
+          d="M7.5 12.5l3 3 6-6.5"
+          stroke="var(--color-base-950)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      )}
+    </svg>
+  )
+}
+
 export function ListGlyph() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
