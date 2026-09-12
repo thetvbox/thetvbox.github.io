@@ -71,4 +71,32 @@ describe('SeasonTabs', () => {
     fireEvent.click(screen.getByText('Season 2'))
     expect(onSelect).toHaveBeenCalledWith(2)
   })
+
+  it('badges a season as fully watched when its segment says so', () => {
+    render(
+      <SeasonTabs
+        seasons={[season({ id: 1, season_number: 1 }), season({ id: 2, season_number: 2 })]}
+        active={1}
+        onSelect={vi.fn()}
+        segments={[
+          { seasonNumber: 1, watched: 10, total: 10 },
+          { seasonNumber: 2, watched: 3, total: 10 },
+        ]}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Season 1, fully watched' })).toBeInTheDocument()
+    expect(screen.getByText('Season 2').closest('button')).not.toHaveAttribute('aria-label')
+  })
+
+  it('does not badge a season with zero episodes as watched', () => {
+    render(
+      <SeasonTabs
+        seasons={[season({ id: 1, season_number: 1, episode_count: 0 })]}
+        active={1}
+        onSelect={vi.fn()}
+        segments={[{ seasonNumber: 1, watched: 0, total: 0 }]}
+      />,
+    )
+    expect(screen.getByText('Season 1').closest('button')).not.toHaveAttribute('aria-label')
+  })
 })

@@ -30,6 +30,13 @@ All notable changes to TV Box are documented here. Format loosely follows
   "Rate this show" -- click it to see which seasons and how they were
   rated. It's never saved as your actual rating of the show; it disappears
   the moment you do rate the show yourself.
+- The episode list on Show Detail now marks the next episode you haven't
+  watched with an "Up next" badge and a highlighted border, so returning
+  to a long-running show mid-season doesn't mean scanning row by row to
+  find your place. The season tabs badge any season you've fully watched
+  with a small checkmark, and the "X/Y watched" count next to them now
+  has a progress bar alongside it (reusing the same bar already used for
+  shows on Home) instead of being text-only.
 
 ### Changed
 
@@ -66,8 +73,9 @@ All notable changes to TV Box are documented here. Format loosely follows
   count once they have anything in them. The Finished and Episodes
   watched stat cards are now shortcuts to the History and Diary tabs.
 - The IMDb rating and Rotten Tomatoes score on Show Detail were hard to
-  read at 10-12px; both are now a size up, along with a slightly larger
-  Rotten Tomatoes icon.
+  read at 10-12px; both are now a size up. The fresh/rotten Rotten
+  Tomatoes icon itself was bumped twice this pass and is now noticeably
+  bigger than where it started.
 - Every centered overlay (Report a bug, What's new, followers/following,
   the rating breakdown) now shares the same frosted-glass panel as the
   notification/person/more dropdowns, instead of a flat solid background

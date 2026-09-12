@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import SeasonTabs from '../SeasonTabs'
+import SeasonProgressBar from '../SeasonProgressBar'
 import RatingSummary from '../RatingSummary'
 import DateMarkControl from '../DateMarkControl'
 import EpisodeRow from '../EpisodeRow'
@@ -8,6 +9,7 @@ import { EpisodeRowSkeleton } from '../Skeletons'
 import { formatShortDate, isFutureDate } from '../../lib/date'
 import { pluralSuffix } from '../../lib/format'
 import { scrollBehavior } from '../../lib/motion'
+import { computeSeasonProgress, countWatchedBySeason } from '../../lib/seasonProgress'
 import { watchedKey } from '../../lib/watched'
 import type { SeasonRatingWithUser, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
@@ -65,6 +67,13 @@ export default function ShowDetailSeasons({
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
 
+  // Per-season watched/total, for the season tabs' completion checkmark and this season's
+  // progress bar -- `watched` already covers the whole show, so no extra fetch needed.
+  const seasonSegments = useMemo(
+    () => computeSeasonProgress(show.seasons, countWatchedBySeason(Object.values(watched)))?.segments ?? [],
+    [show.seasons, watched],
+  )
+
   const lastWatchedEpisode = season?.episodes
     .filter((ep) => watched[watchedKey(ep.season_number, ep.episode_number)])
     .at(-1)
@@ -89,9 +98,12 @@ export default function ShowDetailSeasons({
       )}
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <SeasonTabs seasons={show.seasons} active={activeSeason} onSelect={onSelectSeason} />
+        <SeasonTabs seasons={show.seasons} active={activeSeason} onSelect={onSelectSeason} segments={seasonSegments} />
         {season && seasonWatchedCount !== null && (
-          <div className="flex shrink-0 items-center gap-2 text-xs text-base-400">
+          <div className="flex shrink-0 items-center gap-2.5 text-xs text-base-400">
+            <div className="w-16 sm:w-24">
+              <SeasonProgressBar segments={[{ seasonNumber: activeSeason, watched: seasonWatchedCount, total: season.episodes.length }]} />
+            </div>
             <span>
               {seasonWatchedCount}/{season.episodes.length} watched
             </span>
@@ -139,6 +151,7 @@ export default function ShowDetailSeasons({
                 onToggleWatched={() => onToggleWatched(ep.episode_number, ep.name, ep.runtime)}
                 onMarkWatchedWithDate={(input) => onMarkWatchedWithDate(ep.episode_number, ep.name, ep.runtime, input)}
                 rootRef={ep.episode_number === scrollTargetEpisode?.episode_number ? nextUpRef : undefined}
+                isUpNext={ep.episode_number === nextUpEpisode?.episode_number}
               />
             ))}
       </div>

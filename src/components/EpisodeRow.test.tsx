@@ -136,6 +136,35 @@ describe('EpisodeRow', () => {
     expect(screen.getByText('No synopsis available.')).toBeInTheDocument()
   })
 
+  it('shows an "Up next" badge when isUpNext is set', () => {
+    render(
+      <EpisodeRow
+        episode={episode()}
+        watched={false}
+        watchedAt={null}
+        watchedAtUnknown={false}
+        onToggleWatched={vi.fn()}
+        onMarkWatchedWithDate={vi.fn()}
+        isUpNext
+      />,
+    )
+    expect(screen.getByText('Up next')).toBeInTheDocument()
+  })
+
+  it('omits the "Up next" badge by default', () => {
+    render(
+      <EpisodeRow
+        episode={episode()}
+        watched={false}
+        watchedAt={null}
+        watchedAtUnknown={false}
+        onToggleWatched={vi.fn()}
+        onMarkWatchedWithDate={vi.fn()}
+      />,
+    )
+    expect(screen.queryByText('Up next')).not.toBeInTheDocument()
+  })
+
   it('renders the runtime badge when present, and omits it when null', () => {
     const { rerender } = render(
       <EpisodeRow

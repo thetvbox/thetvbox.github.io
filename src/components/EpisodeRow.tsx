@@ -16,6 +16,9 @@ interface EpisodeRowProps {
   onToggleWatched: () => Promise<void>
   onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
   rootRef?: Ref<HTMLDivElement>
+  /** The next episode the viewer hasn't watched yet -- badged and highlighted so returning to a
+   *  long-running show lands you on where you left off without hunting for it. */
+  isUpNext?: boolean
 }
 
 export default function EpisodeRow({
@@ -26,6 +29,7 @@ export default function EpisodeRow({
   onToggleWatched,
   onMarkWatchedWithDate,
   rootRef,
+  isUpNext = false,
 }: EpisodeRowProps) {
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -56,8 +60,12 @@ export default function EpisodeRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-      className={`group rounded-xl border border-hairline bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70 sm:p-4 ${
-        watched ? 'ring-1 ring-inset ring-accent-500/20' : ''
+      className={`group rounded-xl border bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70 sm:p-4 ${
+        watched
+          ? 'border-hairline ring-1 ring-inset ring-accent-500/25'
+          : isUpNext
+            ? 'border-accent-500/40 ring-1 ring-inset ring-accent-500/30'
+            : 'border-hairline'
       } ${isUpcoming ? 'opacity-60' : ''}`}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
@@ -84,9 +92,16 @@ export default function EpisodeRow({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-400">
-            Episode {episode.episode_number}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-400">
+              Episode {episode.episode_number}
+            </p>
+            {isUpNext && (
+              <span className="rounded-full bg-accent-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-300 ring-1 ring-inset ring-accent-500/30">
+                Up next
+              </span>
+            )}
+          </div>
           <p className="text-sm font-medium text-base-100 sm:text-base">
             {episode.name || `Episode ${episode.episode_number}`}
           </p>

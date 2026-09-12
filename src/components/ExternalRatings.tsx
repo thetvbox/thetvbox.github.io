@@ -41,7 +41,7 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
       <span className="rounded bg-[#fa320a] px-1 py-0.5 text-xs font-bold leading-none text-white">RT</span>
       {rtScoreKnown ? (
         <>
-          <RottenTomatoGlyph fresh={rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD} size={16} />
+          <RottenTomatoGlyph fresh={rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD} size={20} />
           <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
         </>
       ) : (
