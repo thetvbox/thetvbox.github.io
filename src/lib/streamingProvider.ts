@@ -1,6 +1,6 @@
 import { getWatchProviders } from './tmdb'
-import { fetchStreamingOverride } from './streamingOverrides'
-import type { TmdbWatchProvider, TmdbWatchProviderRegion } from '../types'
+import { fetchStreamingOverrides } from './streamingOverrides'
+import type { StreamingOverride, TmdbWatchProvider, TmdbWatchProviderRegion } from '../types'
 
 /** Dedupes providers that repeat across flatrate/rent/buy, sorted by TMDB's display priority. */
 export function dedupeProviders(list: TmdbWatchProvider[]): TmdbWatchProvider[] {
@@ -49,12 +49,13 @@ export interface ResolvedProvider {
 }
 
 /** Resolves the group's "where to watch" answer for one show: manual override wins, else best automatic guess. */
-async function resolveShowPlatform(showId: number, region: string): Promise<ResolvedProvider | null> {
-  const [providers, override] = await Promise.all([
-    getWatchProviders(showId).catch(() => null),
-    fetchStreamingOverride(showId).catch(() => null),
-  ])
+async function resolveShowPlatform(
+  showId: number,
+  region: string,
+  override: StreamingOverride | undefined,
+): Promise<ResolvedProvider | null> {
   if (override) return { provider_name: override.provider_name, logo_path: override.provider_logo_path }
+  const providers = await getWatchProviders(showId).catch(() => null)
   const best = pickBestFreeProvider(providers?.results[region] ?? null)
   return best ? { provider_name: best.provider_name, logo_path: best.logo_path } : null
 }
@@ -79,9 +80,13 @@ export async function resolveShowPlatforms(
 ): Promise<Map<number, ResolvedProvider | null>> {
   const uncached = [...new Set(showIds)].filter((id) => !platformCache.has(cacheKey(id, region)))
 
+  // One request for every show's override instead of one per show -- avoids firing a burst of
+  // parallel Supabase requests every time a poster grid (Home/Search/History) renders.
+  const overrides = await fetchStreamingOverrides(uncached).catch(() => new Map<number, StreamingOverride>())
+
   await Promise.all(
     uncached.map(async (id) => {
-      const result = await resolveShowPlatform(id, region).catch(() => null)
+      const result = await resolveShowPlatform(id, region, overrides.get(id)).catch(() => null)
       platformCache.set(cacheKey(id, region), result)
     }),
   )

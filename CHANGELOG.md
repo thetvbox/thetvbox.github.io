@@ -29,6 +29,9 @@ All notable changes to TV Box are documented here. Format loosely follows
   button uses the same shared header as every other panel (and is a
   proper 44px touch target, not 32px), and search results cascade in
   one-by-one instead of popping in as a flat block.
+- Poster grids that show a "where to watch" badge (Home, Search, History)
+  now resolve every card's manual streaming override in a single request
+  instead of one request per card.
 
 ### Fixed
 

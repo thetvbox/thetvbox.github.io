@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import type { TmdbWatchProvider, TmdbWatchProviderRegion, TmdbWatchProviders } from '../types'
 
 vi.mock('./tmdb', () => ({ getWatchProviders: vi.fn() }))
-vi.mock('./streamingOverrides', () => ({ fetchStreamingOverride: vi.fn() }))
+vi.mock('./streamingOverrides', () => ({ fetchStreamingOverrides: vi.fn() }))
 
 import { getWatchProviders } from './tmdb'
-import { fetchStreamingOverride } from './streamingOverrides'
+import { fetchStreamingOverrides } from './streamingOverrides'
 import { dedupeProviders, invalidatePlatformCache, pickBestFreeProvider, resolveShowPlatforms } from './streamingProvider'
 
 function provider(overrides: Partial<TmdbWatchProvider> = {}): TmdbWatchProvider {
@@ -80,18 +80,27 @@ describe('resolveShowPlatforms', () => {
       id: 101,
       results: { US: { link: '', flatrate: [provider({ provider_name: 'Netflix' })] } },
     } as TmdbWatchProviders)
-    vi.mocked(fetchStreamingOverride).mockResolvedValue({
-      id: 'o1',
-      show_id: 101,
-      provider_id: 9,
-      provider_name: 'Manual Pick',
-      provider_logo_path: '/manual.png',
-      updated_by: 'u1',
-      updated_at: '2024-01-01T00:00:00Z',
-    })
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(
+      new Map([
+        [
+          101,
+          {
+            id: 'o1',
+            show_id: 101,
+            provider_id: 9,
+            provider_name: 'Manual Pick',
+            provider_logo_path: '/manual.png',
+            updated_by: 'u1',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
+      ]),
+    )
 
     const result = await resolveShowPlatforms([101], 'US')
     expect(result.get(101)).toEqual({ provider_name: 'Manual Pick', logo_path: '/manual.png' })
+    // An override answers the question on its own -- no need to also ask TMDB.
+    expect(getWatchProviders).not.toHaveBeenCalled()
   })
 
   it('auto-picks the best free provider when there is no override', async () => {
@@ -99,7 +108,7 @@ describe('resolveShowPlatforms', () => {
       id: 102,
       results: { US: { link: '', flatrate: [provider({ provider_name: 'Netflix' })] } },
     } as TmdbWatchProviders)
-    vi.mocked(fetchStreamingOverride).mockResolvedValue(null)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
 
     const result = await resolveShowPlatforms([102], 'US')
     expect(result.get(102)).toEqual({ provider_name: 'Netflix', logo_path: '/netflix.png' })
@@ -107,7 +116,7 @@ describe('resolveShowPlatforms', () => {
 
   it('resolves null for a show with no providers and no override', async () => {
     vi.mocked(getWatchProviders).mockResolvedValue({ id: 103, results: {} } as TmdbWatchProviders)
-    vi.mocked(fetchStreamingOverride).mockResolvedValue(null)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
 
     const result = await resolveShowPlatforms([103], 'US')
     expect(result.get(103)).toBeNull()
@@ -115,10 +124,19 @@ describe('resolveShowPlatforms', () => {
 
   it('resolves null (not a throw) when both lookups fail', async () => {
     vi.mocked(getWatchProviders).mockRejectedValue(new Error('tmdb down'))
-    vi.mocked(fetchStreamingOverride).mockRejectedValue(new Error('supabase down'))
+    vi.mocked(fetchStreamingOverrides).mockRejectedValue(new Error('supabase down'))
 
     const result = await resolveShowPlatforms([104], 'US')
     expect(result.get(104)).toBeNull()
+  })
+
+  it('batches every uncached show into a single overrides request', async () => {
+    vi.mocked(getWatchProviders).mockResolvedValue({ id: 0, results: {} } as TmdbWatchProviders)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    await resolveShowPlatforms([201, 202, 203], 'US')
+    expect(fetchStreamingOverrides).toHaveBeenCalledTimes(1)
+    expect(fetchStreamingOverrides).toHaveBeenCalledWith([201, 202, 203])
   })
 
   it('caches results so a second call for the same show/region skips re-fetching', async () => {
@@ -126,7 +144,7 @@ describe('resolveShowPlatforms', () => {
       id: 105,
       results: { US: { link: '', flatrate: [provider()] } },
     } as TmdbWatchProviders)
-    vi.mocked(fetchStreamingOverride).mockResolvedValue(null)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
 
     await resolveShowPlatforms([105], 'US')
     const callsAfterFirst = vi.mocked(getWatchProviders).mock.calls.length
@@ -139,7 +157,7 @@ describe('resolveShowPlatforms', () => {
       id: 106,
       results: { US: { link: '', flatrate: [provider()] } },
     } as TmdbWatchProviders)
-    vi.mocked(fetchStreamingOverride).mockResolvedValue(null)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
 
     await resolveShowPlatforms([106], 'US')
     const callsAfterFirst = vi.mocked(getWatchProviders).mock.calls.length

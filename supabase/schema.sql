@@ -257,6 +257,8 @@ create table if not exists public.show_streaming_overrides (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists show_streaming_overrides_updated_by_idx on public.show_streaming_overrides (updated_by);
+
 alter table public.show_streaming_overrides enable row level security;
 
 drop policy if exists "Anyone can read streaming overrides" on public.show_streaming_overrides;
@@ -396,6 +398,11 @@ select
 from public.episode_watched
 group by user_id, show_id;
 
+-- Views run with the view owner's privileges, not the querying role's,
+-- unless told otherwise -- harmless here since the underlying table's RLS
+-- policy already grants full read to anon/authenticated anyway, but this
+-- is what the Supabase security linter expects to see.
+alter view public.episode_watched_show_summary set (security_invoker = true);
 grant select on public.episode_watched_show_summary to anon, authenticated;
 
 -- Per-show rollup of just the undated ("watched a while ago") rows -- the
@@ -419,6 +426,8 @@ from public.episode_watched
 where watched_at_unknown = true
 group by user_id, show_id;
 
+-- Same reasoning as episode_watched_show_summary above.
+alter view public.episode_watched_undated_summary set (security_invoker = true);
 grant select on public.episode_watched_undated_summary to anon, authenticated;
 
 -- User-curated lists of shows (e.g. "Comfort shows"). "Shareable" is close
@@ -680,6 +689,7 @@ create table if not exists public.notifications (
 
 create index if not exists notifications_user_created_idx on public.notifications (user_id, created_at desc);
 create index if not exists notifications_user_unseen_idx on public.notifications (user_id) where seen_at is null;
+create index if not exists notifications_actor_id_idx on public.notifications (actor_id);
 
 alter table public.notifications enable row level security;
 
@@ -725,6 +735,14 @@ create trigger trg_notify_on_follow
   after insert on public.follows
   for each row execute function public.notify_on_follow();
 
+-- Trigger-only function (returns trigger); Postgres would refuse a direct
+-- call anyway, but Supabase auto-exposes every public-schema function as a
+-- PostgREST RPC endpoint unless EXECUTE is revoked, and the security linter
+-- flags that exposure. Triggers still fire fine after this -- trigger
+-- dispatch doesn't check the invoking role's EXECUTE grants, only direct
+-- calls do.
+revoke execute on function public.notify_on_follow() from public, anon, authenticated;
+
 -- Show rated: notify the rater's current followers. Fires on INSERT only
 -- (not UPDATE) so editing an existing rating doesn't re-notify everyone --
 -- upsertShowRating's onConflict makes a changed rating an UPDATE, not a
@@ -750,6 +768,9 @@ drop trigger if exists trg_notify_on_show_rating on public.show_ratings;
 create trigger trg_notify_on_show_rating
   after insert on public.show_ratings
   for each row execute function public.notify_on_show_rating();
+
+-- Same reasoning as notify_on_follow above.
+revoke execute on function public.notify_on_show_rating() from public, anon, authenticated;
 
 -- Show finished: notify the watcher's current followers, once per show ever
 -- (the existing-notification check guards against re-notifying on every
@@ -801,3 +822,6 @@ drop trigger if exists trg_notify_on_show_finished on public.episode_watched;
 create trigger trg_notify_on_show_finished
   after insert or update on public.episode_watched
   for each row execute function public.notify_on_show_finished();
+
+-- Same reasoning as notify_on_follow above.
+revoke execute on function public.notify_on_show_finished() from public, anon, authenticated;

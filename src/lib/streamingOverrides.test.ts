@@ -4,7 +4,7 @@ import { createQueryBuilder } from '../test/supabaseMock'
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
-import { clearStreamingOverride, fetchStreamingOverride, setStreamingOverride } from './streamingOverrides'
+import { clearStreamingOverride, fetchStreamingOverride, fetchStreamingOverrides, setStreamingOverride } from './streamingOverrides'
 import type { StreamingOverride } from '../types'
 
 function row(overrides: Partial<StreamingOverride> = {}): StreamingOverride {
@@ -44,6 +44,33 @@ describe('fetchStreamingOverride', () => {
   it('throws on a Supabase error', async () => {
     mockFrom({ error: new Error('boom') })
     await expect(fetchStreamingOverride(1)).rejects.toThrow('boom')
+  })
+})
+
+describe('fetchStreamingOverrides', () => {
+  it('returns an empty map without querying when given no show ids', async () => {
+    const fromSpy = vi.mocked(supabase.from)
+    expect(await fetchStreamingOverrides([])).toEqual(new Map())
+    expect(fromSpy).not.toHaveBeenCalled()
+  })
+
+  it('keys the returned map by show_id', async () => {
+    const builder = mockFrom({ data: [row({ show_id: 1 }), row({ id: 'o2', show_id: 2, provider_name: 'Hulu' })] })
+    const result = await fetchStreamingOverrides([1, 2])
+    expect(result.get(1)).toEqual(row({ show_id: 1 }))
+    expect(result.get(2)?.provider_name).toBe('Hulu')
+    expect(builder.in).toHaveBeenCalledWith('show_id', [1, 2])
+  })
+
+  it('omits shows with no override from the map', async () => {
+    mockFrom({ data: [row({ show_id: 1 })] })
+    const result = await fetchStreamingOverrides([1, 2])
+    expect(result.has(2)).toBe(false)
+  })
+
+  it('throws on a Supabase error', async () => {
+    mockFrom({ error: new Error('boom') })
+    await expect(fetchStreamingOverrides([1])).rejects.toThrow('boom')
   })
 })
 
