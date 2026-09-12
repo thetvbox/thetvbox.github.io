@@ -1,23 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
-import InlinePanel from '../components/InlinePanel'
 import PanelHeader from '../components/PanelHeader'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
+import {
+  DROPDOWN_PANEL_ANIMATE,
+  DROPDOWN_PANEL_EXIT,
+  DROPDOWN_PANEL_INITIAL,
+  DROPDOWN_PANEL_TRANSITION,
+} from '../lib/motion'
 import { profileRoute } from '../lib/routes'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   useCloseOnNavigate(() => setMenuOpen(false))
+
+  // The menu floats over the page with no backdrop of its own (see ProfileMenuPanel below),
+  // so a click anywhere outside the trigger+menu needs to close it -- same technique as
+  // Navbar's notifications dropdown and Activity's Person filter.
+  useEffect(() => {
+    if (!menuOpen) return
+    function handlePointerDown(e: PointerEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [menuOpen])
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
@@ -36,32 +56,34 @@ export default function Profile() {
 
         {/* Year in review / Public view / Sign out used to sit here as three peer-weight
             buttons -- they're all secondary/occasional actions next to the content below,
-            so they're tucked behind one trigger instead of competing for attention. */}
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-expanded={menuOpen}
-          aria-haspopup="true"
-          className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
-            menuOpen
-              ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
-              : 'border-hairline-strong text-base-300 hover:border-accent-500/40 hover:text-accent-400'
-          }`}
-        >
-          More
-        </button>
-      </div>
+            so they're tucked behind one trigger instead of competing for attention. This is
+            a short action menu, not a content-filter form, so it floats over the page as a
+            dropdown (like NotificationsBell) instead of pushing content down. */}
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-haspopup="true"
+            className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
+              menuOpen
+                ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
+                : 'border-hairline-strong text-base-300 hover:border-accent-500/40 hover:text-accent-400'
+            }`}
+          >
+            More
+          </button>
 
-      <div className="flex justify-end">
-        <AnimatePresence>
-          {menuOpen && (
-            <ProfileMenuPanel
-              username={user?.username ?? ''}
-              onSignOut={signOut}
-              onClose={() => setMenuOpen(false)}
-            />
-          )}
-        </AnimatePresence>
+          <AnimatePresence>
+            {menuOpen && (
+              <ProfileMenuPanel
+                username={user?.username ?? ''}
+                onSignOut={signOut}
+                onClose={() => setMenuOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {user && <ProfileActivity userId={user.id} username={user.username} />}
@@ -94,7 +116,16 @@ function ProfileMenuPanel({
   useEscapeAndFocusReturn(true, onClose)
 
   return (
-    <InlinePanel className="w-56 p-2">
+    <motion.div
+      layout
+      initial={DROPDOWN_PANEL_INITIAL}
+      animate={DROPDOWN_PANEL_ANIMATE}
+      exit={DROPDOWN_PANEL_EXIT}
+      transition={DROPDOWN_PANEL_TRANSITION}
+      role="dialog"
+      aria-label="More"
+      className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl"
+    >
       <PanelHeader title="More" onClose={onClose} />
       <div className="space-y-0.5">
         <Link
@@ -122,6 +153,6 @@ function ProfileMenuPanel({
           Sign out
         </button>
       </div>
-    </InlinePanel>
+    </motion.div>
   )
 }

@@ -42,12 +42,14 @@ All notable changes to TV Box are documented here. Format loosely follows
   like a full-width filter panel.
 - Profile: "Year in review", "Public view", and "Sign out" were three
   equal-weight buttons next to your name; they're now one "More" button
-  that opens a small menu, since they're occasional actions next to the
-  activity you're actually there to see. Your stat cards and rating chart
-  are now grouped into one card instead of two separately-spaced blocks,
-  and the Watchlist/Dropped/Lists tabs show a count once they have
-  anything in them. The Finished and Episodes watched stat cards are now
-  shortcuts to the History and Diary tabs.
+  that opens a small dropdown menu, since they're occasional actions next
+  to the activity you're actually there to see. The menu floats over the
+  page and closes on an outside click, instead of an early version that
+  pushed your activity feed down like a full-width panel. Your stat cards
+  and rating chart are now grouped into one card instead of two
+  separately-spaced blocks, and the Watchlist/Dropped/Lists tabs show a
+  count once they have anything in them. The Finished and Episodes
+  watched stat cards are now shortcuts to the History and Diary tabs.
 
 ### Fixed
 

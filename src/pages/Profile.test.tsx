@@ -67,6 +67,20 @@ describe('Profile', () => {
     expect(screen.getByText('Public view')).toHaveAttribute('href', '/u/bob')
   })
 
+  it('renders the More menu as a floating overlay, not an inline block', () => {
+    renderProfile()
+    fireEvent.click(screen.getByText('More'))
+    expect(screen.getByText('Public view').closest('[role="dialog"]')).toHaveClass('absolute')
+  })
+
+  it('closes the More menu on an outside pointerdown', () => {
+    renderProfile()
+    fireEvent.click(screen.getByText('More'))
+    expect(screen.getByText('Public view')).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByText('Public view')).not.toBeInTheDocument()
+  })
+
   it('calls signOut when Sign out is clicked, and closes the menu', () => {
     const signOut = vi.fn()
     vi.mocked(useAuth).mockReturnValue({
