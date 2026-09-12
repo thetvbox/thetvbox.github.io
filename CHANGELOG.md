@@ -20,8 +20,9 @@ All notable changes to TV Box are documented here. Format loosely follows
   link is a fast, purely client-side guess from the title (verified
   against a spread of real shows first) rather than a live lookup --
   the rare wrong guess lands on RT's own page instead of anything
-  broken. The icon shows a neutral outline until/unless OMDb also has
-  an actual score to color it fresh or rotten with.
+  broken. Until/unless OMDb also has an actual score, the icon shows a
+  neutral outline with a "Click to see score" hint instead of a bare,
+  unlabeled circle.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were

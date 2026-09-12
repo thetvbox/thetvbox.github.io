@@ -18,9 +18,10 @@ const ROTTEN_TOMATOES_FRESH_THRESHOLD = 60
 /**
  * IMDb rating + Rotten Tomatoes score, sourced from OMDb. The IMDb rating only appears once
  * OMDb resolves one, since there's no other source for it here. The Rotten Tomatoes icon
- * appears as soon as the show itself has loaded (in a neutral "unknown" state, linking to a
- * guessed RT page) and fills in with an actual fresh/rotten score if/when OMDb has one --
- * these are a bonus, not core functionality, so there's no error state, just less detail.
+ * appears as soon as the show itself has loaded (in a neutral "unknown" state with a "Click to
+ * see score" hint, linking to a guessed RT page) and fills in with an actual fresh/rotten score
+ * if/when OMDb has one -- these are a bonus, not core functionality, so there's no error state,
+ * just less detail.
  */
 export default function ExternalRatings({ ratings, imdbId, showName }: ExternalRatingsProps) {
   const imdbRating = ratings?.imdbRating ?? null
@@ -38,7 +39,11 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
   const rtContent = (
     <>
       <RottenTomatoGlyph fresh={rtScoreKnown ? rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD : null} size={16} />
-      {rtScoreKnown && <span className="text-sm font-medium">{rottenTomatoesScore}%</span>}
+      {rtScoreKnown ? (
+        <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
+      ) : (
+        <span className="text-sm text-base-400">Click to see score</span>
+      )}
     </>
   )
 
