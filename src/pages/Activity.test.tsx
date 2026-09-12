@@ -107,17 +107,78 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
   })
 
-  it('shows per-member filter chips and filters by clicking one', async () => {
+  it('does not show the Person trigger when at most one member has activity', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([ratingFor(friend)])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
+    expect(screen.queryByText('Person')).not.toBeInTheDocument()
+  })
+
+  it('opens the person-filter panel from the trigger and filters by clicking someone', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
+    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    expect(screen.queryByText('@friend')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('@friend'))
+
+    // Panel closes and the trigger now shows who's selected.
+    await waitFor(() => expect(screen.queryByText('Filter by person')).not.toBeInTheDocument())
+    expect(screen.getByText('@friend')).toBeInTheDocument()
+    expect(screen.getByText('Rated Show One')).toBeInTheDocument()
+    expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument()
+    expect(screen.getByText('What @friend has been up to.')).toBeInTheDocument()
+  })
+
+  it('clears the person filter (and closes the panel) if switching scope drops them from the pool', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
+      ratingFor(friend, { id: 'r-friend' }),
+      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    // Following-only scope excludes stranger, so the person picker starts with just one
+    // member (friend) -- switch to Everyone first to bring stranger into the pool.
+    await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Everyone'))
+    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('@stranger')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('@stranger'))
+    await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
+
+    // Switching back to Following excludes stranger entirely -- the filter should reset
+    // instead of showing a misleading "hasn't done anything" empty state for them.
+    fireEvent.click(screen.getByText('Following'))
+    await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
+    expect(screen.queryByText('@stranger')).not.toBeInTheDocument()
+  })
+
+  it('picking "All" in the panel clears the person filter', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
+      ratingFor(friend, { id: 'r-friend' }),
+      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Person'))
     await waitFor(() => expect(screen.getByText('@friend')).toBeInTheDocument())
     fireEvent.click(screen.getByText('@friend'))
-    await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
-    expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('@friend'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('All'))
+    await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
+    expect(screen.getByText('Rated Show One')).toBeInTheDocument()
   })
 
   it('renders follow events via FollowActivityRow', async () => {

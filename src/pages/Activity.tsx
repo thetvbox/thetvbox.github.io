@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
 import { fetchRecentSeasonRatingsAllUsers } from '../lib/seasonRatings'
 import { fetchRecentWatchedAllUsers } from '../lib/watched'
@@ -12,9 +12,13 @@ import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
+import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
+import Avatar from '../components/Avatar'
+import InlinePanel from '../components/InlinePanel'
+import PanelHeader from '../components/PanelHeader'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
@@ -42,6 +46,7 @@ export default function Activity() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [scope, setScope] = useState<Scope>('following')
   const [filterUsername, setFilterUsername] = useState<string | null>(null)
+  const [personFilterOpen, setPersonFilterOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const scopeTouched = useRef(false)
@@ -106,6 +111,24 @@ export default function Activity() {
     [members, activeUsernames],
   )
 
+  // Switching scope (or the feed reloading) can drop the currently-filtered person out of the
+  // pool -- without this, the empty state would misleadingly read "@person hasn't done anything
+  // yet" when really they're just excluded by scope, not inactive.
+  useEffect(() => {
+    if (filterUsername && !filterableMembers.some((u) => u.username === filterUsername)) {
+      setFilterUsername(null)
+    }
+  }, [filterUsername, filterableMembers])
+
+  // The Person trigger button only renders with >1 filterable member (see JSX below); switching
+  // scope while the panel is open can shrink that pool, so close it along with the button
+  // disappearing instead of leaving it floating with nothing useful left to pick.
+  useEffect(() => {
+    if (personFilterOpen && filterableMembers.length <= 1) {
+      setPersonFilterOpen(false)
+    }
+  }, [personFilterOpen, filterableMembers])
+
   const filtered = useMemo(
     () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
     [scoped, filterUsername],
@@ -142,35 +165,63 @@ export default function Activity() {
       <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
         <h1 className="font-display text-xl font-semibold text-base-100 sm:text-2xl">Activity</h1>
         <p className="mt-1 text-sm text-base-500">
-          {scope === 'following' ? "What people you follow have been up to." : 'What the group has been up to.'}
+          {filterUsername
+            ? `What @${filterUsername} has been up to.`
+            : scope === 'following'
+              ? "What people you follow have been up to."
+              : 'What the group has been up to.'}
         </p>
       </motion.div>
 
-      <div className="mb-3 flex gap-1.5">
-        <ScopeChip active={scope === 'following'} onClick={() => handleSetScope('following')}>
-          Following
-        </ScopeChip>
-        <ScopeChip active={scope === 'everyone'} onClick={() => handleSetScope('everyone')}>
-          Everyone
-        </ScopeChip>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1.5">
+          <ScopeChip active={scope === 'following'} onClick={() => handleSetScope('following')}>
+            Following
+          </ScopeChip>
+          <ScopeChip active={scope === 'everyone'} onClick={() => handleSetScope('everyone')}>
+            Everyone
+          </ScopeChip>
+        </div>
+
+        {filterableMembers.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setPersonFilterOpen((v) => !v)}
+            aria-expanded={personFilterOpen}
+            aria-haspopup="true"
+            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
+              personFilterOpen || filterUsername
+                ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
+                : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+            }`}
+          >
+            {filterUsername ? (
+              <>
+                <Avatar username={filterUsername} size="xs" />
+                <span>@{filterUsername}</span>
+              </>
+            ) : (
+              'Person'
+            )}
+          </button>
+        )}
       </div>
 
-      {filterableMembers.length > 1 && (
-        <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">
-          <FilterChip active={filterUsername === null} onClick={() => setFilterUsername(null)}>
-            All
-          </FilterChip>
-          {filterableMembers.map((u) => (
-            <FilterChip
-              key={u.id}
-              active={filterUsername === u.username}
-              onClick={() => setFilterUsername(u.username)}
-            >
-              {me?.username === u.username ? 'You' : `@${u.username}`}
-            </FilterChip>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {personFilterOpen && (
+          <PersonFilterPanel
+            key="person-filter"
+            members={filterableMembers}
+            me={me}
+            active={filterUsername}
+            onSelect={(username) => {
+              setFilterUsername(username)
+              setPersonFilterOpen(false)
+            }}
+            onClose={() => setPersonFilterOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
@@ -239,21 +290,50 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
   )
 }
 
-function FilterChip({
+/** The "who" drill-down for the feed -- tucked behind the Person trigger button rather than
+ *  shown as a permanent row, since (unlike the Following/Everyone scope) it's a secondary,
+ *  unbounded-cardinality filter most visits never touch. Mirrors HistoryFiltersPanel's
+ *  trigger-button + InlinePanel shape. */
+function PersonFilterPanel({
+  members,
+  me,
   active,
-  onClick,
-  children,
+  onSelect,
+  onClose,
 }: {
-  active: boolean
-  onClick: () => void
-  children: ReactNode
+  members: AppUser[]
+  me: AppUser | null
+  active: string | null
+  onSelect: (username: string | null) => void
+  onClose: () => void
 }) {
+  useEscapeAndFocusReturn(true, onClose)
+
+  return (
+    <InlinePanel className="p-3.5">
+      <PanelHeader title="Filter by person" onClose={onClose} />
+      <div className="flex flex-wrap gap-1.5">
+        <PersonChip active={active === null} onClick={() => onSelect(null)}>
+          All
+        </PersonChip>
+        {members.map((u) => (
+          <PersonChip key={u.id} active={active === u.username} onClick={() => onSelect(u.username)}>
+            <Avatar username={u.username} size="xs" />
+            <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
+          </PersonChip>
+        ))}
+      </div>
+    </InlinePanel>
+  )
+}
+
+function PersonChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+      className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
         active
           ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
           : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'

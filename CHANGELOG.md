@@ -32,6 +32,12 @@ All notable changes to TV Box are documented here. Format loosely follows
 - Poster grids that show a "where to watch" badge (Home, Search, History)
   now resolve every card's manual streaming override in a single request
   instead of one request per card.
+- Activity used to stack two full rows of buttons above the feed
+  (Following/Everyone, then All plus one chip per person). The
+  Following/Everyone toggle now stays as the one always-visible control,
+  and the per-person filter moved behind a single "Person" button that
+  opens a small panel with an avatar next to each name -- same filtering,
+  one row instead of two.
 
 ### Fixed
 
