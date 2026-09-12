@@ -30,8 +30,9 @@ describe('ExternalRatings', () => {
     expect(screen.getByText('IMDb').closest('a')).not.toBeInTheDocument()
   })
 
-  it('shows the Rotten Tomatoes score once OMDb has resolved one', () => {
+  it('shows the Rotten Tomatoes score once OMDb has resolved one, labeled so it reads as RT and not just a percentage', () => {
     render(<ExternalRatings ratings={{ imdbRating: null, rottenTomatoesScore: 92 }} imdbId="tt1234567" />)
+    expect(screen.getByText('RT')).toBeInTheDocument()
     expect(screen.getByText('92%')).toBeInTheDocument()
     expect(screen.getByTitle('Rotten Tomatoes')).toBeInTheDocument()
   })
@@ -60,8 +61,9 @@ describe('ExternalRatings', () => {
     render(<ExternalRatings ratings={null} imdbId="tt1234567" showName="Ted Lasso" />)
     const link = screen.getByTitle('Rotten Tomatoes').closest('a')
     expect(link).toHaveAttribute('href', 'https://www.rottentomatoes.com/tv/ted_lasso')
+    expect(screen.getByText('RT')).toBeInTheDocument()
     expect(screen.getByText('Click to see score')).toBeInTheDocument()
-    // No score to show yet -- just the icon, the hint, and the link.
+    // No score to show yet -- just the badge, the icon, the hint, and the link.
     expect(screen.queryByText(/%$/)).not.toBeInTheDocument()
   })
 

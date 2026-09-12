@@ -38,6 +38,7 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
   const rtScoreKnown = rottenTomatoesScore !== null
   const rtContent = (
     <>
+      <span className="rounded bg-[#fa320a] px-1 py-0.5 text-xs font-bold leading-none text-white">RT</span>
       <RottenTomatoGlyph fresh={rtScoreKnown ? rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD : null} size={16} />
       {rtScoreKnown ? (
         <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
