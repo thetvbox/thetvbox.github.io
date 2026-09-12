@@ -13,7 +13,13 @@ import type { ShowRating } from '../types'
 const BUCKETS = Array.from({ length: MAX_RATING / RATING_STEP }, (_, i) => (i + 1) * RATING_STEP)
 
 /** Rating histogram, one bar per half-star bucket; clicking a bar opens the shows behind it in an overlay. */
-export default function RatingDistribution({ ratings }: { ratings: ShowRating[] }) {
+export default function RatingDistribution({
+  ratings,
+  className = 'mb-8',
+}: {
+  ratings: ShowRating[]
+  className?: string
+}) {
   const [selected, setSelected] = useState<number | null>(null)
 
   const { counts, byBucket } = useMemo(() => {
@@ -36,7 +42,7 @@ export default function RatingDistribution({ ratings }: { ratings: ShowRating[] 
   const selectedShows = selected !== null ? (byBucket.get(selected) ?? []) : []
 
   return (
-    <div className="mb-8">
+    <div className={className}>
       <div className="flex h-16 items-end gap-1">
         {BUCKETS.map((b, i) => {
           const hasShows = counts[i] > 0

@@ -235,15 +235,22 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
   return (
     <div>
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label="Shows rated" value={stats.totalShows} />
-        <StatCard label="Finished" value={stats.finished} />
-        <StatCard label="Episodes watched" value={stats.episodesWatched} />
-        <StatCard label="Hours watched" value={stats.hoursWatched} />
-        <StatCard label="Avg rating" value={stats.avg !== null ? stats.avg.toFixed(1) : '—'} />
-      </div>
+      {/* Stat cards and the rating histogram used to be two separate floating blocks with
+          their own generous margins; grouping them in one card reads as a single "your
+          numbers" section instead of two disconnected ones. Finished/Episodes watched jump
+          to the tab they summarize -- Shows rated/Hours watched/Avg rating don't have one
+          clean tab equivalent, so they stay purely informational. */}
+      <div className="mb-6 rounded-2xl border border-hairline bg-base-900/40 p-4 sm:p-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <StatCard label="Shows rated" value={stats.totalShows} />
+          <StatCard label="Finished" value={stats.finished} onClick={() => setTab('history')} />
+          <StatCard label="Episodes watched" value={stats.episodesWatched} onClick={() => setTab('diary')} />
+          <StatCard label="Hours watched" value={stats.hoursWatched} />
+          <StatCard label="Avg rating" value={stats.avg !== null ? stats.avg.toFixed(1) : '—'} />
+        </div>
 
-      <RatingDistribution ratings={ratings} />
+        <RatingDistribution ratings={ratings} className="mt-4" />
+      </div>
 
       <div className="no-scrollbar -mx-4 mb-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <TabButton active={tab === 'diary'} onClick={() => setTab('diary')}>
@@ -253,13 +260,13 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
           History
         </TabButton>
         <TabButton active={tab === 'watchlist'} onClick={() => setTab('watchlist')}>
-          Watchlist
+          Watchlist{watchlist.length > 0 ? ` · ${watchlist.length}` : ''}
         </TabButton>
         <TabButton active={tab === 'dropped'} onClick={() => setTab('dropped')}>
-          Dropped
+          Dropped{dropped.length > 0 ? ` · ${dropped.length}` : ''}
         </TabButton>
         <TabButton active={tab === 'lists'} onClick={() => setTab('lists')}>
-          Lists
+          Lists{lists.length > 0 ? ` · ${lists.length}` : ''}
         </TabButton>
       </div>
 

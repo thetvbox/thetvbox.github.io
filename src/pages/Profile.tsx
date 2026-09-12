@@ -2,9 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
+import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
+import InlinePanel from '../components/InlinePanel'
+import PanelHeader from '../components/PanelHeader'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
 import { profileRoute } from '../lib/routes'
@@ -12,10 +16,12 @@ import { profileRoute } from '../lib/routes'
 export default function Profile() {
   const { user, signOut } = useAuth()
   const [changelogOpen, setChangelogOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  useCloseOnNavigate(() => setMenuOpen(false))
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <Avatar username={user?.username ?? ''} size="lg" />
           <div>
@@ -27,27 +33,35 @@ export default function Profile() {
             {user && <ProfileFollowSection profileId={user.id} username={user.username} isMe />}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/recap"
-            className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
-          >
-            Year in review
-          </Link>
-          <Link
-            to={profileRoute(user?.username ?? '')}
-            className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
-          >
-            Public view
-          </Link>
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-danger/40 hover:text-danger"
-          >
-            Sign out
-          </button>
-        </div>
+
+        {/* Year in review / Public view / Sign out used to sit here as three peer-weight
+            buttons -- they're all secondary/occasional actions next to the content below,
+            so they're tucked behind one trigger instead of competing for attention. */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-haspopup="true"
+          className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
+            menuOpen
+              ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
+              : 'border-hairline-strong text-base-300 hover:border-accent-500/40 hover:text-accent-400'
+          }`}
+        >
+          More
+        </button>
+      </div>
+
+      <div className="flex justify-end">
+        <AnimatePresence>
+          {menuOpen && (
+            <ProfileMenuPanel
+              username={user?.username ?? ''}
+              onSignOut={signOut}
+              onClose={() => setMenuOpen(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       {user && <ProfileActivity userId={user.id} username={user.username} />}
@@ -65,5 +79,49 @@ export default function Profile() {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+function ProfileMenuPanel({
+  username,
+  onSignOut,
+  onClose,
+}: {
+  username: string
+  onSignOut: () => void
+  onClose: () => void
+}) {
+  useEscapeAndFocusReturn(true, onClose)
+
+  return (
+    <InlinePanel className="w-56 p-2">
+      <PanelHeader title="More" onClose={onClose} />
+      <div className="space-y-0.5">
+        <Link
+          to="/recap"
+          onClick={onClose}
+          className="block rounded-lg px-2.5 py-2 text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
+        >
+          Year in review
+        </Link>
+        <Link
+          to={profileRoute(username)}
+          onClick={onClose}
+          className="block rounded-lg px-2.5 py-2 text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
+        >
+          Public view
+        </Link>
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            onSignOut()
+          }}
+          className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover hover:text-danger"
+        >
+          Sign out
+        </button>
+      </div>
+    </InlinePanel>
   )
 }

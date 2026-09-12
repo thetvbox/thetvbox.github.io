@@ -128,6 +128,37 @@ describe('ProfileActivity', () => {
     expect(screen.getByText('3.0')).toBeInTheDocument()
   })
 
+  it('clicking the Finished stat jumps to the History tab', async () => {
+    vi.mocked(fetchRecentShowRatings).mockResolvedValue([rating()])
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([
+      {
+        user_id: 'u1',
+        show_id: 1,
+        show_name: 'Show One',
+        show_poster_path: null,
+        watched_count: 10,
+        total_episodes: 10,
+        last_watched_at: '2026-01-01T00:00:00Z',
+        last_watched_at_unknown: false,
+        runtime_minutes_sum: 400,
+      },
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Finished')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Finished'))
+    expect(screen.getByTestId('history-section')).toHaveTextContent('history:1')
+    expect(screen.getByText('History').closest('button')).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('clicking the Episodes watched stat jumps to the Diary tab', async () => {
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('History')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('History'))
+    expect(screen.getByText('Diary').closest('button')).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByText('Episodes watched'))
+    expect(screen.getByText('Diary').closest('button')).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('shows an error message when loading fails', async () => {
     vi.mocked(fetchRecentShowRatings).mockRejectedValue(new Error('load failed'))
     renderActivity()
@@ -142,39 +173,49 @@ describe('ProfileActivity', () => {
   it('switches to the Watchlist tab and renders watchlist items', async () => {
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem({ show_name: 'Watch This' })])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Watchlist')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Watchlist'))
+    await waitFor(() => expect(screen.getByText('Watchlist · 1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Watchlist · 1'))
     expect(screen.getByText('Watch This')).toBeInTheDocument()
+  })
+
+  it('shows a count next to Watchlist/Dropped/Lists only once they have items', async () => {
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Diary').closest('button')).toBeInTheDocument())
+    expect(screen.getByText('Watchlist')).toBeInTheDocument()
+    expect(screen.queryByText(/Watchlist ·/)).not.toBeInTheDocument()
   })
 
   it('removes a watchlist item optimistically and offers undo', async () => {
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem({ show_name: 'Watch This' })])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Watchlist')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Watchlist'))
+    await waitFor(() => expect(screen.getByText('Watchlist · 1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Watchlist · 1'))
     fireEvent.click(screen.getByText('Remove'))
     await waitFor(() => expect(screen.queryByText('Watch This')).not.toBeInTheDocument())
     expect(removeFromWatchlist).toHaveBeenCalledWith('u1', 1)
     expect(screen.getByText(/Removed Watch This from watchlist/)).toBeInTheDocument()
+    // The count drops out of the tab label along with the item.
+    expect(screen.getByText('Watchlist')).toBeInTheDocument()
   })
 
   it('undoing a watchlist removal restores the item', async () => {
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem({ show_name: 'Watch This' })])
     vi.mocked(addToWatchlist).mockResolvedValue(watchlistItem({ show_name: 'Watch This' }))
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Watchlist')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Watchlist'))
+    await waitFor(() => expect(screen.getByText('Watchlist · 1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Watchlist · 1'))
     fireEvent.click(screen.getByText('Remove'))
     await waitFor(() => expect(screen.getByText('Undo')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Undo'))
     await waitFor(() => expect(screen.getByText('Watch This')).toBeInTheDocument())
+    expect(screen.getByText('Watchlist · 1')).toBeInTheDocument()
   })
 
   it('switches to the Dropped tab and resumes a show', async () => {
     vi.mocked(fetchDroppedForUser).mockResolvedValue([droppedItem({ show_name: 'Dropped Show' })])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Dropped')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Dropped'))
+    await waitFor(() => expect(screen.getByText('Dropped · 1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Dropped · 1'))
     fireEvent.click(screen.getByText('Resume'))
     await waitFor(() => expect(screen.queryByText('Dropped Show')).not.toBeInTheDocument())
     expect(undropShow).toHaveBeenCalledWith('u1', 1)
@@ -224,8 +265,8 @@ describe('ProfileActivity', () => {
     })
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem()])
     renderActivity('u1')
-    await waitFor(() => expect(screen.getByText('Watchlist')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Watchlist'))
+    await waitFor(() => expect(screen.getByText('Watchlist · 1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Watchlist · 1'))
     expect(screen.queryByText('Remove')).not.toBeInTheDocument()
   })
 })

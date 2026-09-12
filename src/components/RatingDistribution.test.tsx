@@ -35,6 +35,25 @@ describe('RatingDistribution', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
+  it('defaults to mb-8 for spacing as a standalone block', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <RatingDistribution ratings={[rating()]} />
+      </MemoryRouter>,
+    )
+    expect(container.firstChild).toHaveClass('mb-8')
+  })
+
+  it('accepts a className override for nesting inside another card', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <RatingDistribution ratings={[rating()]} className="mt-4" />
+      </MemoryRouter>,
+    )
+    expect(container.firstChild).toHaveClass('mt-4')
+    expect(container.firstChild).not.toHaveClass('mb-8')
+  })
+
   it('renders one bar per half-star bucket', () => {
     renderWithRouter([rating()])
     expect(screen.getAllByRole('button', { name: /show.*rated/ })).toHaveLength(10)

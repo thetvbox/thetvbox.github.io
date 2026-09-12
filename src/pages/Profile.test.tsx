@@ -52,12 +52,22 @@ describe('Profile', () => {
     expect(screen.getByTestId('profile-activity')).toBeInTheDocument()
   })
 
+  it('keeps Year in review / Public view / Sign out tucked behind a More menu until opened', () => {
+    renderProfile()
+    expect(screen.queryByText('Public view')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('More'))
+    expect(screen.getByText('Year in review')).toBeInTheDocument()
+    expect(screen.getByText('Public view')).toBeInTheDocument()
+    expect(screen.getByText('Sign out')).toBeInTheDocument()
+  })
+
   it('links Public view to the profile route', () => {
     renderProfile()
+    fireEvent.click(screen.getByText('More'))
     expect(screen.getByText('Public view')).toHaveAttribute('href', '/u/bob')
   })
 
-  it('calls signOut when Sign out is clicked', () => {
+  it('calls signOut when Sign out is clicked, and closes the menu', () => {
     const signOut = vi.fn()
     vi.mocked(useAuth).mockReturnValue({
       user: bob,
@@ -68,8 +78,10 @@ describe('Profile', () => {
       signOut,
     })
     renderProfile()
+    fireEvent.click(screen.getByText('More'))
     fireEvent.click(screen.getByText('Sign out'))
     expect(signOut).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument()
   })
 
   it('toggles the changelog panel open and closed', () => {
