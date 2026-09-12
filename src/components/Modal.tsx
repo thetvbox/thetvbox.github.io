@@ -1,8 +1,9 @@
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import {
   MODAL_BACKDROP_ANIMATE,
   MODAL_BACKDROP_EXIT,
@@ -22,9 +23,11 @@ interface ModalProps {
   className?: string
 }
 
-/** App-wide centered overlay portaled to document.body, with escape-to-close, focus return, and scroll lock. */
+/** App-wide centered overlay portaled to document.body, with escape-to-close, focus trap+return, and scroll lock. */
 export default function Modal({ onClose, label, children, maxWidth = 'max-w-md', className = '' }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
   useEscapeAndFocusReturn(true, onClose)
+  useFocusTrap(true, panelRef)
 
   useEffect(() => {
     const original = document.body.style.overflow
@@ -46,6 +49,7 @@ export default function Modal({ onClose, label, children, maxWidth = 'max-w-md',
         aria-hidden="true"
       />
       <motion.div
+        ref={panelRef}
         layout
         role="dialog"
         aria-modal="true"
@@ -54,7 +58,7 @@ export default function Modal({ onClose, label, children, maxWidth = 'max-w-md',
         animate={MODAL_PANEL_ANIMATE}
         exit={MODAL_PANEL_EXIT}
         transition={MODAL_PANEL_TRANSITION}
-        className={`relative z-10 w-full ${maxWidth} rounded-2xl border border-hairline-strong bg-base-900 shadow-2xl shadow-black/40 ${className}`}
+        className={`relative z-10 w-full ${maxWidth} rounded-2xl border border-hairline-strong bg-base-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl ${className}`}
       >
         {children}
       </motion.div>

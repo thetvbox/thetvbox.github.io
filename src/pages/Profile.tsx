@@ -1,21 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
+import DropdownPanel from '../components/DropdownPanel'
 import PanelHeader from '../components/PanelHeader'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
-import {
-  DROPDOWN_PANEL_ANIMATE,
-  DROPDOWN_PANEL_EXIT,
-  DROPDOWN_PANEL_INITIAL,
-  DROPDOWN_PANEL_TRANSITION,
-} from '../lib/motion'
 import { profileRoute } from '../lib/routes'
 
 export default function Profile() {
@@ -113,19 +107,8 @@ function ProfileMenuPanel({
   onSignOut: () => void
   onClose: () => void
 }) {
-  useEscapeAndFocusReturn(true, onClose)
-
   return (
-    <motion.div
-      layout
-      initial={DROPDOWN_PANEL_INITIAL}
-      animate={DROPDOWN_PANEL_ANIMATE}
-      exit={DROPDOWN_PANEL_EXIT}
-      transition={DROPDOWN_PANEL_TRANSITION}
-      role="dialog"
-      aria-label="More"
-      className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl"
-    >
+    <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
       <PanelHeader title="More" onClose={onClose} />
       <div className="space-y-0.5">
         <Link
@@ -153,6 +136,6 @@ function ProfileMenuPanel({
           Sign out
         </button>
       </div>
-    </motion.div>
+    </DropdownPanel>
   )
 }

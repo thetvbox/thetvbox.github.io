@@ -10,20 +10,13 @@ import type { ActivityFeedItem } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
-import {
-  DROPDOWN_PANEL_ANIMATE,
-  DROPDOWN_PANEL_EXIT,
-  DROPDOWN_PANEL_INITIAL,
-  DROPDOWN_PANEL_TRANSITION,
-  PAGE_HEADER_MOTION,
-  staggerRowMotion,
-} from '../lib/motion'
+import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
+import DropdownPanel from '../components/DropdownPanel'
 import PanelHeader from '../components/PanelHeader'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
@@ -331,19 +324,8 @@ function PersonFilterPanel({
   onSelect: (username: string | null) => void
   onClose: () => void
 }) {
-  useEscapeAndFocusReturn(true, onClose)
-
   return (
-    <motion.div
-      layout
-      initial={DROPDOWN_PANEL_INITIAL}
-      animate={DROPDOWN_PANEL_ANIMATE}
-      exit={DROPDOWN_PANEL_EXIT}
-      transition={DROPDOWN_PANEL_TRANSITION}
-      role="dialog"
-      aria-label="Filter by person"
-      className="absolute right-0 top-full z-50 mt-2 w-60 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-3.5 shadow-2xl shadow-black/40 backdrop-blur-xl"
-    >
+    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-3.5">
       <PanelHeader title="Filter by person" onClose={onClose} />
       <ul className="max-h-64 space-y-1 overflow-y-auto">
         <li>
@@ -360,7 +342,7 @@ function PersonFilterPanel({
           </li>
         ))}
       </ul>
-    </motion.div>
+    </DropdownPanel>
   )
 }
 

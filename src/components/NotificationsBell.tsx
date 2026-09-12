@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import {
   clearAllNotifications,
@@ -11,16 +10,11 @@ import {
   markNotificationsSeenAndPrune,
 } from '../lib/notifications'
 import { formatShortDate } from '../lib/date'
-import {
-  DROPDOWN_PANEL_ANIMATE,
-  DROPDOWN_PANEL_EXIT,
-  DROPDOWN_PANEL_INITIAL,
-  DROPDOWN_PANEL_TRANSITION,
-} from '../lib/motion'
 import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
 import { profileRoute, showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
 import PosterThumb from './PosterThumb'
+import DropdownPanel from './DropdownPanel'
 import PanelHeader from './PanelHeader'
 import { errorMessage } from '../lib/format'
 import ErrorText from './ErrorText'
@@ -181,8 +175,6 @@ function NotificationsPanel({
   const [error, setError] = useState<string | null>(null)
   const [clearing, setClearing] = useState(false)
 
-  useEscapeAndFocusReturn(true, onClose)
-
   useEffect(() => {
     let cancelled = false
     fetchNotifications(userId)
@@ -217,16 +209,7 @@ function NotificationsPanel({
   }
 
   return (
-    <motion.div
-      layout
-      initial={DROPDOWN_PANEL_INITIAL}
-      animate={DROPDOWN_PANEL_ANIMATE}
-      exit={DROPDOWN_PANEL_EXIT}
-      transition={DROPDOWN_PANEL_TRANSITION}
-      role="dialog"
-      aria-label="Notifications"
-      className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl"
-    >
+    <DropdownPanel onClose={onClose} label="Notifications" className="w-80 p-4">
       <PanelHeader
         title="Notifications"
         onClose={onClose}
@@ -289,6 +272,6 @@ function NotificationsPanel({
           </ul>
         )}
       </div>
-    </motion.div>
+    </DropdownPanel>
   )
 }

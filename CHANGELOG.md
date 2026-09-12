@@ -50,6 +50,13 @@ All notable changes to TV Box are documented here. Format loosely follows
   separately-spaced blocks, and the Watchlist/Dropped/Lists tabs show a
   count once they have anything in them. The Finished and Episodes
   watched stat cards are now shortcuts to the History and Diary tabs.
+- Every centered overlay (Report a bug, What's new, followers/following,
+  the rating breakdown) now shares the same frosted-glass panel as the
+  notification/person/more dropdowns, instead of a flat solid background
+  -- one consistent look for every popup in the app instead of two
+  slightly different ones. All overlays and dropdowns also now trap Tab
+  within themselves while open, instead of letting keyboard focus tab out
+  to the page underneath.
 
 ### Fixed
 

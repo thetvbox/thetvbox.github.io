@@ -125,7 +125,7 @@ export default function AddToListPicker({
 
   return (
     <>
-      <InlinePanel className="p-3.5">
+      <InlinePanel className="p-3.5" label="Add to a list">
         <PanelHeader title="Add to a list" onClose={onClose} />
 
         <div className="max-h-56 overflow-y-auto">

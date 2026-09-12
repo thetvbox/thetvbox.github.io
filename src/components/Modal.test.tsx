@@ -49,4 +49,25 @@ describe('Modal', () => {
     unmount()
     expect(document.body.style.overflow).not.toBe('hidden')
   })
+
+  it('renders the panel with the app-wide glass treatment', () => {
+    render(
+      <Modal onClose={vi.fn()} label="Followers">
+        <p>Hello</p>
+      </Modal>,
+    )
+    expect(screen.getByRole('dialog', { name: 'Followers' })).toHaveClass('bg-base-900/95', 'backdrop-blur-xl')
+  })
+
+  it('traps Tab within the panel', () => {
+    render(
+      <Modal onClose={vi.fn()} label="Followers">
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>,
+    )
+    screen.getByText('Last').focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(screen.getByText('First'))
+  })
 })

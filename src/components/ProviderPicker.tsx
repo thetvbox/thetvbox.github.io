@@ -72,7 +72,7 @@ export default function ProviderPicker({
   }, [allProviders, query])
 
   return (
-    <InlinePanel className="p-3.5">
+    <InlinePanel className="p-3.5" label="Where to watch">
       <PanelHeader title="Where to watch" onClose={onClose} />
       <input
         autoFocus
