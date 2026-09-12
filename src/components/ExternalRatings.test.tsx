@@ -34,6 +34,20 @@ describe('ExternalRatings', () => {
     expect(screen.getByTitle('Rotten Tomatoes')).toBeInTheDocument()
   })
 
+  it("links the Rotten Tomatoes score to its search results when a show name is given", () => {
+    render(
+      <ExternalRatings ratings={{ imdbRating: null, rottenTomatoesScore: 92 }} imdbId="tt1234567" showName="Breaking Bad" />,
+    )
+    const link = screen.getByTitle('Rotten Tomatoes').closest('a')
+    expect(link).toHaveAttribute('href', 'https://www.rottentomatoes.com/search?search=Breaking%20Bad')
+    expect(link).toHaveAttribute('target', '_blank')
+  })
+
+  it('shows the Rotten Tomatoes score as plain text (not a link) when there is no show name', () => {
+    render(<ExternalRatings ratings={{ imdbRating: null, rottenTomatoesScore: 92 }} imdbId="tt1234567" />)
+    expect(screen.getByTitle('Rotten Tomatoes').closest('a')).not.toBeInTheDocument()
+  })
+
   it('shows both scores together', () => {
     render(<ExternalRatings ratings={{ imdbRating: 7.9, rottenTomatoesScore: 45 }} imdbId="tt1234567" />)
     expect(screen.getByText('7.9')).toBeInTheDocument()

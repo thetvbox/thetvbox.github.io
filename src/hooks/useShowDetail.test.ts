@@ -66,10 +66,12 @@ vi.mock('../lib/rewatches', () => ({
 vi.mock('../lib/lists', () => ({
   fetchListMembershipForShow: vi.fn(() => Promise.resolve(new Set())),
 }))
-vi.mock('../lib/tvmaze', () => ({
-  getCorrectedAirDates: vi.fn(() => Promise.resolve(new Map())),
-  tvmazeEpisodeKey: (s: number, e: number) => `${s}-${e}`,
-}))
+// Only getCorrectedAirDates (the network call) is mocked -- effectiveAirDate/findNextUpcomingEpisode
+// are pure and left as their real implementations, since this file's tests don't exercise them.
+vi.mock('../lib/tvmaze', async () => {
+  const actual = await vi.importActual<typeof import('../lib/tvmaze')>('../lib/tvmaze')
+  return { ...actual, getCorrectedAirDates: vi.fn(() => Promise.resolve(new Map())) }
+})
 vi.mock('../lib/omdb', () => ({
   getExternalRatings: vi.fn(() => Promise.resolve(null)),
 }))

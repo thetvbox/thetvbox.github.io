@@ -1,6 +1,5 @@
 import { getSeasonDetail, getShowDetail } from './tmdb'
-import { getCorrectedAirDates, tvmazeEpisodeKey } from './tvmaze'
-import { isFutureDate } from './date'
+import { effectiveAirDate, findNextUpcomingEpisode, getCorrectedAirDates } from './tvmaze'
 import type { TmdbSeasonSummary } from '../types'
 
 export interface SeasonSegment {
@@ -94,13 +93,13 @@ export async function fetchNextEpisode(showId: number, seasonNumber: number): Pr
       getSeasonDetail(showId, seasonNumber),
       getShowDetail(showId).catch(() => null),
     ])
-    const next = detail.episodes.find((ep) => ep.air_date && isFutureDate(ep.air_date))
-    let result: NextEpisode | null = null
-    if (next) {
-      const corrected = await getCorrectedAirDates(show?.external_ids?.imdb_id).catch(() => new Map<string, string>())
-      const airDate = corrected.get(tvmazeEpisodeKey(next.season_number, next.episode_number)) ?? next.air_date!
-      result = { seasonNumber, episodeNumber: next.episode_number, airDate }
-    }
+    const corrected = await getCorrectedAirDates(show?.external_ids?.imdb_id).catch(() => new Map<string, string>())
+    // Decides "next upcoming" by each episode's TVmaze-corrected date, not TMDB's raw one --
+    // see findNextUpcomingEpisode's own comment for why that distinction matters.
+    const next = findNextUpcomingEpisode(detail.episodes, corrected)
+    const result: NextEpisode | null = next
+      ? { seasonNumber, episodeNumber: next.episode_number, airDate: effectiveAirDate(next, corrected)! }
+      : null
     nextEpisodeCache.set(key, result)
     return result
   } catch {

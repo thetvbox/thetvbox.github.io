@@ -12,6 +12,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   a show's year/seasons/status, sourced from OMDb -- requires an optional
   free OMDb API key (see .env.example); scores just don't show up without
   one, or for the rare show OMDb has no data for.
+- The Rotten Tomatoes score on Show Detail now links out to Rotten
+  Tomatoes, the way the IMDb rating already links to IMDb. There's no
+  free API that hands back a show's actual RT page, so it opens an RT
+  search for the show's title rather than risking a broken guessed link.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were
@@ -52,6 +56,9 @@ All notable changes to TV Box are documented here. Format loosely follows
   separately-spaced blocks, and the Watchlist/Dropped/Lists tabs show a
   count once they have anything in them. The Finished and Episodes
   watched stat cards are now shortcuts to the History and Diary tabs.
+- The IMDb rating and Rotten Tomatoes score on Show Detail were hard to
+  read at 10-12px; both are now a size up, along with a slightly larger
+  Rotten Tomatoes icon.
 - Every centered overlay (Report a bug, What's new, followers/following,
   the rating breakdown) now shares the same frosted-glass panel as the
   notification/person/more dropdowns, instead of a flat solid background
@@ -62,6 +69,14 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- The "Upcoming" episode date on Home (and the "New episode" badge on Now
+  Watching, and the "Next: airs" line on Show Detail) could jump straight
+  to a later episode's date a day or more before the actual next episode
+  had aired -- TMDB's raw air dates are occasionally wrong, and the app
+  already fetches TVmaze's corrected dates for display, but was still
+  picking *which* episode counts as "next" using TMDB's raw date instead
+  of the corrected one. All three now agree on the corrected date when
+  deciding what's next, not just when displaying it.
 - A full pass for consistency and polish: a close button shared by
   several panels (and one hand-rolled one on "Report a bug") was 32px,
   under the app's usual 44px minimum touch target. A handful of

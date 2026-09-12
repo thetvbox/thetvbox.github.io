@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./tmdb', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
-vi.mock('./tvmaze', () => ({ getCorrectedAirDates: vi.fn(), tvmazeEpisodeKey: (s: number, e: number) => `${s}-${e}` }))
+// Only getCorrectedAirDates (the network call) is mocked -- effectiveAirDate/findNextUpcomingEpisode
+// are pure and left as their real implementations, since the bug this file guards against lives in
+// how fetchNextEpisode USES them, not in the functions themselves.
+vi.mock('./tvmaze', async () => {
+  const actual = await vi.importActual<typeof import('./tvmaze')>('./tvmaze')
+  return { ...actual, getCorrectedAirDates: vi.fn() }
+})
 
 import { getSeasonDetail, getShowDetail } from './tmdb'
 import { getCorrectedAirDates } from './tvmaze'
@@ -12,10 +18,22 @@ function season(seasonNumber: number): TmdbSeasonSummary {
   return { id: seasonNumber, season_number: seasonNumber, name: `Season ${seasonNumber}`, episode_count: 10, poster_path: null, air_date: null }
 }
 
+/** A local YYYY-MM-DD date `daysOffset` days from now, built from local date components (not
+ *  toISOString, which can land on a different calendar day near a UTC/local boundary) -- matters
+ *  here since these tests use +/-1 day offsets, not the far-future dates safe from that flakiness. */
+function localDateStr(daysOffset: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + daysOffset)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 beforeEach(() => {
   vi.mocked(getShowDetail).mockReset()
   vi.mocked(getSeasonDetail).mockReset()
-  vi.mocked(getCorrectedAirDates).mockReset()
+  vi.mocked(getCorrectedAirDates).mockReset().mockResolvedValue(new Map())
 })
 
 describe('fetchSeasonBreakdowns', () => {
@@ -84,6 +102,47 @@ describe('fetchNextEpisode', () => {
     vi.mocked(getCorrectedAirDates).mockResolvedValue(new Map([['1-5', '2099-12-25']]))
     const result = await fetchNextEpisode(9103, 1)
     expect(result?.airDate).toBe('2099-12-25')
+  })
+
+  it('does not skip an episode whose corrected date is still upcoming just because its raw TMDB date already looks past', async () => {
+    const farFuture = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 20).toISOString().slice(0, 10)
+    vi.mocked(getSeasonDetail).mockResolvedValue({
+      id: 1,
+      season_number: 1,
+      name: 'Season 1',
+      episodes: [
+        // TMDB's raw date for this one already looks like it aired yesterday...
+        {
+          id: 2,
+          episode_number: 5,
+          season_number: 1,
+          name: 'E5',
+          overview: '',
+          still_path: null,
+          air_date: localDateStr(-1),
+          runtime: 30,
+        },
+        // ...and a naive raw-date search would fall through to this later episode instead.
+        {
+          id: 3,
+          episode_number: 6,
+          season_number: 1,
+          name: 'E6',
+          overview: '',
+          still_path: null,
+          air_date: farFuture,
+          runtime: 30,
+        },
+      ],
+    } as never)
+    vi.mocked(getShowDetail).mockResolvedValue({ external_ids: { imdb_id: 'tt123' } } as never)
+    // TVmaze says E5 actually airs tomorrow -- genuinely still upcoming.
+    const tomorrow = localDateStr(1)
+    vi.mocked(getCorrectedAirDates).mockResolvedValue(new Map([['1-5', tomorrow]]))
+
+    const result = await fetchNextEpisode(9106, 1)
+
+    expect(result).toEqual({ seasonNumber: 1, episodeNumber: 5, airDate: tomorrow })
   })
 
   it('caches by show+season, avoiding a second fetch', async () => {

@@ -59,7 +59,7 @@ export default function ShowDetailHero({
                   {yearFromDate(show.first_air_date)} · {show.number_of_seasons} season
                   {pluralSuffix(show.number_of_seasons)} · {show.status}
                 </p>
-                <ExternalRatings ratings={externalRatings} imdbId={show.external_ids?.imdb_id} />
+                <ExternalRatings ratings={externalRatings} imdbId={show.external_ids?.imdb_id} showName={show.name} />
               </>
             )
           )}

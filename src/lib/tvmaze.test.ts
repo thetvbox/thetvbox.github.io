@@ -1,5 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getCorrectedAirDates, tvmazeEpisodeKey } from './tvmaze'
+import { effectiveAirDate, findNextUpcomingEpisode, getCorrectedAirDates, tvmazeEpisodeKey } from './tvmaze'
+import type { TmdbEpisode } from '../types'
+
+function episode(overrides: Partial<TmdbEpisode> = {}): TmdbEpisode {
+  return {
+    id: 1,
+    episode_number: 1,
+    season_number: 1,
+    name: 'E1',
+    overview: '',
+    still_path: null,
+    air_date: null,
+    runtime: 30,
+    ...overrides,
+  }
+}
 
 function jsonResponse(body: unknown, status = 200): Response {
   return {
@@ -91,5 +106,54 @@ describe('getCorrectedAirDates', () => {
     await getCorrectedAirDates('tt-cached-show')
 
     expect(fetchMock.mock.calls.length).toBe(callsAfterFirst)
+  })
+})
+
+describe('effectiveAirDate', () => {
+  it('returns null when the episode has no TMDB air date at all', () => {
+    expect(effectiveAirDate(episode({ air_date: null }), new Map())).toBeNull()
+  })
+
+  it("returns TMDB's raw date when there is no TVmaze correction for it", () => {
+    expect(effectiveAirDate(episode({ air_date: '2020-01-01' }), new Map())).toBe('2020-01-01')
+  })
+
+  it('prefers the TVmaze correction over the raw TMDB date when one exists', () => {
+    const corrected = new Map([[tvmazeEpisodeKey(1, 1), '2020-01-02']])
+    expect(effectiveAirDate(episode({ season_number: 1, episode_number: 1, air_date: '2020-01-01' }), corrected)).toBe(
+      '2020-01-02',
+    )
+  })
+})
+
+describe('findNextUpcomingEpisode', () => {
+  it('returns null when no episode has an air date at all', () => {
+    expect(findNextUpcomingEpisode([episode({ air_date: null })], new Map())).toBeNull()
+  })
+
+  it('returns null when every episode has already aired', () => {
+    expect(findNextUpcomingEpisode([episode({ air_date: '2000-01-01' })], new Map())).toBeNull()
+  })
+
+  it('returns the first episode whose raw TMDB date is still upcoming', () => {
+    const result = findNextUpcomingEpisode(
+      [episode({ episode_number: 1, air_date: '2000-01-01' }), episode({ episode_number: 2, air_date: '2099-12-25' })],
+      new Map(),
+    )
+    expect(result?.episode_number).toBe(2)
+  })
+
+  it("does not skip an episode whose TVmaze-corrected date is still upcoming, just because its raw TMDB date already looks past", () => {
+    const corrected = new Map([[tvmazeEpisodeKey(1, 5), '2099-12-25']])
+    const result = findNextUpcomingEpisode(
+      [
+        // TMDB's raw date already looks past, but TVmaze says it's genuinely upcoming.
+        episode({ episode_number: 5, air_date: '2000-01-01' }),
+        // A naive raw-date search would wrongly pick this one instead.
+        episode({ episode_number: 6, air_date: '2050-01-01' }),
+      ],
+      corrected,
+    )
+    expect(result?.episode_number).toBe(5)
   })
 })

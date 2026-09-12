@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getCorrectedAirDates, tvmazeEpisodeKey } from '../../lib/tvmaze'
-import { isFutureDate } from '../../lib/date'
+import { effectiveAirDate as resolveAirDate, findNextUpcomingEpisode, getCorrectedAirDates } from '../../lib/tvmaze'
 import type { TmdbSeasonDetail, TmdbShowDetail } from '../../types'
 
 /** Fetches TVmaze's air-date corrections for a show and applies them to its episodes. */
@@ -22,13 +21,14 @@ export function useCorrectedAirDates(show: TmdbShowDetail | null, season: TmdbSe
 
   /** Returns TVmaze's correction for one episode's air date, or its own TMDB date unchanged. */
   function effectiveAirDate(ep: { season_number: number; episode_number: number; air_date: string | null }): string | null {
-    if (!ep.air_date) return null
-    return correctedAirDates.get(tvmazeEpisodeKey(ep.season_number, ep.episode_number)) ?? ep.air_date
+    return resolveAirDate(ep, correctedAirDates)
   }
 
   const nextUpcomingEpisode = useMemo(() => {
     if (!season) return null
-    const ep = season.episodes.find((e) => e.air_date && isFutureDate(e.air_date)) ?? null
+    // Uses each episode's TVmaze-corrected date to decide what's still upcoming, not TMDB's raw
+    // one -- see findNextUpcomingEpisode's own comment for why that distinction matters.
+    const ep = findNextUpcomingEpisode(season.episodes, correctedAirDates)
     if (!ep) return null
     return { ...ep, air_date: effectiveAirDate(ep) }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- effectiveAirDate closes over correctedAirDates, already a dep below
