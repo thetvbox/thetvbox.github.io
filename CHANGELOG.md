@@ -12,10 +12,16 @@ All notable changes to TV Box are documented here. Format loosely follows
   a show's year/seasons/status, sourced from OMDb -- requires an optional
   free OMDb API key (see .env.example); scores just don't show up without
   one, or for the rare show OMDb has no data for.
-- The Rotten Tomatoes score on Show Detail now links out to Rotten
-  Tomatoes, the way the IMDb rating already links to IMDb. There's no
-  free API that hands back a show's actual RT page, so it opens an RT
-  search for the show's title rather than risking a broken guessed link.
+- Show Detail's Rotten Tomatoes icon is now always there (not just when
+  OMDb has a score), and clicking it opens the show's actual RT page --
+  e.g. Ted Lasso links straight to rottentomatoes.com/tv/ted_lasso,
+  the way the IMDb rating already links to IMDb. No free, ToS-compliant
+  API hands back a show's real RT page or score for most shows, so the
+  link is a fast, purely client-side guess from the title (verified
+  against a spread of real shows first) rather than a live lookup --
+  the rare wrong guess lands on RT's own page instead of anything
+  broken. The icon shows a neutral outline until/unless OMDb also has
+  an actual score to color it fresh or rotten with.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were

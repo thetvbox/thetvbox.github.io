@@ -1,11 +1,14 @@
 import RottenTomatoGlyph from './RottenTomatoGlyph'
+import { rottenTomatoesUrl } from '../lib/rottenTomatoes'
 import type { ExternalRatings as ExternalRatingsData } from '../types'
 
 interface ExternalRatingsProps {
   ratings: ExternalRatingsData | null
   imdbId?: string | null
-  /** Show title, used to link the Rotten Tomatoes score to its search results -- OMDb doesn't
-   *  give us a direct RT page slug, so a search link is the only reliably-correct destination. */
+  /** Show title. Used to link straight to the show's Rotten Tomatoes page -- there's no free
+   *  API that hands back an actual RT page for a show, so this is guessed from the title (see
+   *  rottenTomatoesUrl) rather than looked up. Also lets the RT icon render before OMDb
+   *  resolves, or even when OMDb has no score for this show at all. */
   showName?: string | null
 }
 
@@ -13,15 +16,16 @@ interface ExternalRatingsProps {
 const ROTTEN_TOMATOES_FRESH_THRESHOLD = 60
 
 /**
- * IMDb rating + Rotten Tomatoes score, sourced from OMDb. Renders nothing until both the
- * show and its OMDb lookup have resolved, and nothing at all if OMDb has neither score for
- * this show (unconfigured, no IMDb id, or genuinely no data) -- these are a bonus, not core
- * functionality, so there's no loading/error state to show in their place.
+ * IMDb rating + Rotten Tomatoes score, sourced from OMDb. The IMDb rating only appears once
+ * OMDb resolves one, since there's no other source for it here. The Rotten Tomatoes icon
+ * appears as soon as the show itself has loaded (in a neutral "unknown" state, linking to a
+ * guessed RT page) and fills in with an actual fresh/rotten score if/when OMDb has one --
+ * these are a bonus, not core functionality, so there's no error state, just less detail.
  */
 export default function ExternalRatings({ ratings, imdbId, showName }: ExternalRatingsProps) {
-  if (!ratings) return null
-  const { imdbRating, rottenTomatoesScore } = ratings
-  if (imdbRating === null && rottenTomatoesScore === null) return null
+  const imdbRating = ratings?.imdbRating ?? null
+  const rottenTomatoesScore = ratings?.rottenTomatoesScore ?? null
+  if (imdbRating === null && rottenTomatoesScore === null && !showName) return null
 
   const imdbContent = (
     <>
@@ -30,10 +34,11 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
     </>
   )
 
+  const rtScoreKnown = rottenTomatoesScore !== null
   const rtContent = (
     <>
-      <RottenTomatoGlyph fresh={rottenTomatoesScore! >= ROTTEN_TOMATOES_FRESH_THRESHOLD} size={16} />
-      <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
+      <RottenTomatoGlyph fresh={rtScoreKnown ? rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD : null} size={16} />
+      {rtScoreKnown && <span className="text-sm font-medium">{rottenTomatoesScore}%</span>}
     </>
   )
 
@@ -52,10 +57,10 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
         ) : (
           <span className="flex items-center gap-1.5 text-base-300">{imdbContent}</span>
         ))}
-      {rottenTomatoesScore !== null &&
+      {(rtScoreKnown || showName) &&
         (showName ? (
           <a
-            href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(showName)}`}
+            href={rottenTomatoesUrl(showName)}
             target="_blank"
             rel="noreferrer"
             title="Rotten Tomatoes"
