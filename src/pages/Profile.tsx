@@ -7,7 +7,6 @@ import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
 import DropdownPanel from '../components/DropdownPanel'
-import PanelHeader from '../components/PanelHeader'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
 import { profileRoute } from '../lib/routes'
@@ -52,7 +51,11 @@ export default function Profile() {
             buttons -- they're all secondary/occasional actions next to the content below,
             so they're tucked behind one trigger instead of competing for attention. This is
             a short action menu, not a content-filter form, so it floats over the page as a
-            dropdown (like NotificationsBell) instead of pushing content down. */}
+            dropdown (like NotificationsBell) instead of pushing content down. No header/close
+            button inside the dropdown either -- the trigger's own "More" label already says
+            what this is, and DropdownPanel's `label` still gives it an accessible name; closing
+            is via Escape, an outside click, or re-clicking the trigger (same pattern as
+            Activity's person filter). */}
         <div ref={menuRef} className="relative shrink-0">
           <button
             type="button"
@@ -109,7 +112,6 @@ function ProfileMenuPanel({
 }) {
   return (
     <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
-      <PanelHeader title="More" onClose={onClose} />
       <div className="space-y-0.5">
         <Link
           to="/recap"

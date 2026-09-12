@@ -73,6 +73,13 @@ describe('Profile', () => {
     expect(screen.getByText('Public view').closest('[role="dialog"]')).toHaveClass('absolute')
   })
 
+  it('has no header title or close button inside the menu -- just the trigger and its items', () => {
+    renderProfile()
+    fireEvent.click(screen.getByText('More'))
+    expect(screen.getByRole('dialog', { name: 'More' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+  })
+
   it('closes the More menu on an outside pointerdown', () => {
     renderProfile()
     fireEvent.click(screen.getByText('More'))
