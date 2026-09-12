@@ -99,13 +99,13 @@ describe('ShowDetailHero', () => {
       show: show({ external_ids: { imdb_id: 'tt1234567' } }),
       externalRatings: { imdbRating: 8.4, rottenTomatoesScore: 92 },
     })
-    expect(screen.getByText('IMDb')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'IMDb' })).toBeInTheDocument()
     expect(screen.getByText('8.4')).toBeInTheDocument()
     expect(screen.getByText('92%')).toBeInTheDocument()
   })
 
-  it('does not show external ratings before OMDb has resolved (or when it has nothing)', () => {
+  it('does not show the IMDb rating before OMDb has resolved (or when it has nothing)', () => {
     renderHero({ externalRatings: null })
-    expect(screen.queryByText('IMDb')).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'IMDb' })).not.toBeInTheDocument()
   })
 })

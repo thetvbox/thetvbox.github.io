@@ -76,6 +76,12 @@ All notable changes to TV Box are documented here. Format loosely follows
   read at 10-12px; both are now a size up. The fresh/rotten Rotten
   Tomatoes icon itself was bumped twice this pass and is now noticeably
   bigger than where it started.
+- The IMDb and Rotten Tomatoes badges on Show Detail now use each
+  service's actual logo mark instead of a hand-built text pill -- a real
+  yellow-and-black IMDb bug, and RT's tomato-splat mark (the exact
+  CC0-licensed vector traces Simple Icons maintains for both public
+  brand marks), so they read as authentic rather than an approximation.
+  The fresh/rotten score dot next to the RT mark is unchanged.
 - Every centered overlay (Report a bug, What's new, followers/following,
   the rating breakdown) now shares the same frosted-glass panel as the
   notification/person/more dropdowns, instead of a flat solid background

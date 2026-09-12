@@ -1,4 +1,6 @@
+import IMDbGlyph from './IMDbGlyph'
 import RottenTomatoGlyph from './RottenTomatoGlyph'
+import RottenTomatoesLogo from './RottenTomatoesLogo'
 import { rottenTomatoesUrl } from '../lib/rottenTomatoes'
 import type { ExternalRatings as ExternalRatingsData } from '../types'
 
@@ -30,7 +32,9 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
 
   const imdbContent = (
     <>
-      <span className="rounded bg-[#f5c518] px-1 py-0.5 text-xs font-bold leading-none text-black">IMDb</span>
+      <span className="flex items-center justify-center rounded bg-[#f5c518] p-0.5 text-black">
+        <IMDbGlyph className="h-3.5 w-3.5" />
+      </span>
       <span className="text-sm font-medium">{imdbRating?.toFixed(1)}</span>
     </>
   )
@@ -38,7 +42,7 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
   const rtScoreKnown = rottenTomatoesScore !== null
   const rtContent = (
     <>
-      <span className="rounded bg-[#fa320a] px-1 py-0.5 text-xs font-bold leading-none text-white">RT</span>
+      <RottenTomatoesLogo className="h-5 w-5 text-[#fa320a]" />
       {rtScoreKnown ? (
         <>
           <RottenTomatoGlyph fresh={rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD} size={20} />
