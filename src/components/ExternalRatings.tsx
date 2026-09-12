@@ -7,7 +7,7 @@ interface ExternalRatingsProps {
   imdbId?: string | null
   /** Show title. Used to link straight to the show's Rotten Tomatoes page -- there's no free
    *  API that hands back an actual RT page for a show, so this is guessed from the title (see
-   *  rottenTomatoesUrl) rather than looked up. Also lets the RT icon render before OMDb
+   *  rottenTomatoesUrl) rather than looked up. Also lets the RT badge render before OMDb
    *  resolves, or even when OMDb has no score for this show at all. */
   showName?: string | null
 }
@@ -17,11 +17,11 @@ const ROTTEN_TOMATOES_FRESH_THRESHOLD = 60
 
 /**
  * IMDb rating + Rotten Tomatoes score, sourced from OMDb. The IMDb rating only appears once
- * OMDb resolves one, since there's no other source for it here. The Rotten Tomatoes icon
- * appears as soon as the show itself has loaded (in a neutral "unknown" state with a "Click to
- * see score" hint, linking to a guessed RT page) and fills in with an actual fresh/rotten score
- * if/when OMDb has one -- these are a bonus, not core functionality, so there's no error state,
- * just less detail.
+ * OMDb resolves one, since there's no other source for it here. The Rotten Tomatoes badge
+ * appears as soon as the show itself has loaded, with a "Click to see score" hint linking to a
+ * guessed RT page, and swaps in the fresh/rotten glyph and percentage if/when OMDb has an
+ * actual score for this show -- these are a bonus, not core functionality, so there's no error
+ * state, just less detail.
  */
 export default function ExternalRatings({ ratings, imdbId, showName }: ExternalRatingsProps) {
   const imdbRating = ratings?.imdbRating ?? null
@@ -39,9 +39,11 @@ export default function ExternalRatings({ ratings, imdbId, showName }: ExternalR
   const rtContent = (
     <>
       <span className="rounded bg-[#fa320a] px-1 py-0.5 text-xs font-bold leading-none text-white">RT</span>
-      <RottenTomatoGlyph fresh={rtScoreKnown ? rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD : null} size={16} />
       {rtScoreKnown ? (
-        <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
+        <>
+          <RottenTomatoGlyph fresh={rottenTomatoesScore >= ROTTEN_TOMATOES_FRESH_THRESHOLD} size={16} />
+          <span className="text-sm font-medium">{rottenTomatoesScore}%</span>
+        </>
       ) : (
         <span className="text-sm text-base-400">Click to see score</span>
       )}

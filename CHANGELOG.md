@@ -21,10 +21,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   against a spread of real shows first) rather than a live lookup --
   the rare wrong guess lands on RT's own page instead of anything
   broken. Until/unless OMDb also has an actual score, the icon shows a
-  neutral outline with a "Click to see score" hint instead of a bare,
-  unlabeled circle. The whole thing now also carries a small red "RT"
-  badge next to the tomato icon, same as IMDb's own yellow badge, since
-  the icon alone wasn't recognizable as Rotten Tomatoes at a glance.
+  small red "RT" badge (same as IMDb's own yellow one) with a "Click to
+  see score" hint -- the fresh/rotten tomato glyph only appears once
+  there's an actual score for it to color, rather than as an
+  unrecognizable blank circle next to the hint text.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were
