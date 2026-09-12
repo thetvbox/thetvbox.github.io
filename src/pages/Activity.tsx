@@ -17,7 +17,6 @@ import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import DropdownPanel from '../components/DropdownPanel'
-import PanelHeader from '../components/PanelHeader'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
@@ -216,7 +215,7 @@ export default function Activity() {
                   <span>@{filterUsername}</span>
                 </>
               ) : (
-                'Person'
+                'Filter by person'
               )}
             </button>
 
@@ -306,11 +305,16 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
   )
 }
 
-/** The "who" drill-down for the feed -- tucked behind the Person trigger button rather than
- *  shown as a permanent row, since (unlike the Following/Everyone scope) it's a secondary,
- *  unbounded-cardinality filter most visits never touch. A short picklist like this reads as a
- *  menu, not a content-filter form, so it floats over the page like NotificationsBell's dropdown
- *  (absolute + DROPDOWN_PANEL_* motion) instead of pushing content down like InlinePanel. */
+/** The "who" drill-down for the feed -- tucked behind the "Filter by person" trigger button
+ *  rather than shown as a permanent row, since (unlike the Following/Everyone scope) it's a
+ *  secondary, unbounded-cardinality filter most visits never touch. A short picklist like this
+ *  reads as a menu, not a content-filter form, so it floats over the page like NotificationsBell's
+ *  dropdown (absolute + DROPDOWN_PANEL_* motion) instead of pushing content down like InlinePanel.
+ *  No header/close button here -- the trigger button's own label already says what this is, and
+ *  DropdownPanel's `label` still gives it an accessible name for screen readers. Closing is via
+ *  Escape, an outside click, or re-clicking the trigger (all handled elsewhere); there's no "All"
+ *  option either -- clicking the already-selected person again clears the filter instead, same
+ *  toggle-off pattern as RatingDistribution's rating buckets. */
 function PersonFilterPanel({
   members,
   me,
@@ -325,17 +329,14 @@ function PersonFilterPanel({
   onClose: () => void
 }) {
   return (
-    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-3.5">
-      <PanelHeader title="Filter by person" onClose={onClose} />
+    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-2">
       <ul className="max-h-64 space-y-1 overflow-y-auto">
-        <li>
-          <PersonRow active={active === null} onClick={() => onSelect(null)}>
-            All
-          </PersonRow>
-        </li>
         {members.map((u) => (
           <li key={u.id}>
-            <PersonRow active={active === u.username} onClick={() => onSelect(u.username)}>
+            <PersonRow
+              active={active === u.username}
+              onClick={() => onSelect(active === u.username ? null : u.username)}
+            >
               <Avatar username={u.username} size="xs" />
               <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
             </PersonRow>

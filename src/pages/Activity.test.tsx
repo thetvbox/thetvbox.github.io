@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
@@ -107,37 +107,37 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
   })
 
-  it('does not show the Person trigger when at most one member has activity', async () => {
+  it('does not show the Filter by person trigger when at most one member has activity', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([ratingFor(friend)])
     renderActivity()
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
-    expect(screen.queryByText('Person')).not.toBeInTheDocument()
+    expect(screen.queryByText('Filter by person')).not.toBeInTheDocument()
   })
 
-  it('opens the person-filter panel from the trigger and filters by clicking someone', async () => {
+  it('opens the person-filter dropdown from the trigger and filters by clicking someone', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
     expect(screen.queryByText('@friend')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Person'))
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Filter by person'))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
     fireEvent.click(screen.getByText('@friend'))
 
-    // Panel closes and the trigger now shows who's selected.
-    await waitFor(() => expect(screen.queryByText('Filter by person')).not.toBeInTheDocument())
+    // Dropdown closes and the trigger now shows who's selected.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.getByText('@friend')).toBeInTheDocument()
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
     expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument()
     expect(screen.getByText('What @friend has been up to.')).toBeInTheDocument()
   })
 
-  it('clears the person filter (and closes the panel) if switching scope drops them from the pool', async () => {
+  it('clears the person filter (and closes the dropdown) if switching scope drops them from the pool', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
@@ -148,8 +148,8 @@ describe('Activity', () => {
     // member (friend) -- switch to Everyone first to bring stranger into the pool.
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Everyone'))
-    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Filter by person'))
     await waitFor(() => expect(screen.getByText('@stranger')).toBeInTheDocument())
     fireEvent.click(screen.getByText('@stranger'))
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
@@ -161,52 +161,57 @@ describe('Activity', () => {
     expect(screen.queryByText('@stranger')).not.toBeInTheDocument()
   })
 
-  it('picking "All" in the panel clears the person filter', async () => {
+  it('clicking the already-selected person again clears the filter (no "All" option)', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Filter by person'))
     await waitFor(() => expect(screen.getByText('@friend')).toBeInTheDocument())
+    expect(screen.queryByText('All')).not.toBeInTheDocument()
+
     fireEvent.click(screen.getByText('@friend'))
     await waitFor(() => expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument())
 
-    fireEvent.click(screen.getByText('@friend'))
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('All'))
+    // Reopen (the trigger itself now reads "@friend" too, so scope to it specifically) and
+    // click the now-active @friend row inside the dropdown again -- clears back to unfiltered.
+    fireEvent.click(screen.getByRole('button', { name: /@friend/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filter by person' })
+    fireEvent.click(within(dialog).getByText('@friend'))
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
+    expect(screen.getByText('Filter by person')).toBeInTheDocument()
   })
 
-  it('renders the person-filter panel as a floating overlay, not an inline block', async () => {
+  it('renders the person-filter dropdown as a floating overlay, not an inline block', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Person'))
     await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    expect(screen.getByText('Filter by person').closest('[role="dialog"]')).toHaveClass('absolute')
+    fireEvent.click(screen.getByText('Filter by person'))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
+    expect(screen.getByRole('dialog', { name: 'Filter by person' })).toHaveClass('absolute')
   })
 
-  it('closes the person-filter panel on an outside pointerdown', async () => {
+  it('closes the person-filter dropdown on an outside pointerdown', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Person'))
     await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Filter by person'))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
 
     fireEvent.pointerDown(document.body)
-    await waitFor(() => expect(screen.queryByText('Filter by person')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('renders follow events via FollowActivityRow', async () => {
