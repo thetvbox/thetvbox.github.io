@@ -36,8 +36,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   (Following/Everyone, then All plus one chip per person). The
   Following/Everyone toggle now stays as the one always-visible control,
   and the per-person filter moved behind a single "Person" button that
-  opens a small panel with an avatar next to each name -- same filtering,
-  one row instead of two.
+  opens a dropdown listing each name with their avatar -- same filtering,
+  one row instead of two. The dropdown floats over the page and closes on
+  an outside click, instead of an early version that pushed the feed down
+  like a full-width filter panel.
 - Profile: "Year in review", "Public view", and "Sign out" were three
   equal-weight buttons next to your name; they're now one "More" button
   that opens a small menu, since they're occasional actions next to the

@@ -10,14 +10,20 @@ import type { ActivityFeedItem } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
-import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
+import {
+  DROPDOWN_PANEL_ANIMATE,
+  DROPDOWN_PANEL_EXIT,
+  DROPDOWN_PANEL_INITIAL,
+  DROPDOWN_PANEL_TRANSITION,
+  PAGE_HEADER_MOTION,
+  staggerRowMotion,
+} from '../lib/motion'
 import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
-import InlinePanel from '../components/InlinePanel'
 import PanelHeader from '../components/PanelHeader'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
@@ -50,6 +56,7 @@ export default function Activity() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const scopeTouched = useRef(false)
+  const personFilterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -129,6 +136,20 @@ export default function Activity() {
     }
   }, [personFilterOpen, filterableMembers])
 
+  // The panel floats over the page with no backdrop of its own (see PersonFilterPanel below),
+  // so a click anywhere outside the trigger+panel needs to close it -- same technique as
+  // Navbar's notifications dropdown.
+  useEffect(() => {
+    if (!personFilterOpen) return
+    function handlePointerDown(e: PointerEvent) {
+      if (personFilterRef.current && !personFilterRef.current.contains(e.target as Node)) {
+        setPersonFilterOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [personFilterOpen])
+
   const filtered = useMemo(
     () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
     [scoped, filterUsername],
@@ -184,44 +205,46 @@ export default function Activity() {
         </div>
 
         {filterableMembers.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setPersonFilterOpen((v) => !v)}
-            aria-expanded={personFilterOpen}
-            aria-haspopup="true"
-            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
-              personFilterOpen || filterUsername
-                ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-                : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
-            }`}
-          >
-            {filterUsername ? (
-              <>
-                <Avatar username={filterUsername} size="xs" />
-                <span>@{filterUsername}</span>
-              </>
-            ) : (
-              'Person'
-            )}
-          </button>
+          <div ref={personFilterRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setPersonFilterOpen((v) => !v)}
+              aria-expanded={personFilterOpen}
+              aria-haspopup="true"
+              className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
+                personFilterOpen || filterUsername
+                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
+                  : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+              }`}
+            >
+              {filterUsername ? (
+                <>
+                  <Avatar username={filterUsername} size="xs" />
+                  <span>@{filterUsername}</span>
+                </>
+              ) : (
+                'Person'
+              )}
+            </button>
+
+            <AnimatePresence>
+              {personFilterOpen && (
+                <PersonFilterPanel
+                  key="person-filter"
+                  members={filterableMembers}
+                  me={me}
+                  active={filterUsername}
+                  onSelect={(username) => {
+                    setFilterUsername(username)
+                    setPersonFilterOpen(false)
+                  }}
+                  onClose={() => setPersonFilterOpen(false)}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
-
-      <AnimatePresence>
-        {personFilterOpen && (
-          <PersonFilterPanel
-            key="person-filter"
-            members={filterableMembers}
-            me={me}
-            active={filterUsername}
-            onSelect={(username) => {
-              setFilterUsername(username)
-              setPersonFilterOpen(false)
-            }}
-            onClose={() => setPersonFilterOpen(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
@@ -292,8 +315,9 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
 
 /** The "who" drill-down for the feed -- tucked behind the Person trigger button rather than
  *  shown as a permanent row, since (unlike the Following/Everyone scope) it's a secondary,
- *  unbounded-cardinality filter most visits never touch. Mirrors HistoryFiltersPanel's
- *  trigger-button + InlinePanel shape. */
+ *  unbounded-cardinality filter most visits never touch. A short picklist like this reads as a
+ *  menu, not a content-filter form, so it floats over the page like NotificationsBell's dropdown
+ *  (absolute + DROPDOWN_PANEL_* motion) instead of pushing content down like InlinePanel. */
 function PersonFilterPanel({
   members,
   me,
@@ -310,33 +334,44 @@ function PersonFilterPanel({
   useEscapeAndFocusReturn(true, onClose)
 
   return (
-    <InlinePanel className="p-3.5">
+    <motion.div
+      layout
+      initial={DROPDOWN_PANEL_INITIAL}
+      animate={DROPDOWN_PANEL_ANIMATE}
+      exit={DROPDOWN_PANEL_EXIT}
+      transition={DROPDOWN_PANEL_TRANSITION}
+      role="dialog"
+      aria-label="Filter by person"
+      className="absolute right-0 top-full z-50 mt-2 w-60 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 p-3.5 shadow-2xl shadow-black/40 backdrop-blur-xl"
+    >
       <PanelHeader title="Filter by person" onClose={onClose} />
-      <div className="flex flex-wrap gap-1.5">
-        <PersonChip active={active === null} onClick={() => onSelect(null)}>
-          All
-        </PersonChip>
+      <ul className="max-h-64 space-y-1 overflow-y-auto">
+        <li>
+          <PersonRow active={active === null} onClick={() => onSelect(null)}>
+            All
+          </PersonRow>
+        </li>
         {members.map((u) => (
-          <PersonChip key={u.id} active={active === u.username} onClick={() => onSelect(u.username)}>
-            <Avatar username={u.username} size="xs" />
-            <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
-          </PersonChip>
+          <li key={u.id}>
+            <PersonRow active={active === u.username} onClick={() => onSelect(u.username)}>
+              <Avatar username={u.username} size="xs" />
+              <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
+            </PersonRow>
+          </li>
         ))}
-      </div>
-    </InlinePanel>
+      </ul>
+    </motion.div>
   )
 }
 
-function PersonChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+function PersonRow({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 ${
-        active
-          ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-          : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+      className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm font-medium transition-colors duration-200 ${
+        active ? 'bg-accent-500/15 text-accent-300' : 'text-base-200 hover:bg-hover'
       }`}
     >
       {children}

@@ -181,6 +181,34 @@ describe('Activity', () => {
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
   })
 
+  it('renders the person-filter panel as a floating overlay, not an inline block', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
+      ratingFor(friend, { id: 'r-friend' }),
+      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    expect(screen.getByText('Filter by person').closest('[role="dialog"]')).toHaveClass('absolute')
+  })
+
+  it('closes the person-filter panel on an outside pointerdown', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
+      ratingFor(friend, { id: 'r-friend' }),
+      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Person')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Person'))
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+
+    fireEvent.pointerDown(document.body)
+    await waitFor(() => expect(screen.queryByText('Filter by person')).not.toBeInTheDocument())
+  })
+
   it('renders follow events via FollowActivityRow', async () => {
     const follow: Follow = { id: 'f1', follower_id: 'u2', followed_id: 'u3', created_at: '2026-01-01T00:00:00Z' }
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
