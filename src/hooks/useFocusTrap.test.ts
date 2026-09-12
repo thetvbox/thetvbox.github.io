@@ -67,8 +67,6 @@ describe('useFocusTrap', () => {
     renderHook(() => useFocusTrap(true, { current: container }))
     const event = tab()
 
-    // Browsers handle the actual focus move for non-boundary tabs; this hook only intervenes
-    // at the first/last element, so it should leave the event alone here.
     expect(event.defaultPrevented).toBe(false)
   })
 
@@ -102,7 +100,6 @@ describe('useFocusTrap', () => {
     unmount()
     tab()
 
-    // No listener left to wrap focus back to the first element.
     expect(document.activeElement).toBe(last)
   })
 })

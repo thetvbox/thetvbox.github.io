@@ -88,8 +88,6 @@ describe('getCorrectedAirDates', () => {
   it('throws for a non-404 non-ok response', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(null, 500))
     vi.stubGlobal('fetch', fetchMock)
-    // findTvmazeShowId swallows the throw internally and caches null, so the
-    // public function still resolves to an empty map rather than rejecting.
     const result = await getCorrectedAirDates('tt-server-error')
     expect(result).toEqual(new Map())
   })
@@ -146,12 +144,7 @@ describe('findNextUpcomingEpisode', () => {
   it("does not skip an episode whose TVmaze-corrected date is still upcoming, just because its raw TMDB date already looks past", () => {
     const corrected = new Map([[tvmazeEpisodeKey(1, 5), '2099-12-25']])
     const result = findNextUpcomingEpisode(
-      [
-        // TMDB's raw date already looks past, but TVmaze says it's genuinely upcoming.
-        episode({ episode_number: 5, air_date: '2000-01-01' }),
-        // A naive raw-date search would wrongly pick this one instead.
-        episode({ episode_number: 6, air_date: '2050-01-01' }),
-      ],
+      [episode({ episode_number: 5, air_date: '2000-01-01' }), episode({ episode_number: 6, air_date: '2050-01-01' })],
       corrected,
     )
     expect(result?.episode_number).toBe(5)

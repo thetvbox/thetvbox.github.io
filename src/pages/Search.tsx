@@ -30,8 +30,6 @@ export default function Search() {
 
     const trimmed = query.trim()
     if (!trimmed) {
-      // Nothing to search for an empty query -- resets to match, same reasoning as the fetch
-      // effect below.
       // oxlint-disable-next-line react/set-state-in-effect
       setResults([])
       setHasSearched(false)

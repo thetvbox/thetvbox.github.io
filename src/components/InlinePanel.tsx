@@ -4,12 +4,7 @@ import type { ReactNode } from 'react'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { INLINE_PANEL_ANIMATE, INLINE_PANEL_EXIT, INLINE_PANEL_INITIAL, INLINE_PANEL_TRANSITION } from '../lib/motion'
 
-/** Shared shell for this app's conditionally-mounted inline panels (content-filter forms and
- *  similar expanding panels that push the content below them down, as opposed to DropdownPanel's
- *  floating menus). Animated open/closed, and traps focus while mounted -- it's only ever
- *  rendered while its panel is meant to be open, so that's always true here. `label` sets the
- *  panel's accessible name for screen readers; omit it for a panel that doesn't read as its own
- *  dialog (rare). */
+/** Shared shell for this app's inline (push-content-down) panels, animated open/closed with focus trapped while mounted. */
 export default function InlinePanel({
   className = '',
   label,

@@ -1,12 +1,4 @@
-/**
- * The official Rotten Tomatoes icon mark (the tomato splat with the "RT" lettering cut out).
- * This is the exact vector trace Simple Icons maintains for RT's public brand mark
- * (CC0-licensed artwork, distinct from Rotten Tomatoes' own trademark rights) -- used here only
- * to identify/link to Rotten Tomatoes, the same way any "view on Rotten Tomatoes" badge would.
- *
- * Not to be confused with RottenTomatoGlyph, the small fresh/rotten dot that stands in for an
- * actual score -- this component is purely the brand identifier, shown regardless of score.
- */
+/** The Rotten Tomatoes brand mark (CC0 icon via Simple Icons), distinct from RottenTomatoGlyph's fresh/rotten score dot. */
 export default function RottenTomatoesLogo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Rotten Tomatoes" className={className}>

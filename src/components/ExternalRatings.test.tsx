@@ -63,7 +63,6 @@ describe('ExternalRatings', () => {
     expect(link).toHaveAttribute('href', 'https://www.rottentomatoes.com/tv/ted_lasso')
     expect(screen.getByRole('img', { name: 'Rotten Tomatoes' })).toBeInTheDocument()
     expect(screen.getByText('Click to see score')).toBeInTheDocument()
-    // No score to show yet -- just the mark, the hint, and the link.
     expect(screen.queryByText(/%$/)).not.toBeInTheDocument()
   })
 

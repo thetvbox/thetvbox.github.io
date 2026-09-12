@@ -31,9 +31,11 @@ import { fetchDroppedForUser } from '../lib/showDropped'
 import { fetchWatchlist } from '../lib/watchlist'
 import { fetchListsForUser } from '../lib/lists'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
-import { fetchSeasonBreakdowns } from '../lib/seasonProgress'
+import { fetchSeasonBreakdowns, fetchNextEpisode } from '../lib/seasonProgress'
+import { HOME_PREVIEW_LIMIT } from '../lib/constants'
 import Home from './Home'
 import type { AppUser, EpisodeWatched, ShowListWithCount, WatchlistItem } from '../types'
+import type { TmdbSeasonSummary } from '../types'
 
 const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
 
@@ -81,6 +83,18 @@ function listWithCount(overrides: Partial<ShowListWithCount> = {}): ShowListWith
   }
 }
 
+function season(overrides: Partial<TmdbSeasonSummary> = {}): TmdbSeasonSummary {
+  return {
+    id: 1,
+    name: 'Season 1',
+    season_number: 1,
+    episode_count: 10,
+    air_date: '2026-01-01',
+    poster_path: null,
+    ...overrides,
+  }
+}
+
 function renderHome() {
   return render(
     <MemoryRouter>
@@ -98,6 +112,7 @@ beforeEach(() => {
   vi.mocked(fetchWatchlist).mockReset().mockResolvedValue([])
   vi.mocked(fetchListsForUser).mockReset().mockResolvedValue([])
   vi.mocked(fetchSeasonBreakdowns).mockReset().mockResolvedValue(new Map())
+  vi.mocked(fetchNextEpisode).mockReset().mockResolvedValue(null)
   vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), loading: false })
   vi.mocked(useAuth).mockReturnValue({
     user: me,
@@ -133,6 +148,27 @@ describe('Home', () => {
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
   })
 
+  it('keeps the skeleton up until season and episode enrichment finishes, avoiding a partial-content flash', async () => {
+    vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
+    let resolveBreakdowns!: (value: Map<number, TmdbSeasonSummary[]>) => void
+    vi.mocked(fetchSeasonBreakdowns).mockReturnValue(
+      new Promise((resolve) => {
+        resolveBreakdowns = resolve
+      }),
+    )
+    vi.mocked(fetchNextEpisode).mockResolvedValue({ seasonNumber: 1, episodeNumber: 2, airDate: '2026-02-01' })
+    const { container } = renderHome()
+
+    await waitFor(() => expect(fetchSeasonBreakdowns).toHaveBeenCalled())
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(screen.queryByText('Show One')).not.toBeInTheDocument()
+
+    resolveBreakdowns(new Map([[1, [season({ season_number: 1, episode_count: 10 })]]]))
+
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    expect(screen.getByText(/New episode/)).toBeInTheDocument()
+  })
+
   it('renders the watchlist section', async () => {
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem()])
     renderHome()
@@ -140,11 +176,47 @@ describe('Home', () => {
     expect(screen.getByText('Show Two')).toBeInTheDocument()
   })
 
+  it('shows "Manage" instead of "See all" when the watchlist is within the preview limit', async () => {
+    vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem()])
+    renderHome()
+    await waitFor(() => expect(screen.getByText('Your Watchlist')).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: /Manage/ })).toBeInTheDocument()
+  })
+
+  it('shows "See all" and caps the preview when the watchlist exceeds the preview limit', async () => {
+    const items = Array.from({ length: HOME_PREVIEW_LIMIT + 2 }, (_, i) =>
+      watchlistItem({ id: `wl${i}`, show_id: 100 + i, show_name: `Watchlist Show ${i}` }),
+    )
+    vi.mocked(fetchWatchlist).mockResolvedValue(items)
+    renderHome()
+    await waitFor(() => expect(screen.getByRole('link', { name: /See all/ })).toBeInTheDocument())
+    expect(screen.getByText('Watchlist Show 0')).toBeInTheDocument()
+    expect(screen.getByText(`Watchlist Show ${HOME_PREVIEW_LIMIT - 1}`)).toBeInTheDocument()
+    expect(screen.queryByText(`Watchlist Show ${HOME_PREVIEW_LIMIT}`)).not.toBeInTheDocument()
+  })
+
   it('renders the lists section', async () => {
     vi.mocked(fetchListsForUser).mockResolvedValue([listWithCount()])
     renderHome()
     await waitFor(() => expect(screen.getByText('Your Lists')).toBeInTheDocument())
     expect(screen.getByText('Favorites')).toBeInTheDocument()
+  })
+
+  it('shows "Manage" instead of "See all" when lists are within the preview limit', async () => {
+    vi.mocked(fetchListsForUser).mockResolvedValue([listWithCount()])
+    renderHome()
+    await waitFor(() => expect(screen.getByText('Your Lists')).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: /Manage/ })).toBeInTheDocument()
+  })
+
+  it('shows "See all" and caps the preview when lists exceed the preview limit', async () => {
+    const items = Array.from({ length: HOME_PREVIEW_LIMIT + 2 }, (_, i) => listWithCount({ id: `l${i}`, name: `List ${i}` }))
+    vi.mocked(fetchListsForUser).mockResolvedValue(items)
+    renderHome()
+    await waitFor(() => expect(screen.getByRole('link', { name: /See all/ })).toBeInTheDocument())
+    expect(screen.getByText('List 0')).toBeInTheDocument()
+    expect(screen.getByText(`List ${HOME_PREVIEW_LIMIT - 1}`)).toBeInTheDocument()
+    expect(screen.queryByText(`List ${HOME_PREVIEW_LIMIT}`)).not.toBeInTheDocument()
   })
 
   it('does not fetch when there is no signed-in user', () => {

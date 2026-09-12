@@ -33,14 +33,7 @@ function parseRottenTomatoes(ratings: OmdbRating[] | undefined): number | null {
 
 const ratingsByImdbId = new Map<string, ExternalRatings | null>()
 
-/**
- * Fetches IMDb rating + Rotten Tomatoes score from OMDb (omdbapi.com) by IMDb id,
- * session-cached. OMDb is the one free, legally licensable (CC BY-NC 4.0) source that
- * exposes both scores from a single lookup -- neither IMDb nor Rotten Tomatoes offers a
- * public API of their own. Returns null if OMDb isn't configured, there's no IMDb id to
- * look up (TMDB doesn't always have one), or the lookup fails/finds nothing -- these
- * scores are a nice-to-have, so callers just hide the row rather than showing an error.
- */
+/** Fetches IMDb rating + Rotten Tomatoes score from OMDb (omdbapi.com) by IMDb id, session-cached; null if unavailable. */
 export async function getExternalRatings(imdbId: string | null | undefined): Promise<ExternalRatings | null> {
   if (!isOmdbConfigured || !imdbId) return null
   const cached = ratingsByImdbId.get(imdbId)

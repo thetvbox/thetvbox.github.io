@@ -32,7 +32,6 @@ export interface TmdbShowDetail {
   external_ids?: { imdb_id: string | null }
 }
 
-/** IMDb rating and Rotten Tomatoes score for a show, sourced from OMDb (omdbapi.com). */
 export interface ExternalRatings {
   imdbRating: number | null
   rottenTomatoesScore: number | null

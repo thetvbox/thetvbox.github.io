@@ -185,9 +185,6 @@ function YearRangeFilter({
   const [toText, setToText] = useState(yearTo === null ? '' : String(yearTo))
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Resync the free-typed text when the committed year changes from outside this component
-  // (e.g. a "reset filters" action elsewhere) -- adjusted during render against the last-seen
-  // prop, not in an effect: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   const [prevYearFrom, setPrevYearFrom] = useState(yearFrom)
   if (yearFrom !== prevYearFrom) {
     setPrevYearFrom(yearFrom)

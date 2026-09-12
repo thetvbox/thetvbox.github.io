@@ -16,8 +16,6 @@ import type { AppUser } from '../types'
 interface FollowListPanelProps {
   userId: string
   mode: 'followers' | 'following'
-  /** The count already shown on the profile page before this panel opens -- used to size the
-   *  loading skeleton so it roughly matches the real list, instead of guessing a fixed count. */
   expectedCount: number
   onClose: () => void
   onMyFollowingCountChange?: (delta: number) => void
@@ -45,8 +43,6 @@ export default function FollowListPanel({
   useEffect(() => {
     if (!me) return
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
@@ -115,10 +111,6 @@ export default function FollowListPanel({
 
       {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
 
-      {/* Capped, not fixed: sized to the count already known from the profile page (via
-          expectedCount) so a short list renders at its natural small height instead of
-          sitting in a big empty box, while a long list still caps out and scrolls within
-          this box instead of growing the modal unboundedly. */}
       <div className="max-h-64 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
@@ -127,9 +119,6 @@ export default function FollowListPanel({
             ))}
           </div>
         ) : people.length === 0 ? (
-          // No h-full here: the wrapper above is max-h-64 (auto height), not a fixed h-64,
-          // so a percentage height would collapse to 0. A little vertical padding instead
-          // keeps this from looking like a bare one-line message.
           <div className="flex items-center justify-center py-8">
             <p className="text-center text-xs text-base-500">
               {mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}

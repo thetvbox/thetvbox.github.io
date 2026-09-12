@@ -113,7 +113,6 @@ describe('DiaryTab', () => {
     })
 
     it('splits the last visible day-group instead of cutting a whole day out', () => {
-      // One big group of DIARY_PAGE_SIZE + 5 entries, all on the same day.
       renderTab([
         {
           heading: 'Today',

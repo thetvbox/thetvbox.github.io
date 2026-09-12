@@ -1,9 +1,4 @@
-/**
- * The official IMDb badge mark. This is the exact vector trace Simple Icons maintains for
- * IMDb's public brand mark (CC0-licensed artwork, distinct from IMDb's own trademark rights) --
- * used here only to identify/link to IMDb, the same way a "view on IMDb" badge would anywhere
- * else. Renders with currentColor so the wrapping badge controls fill (see ExternalRatings).
- */
+/** The IMDb brand mark (CC0 icon via Simple Icons), rendered with currentColor. */
 export default function IMDbGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="IMDb" className={className}>

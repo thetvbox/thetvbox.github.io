@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
 import { DIARY_PAGE_SIZE } from '../../lib/constants'
 import type { DiaryEntry } from '../../lib/showActivity'
-import { showDiaryRoute, showRoute } from '../../lib/routes'
+import { ROUTES, showDiaryRoute, showRoute } from '../../lib/routes'
 import { pluralSuffix } from '../../lib/format'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
@@ -21,12 +21,7 @@ interface DiaryTabProps {
   username: string
 }
 
-/**
- * Truncates day-groups plus the trailing undated bucket to at most `limit` entries total,
- * splitting the last group rather than cutting mid-day-heading. A heavy watcher's full
- * history can run into the thousands of rows -- rendering all of them as live (animated,
- * image-bearing) DOM nodes at once would make the tab slow to open, so DiaryTab paginates.
- */
+/** Truncates day-groups plus the trailing undated bucket to at most `limit` entries total, splitting the last group rather than cutting mid-day-heading. */
 function sliceDiaryGroups(
   groups: DiaryDayGroup[],
   undatedEntries: DiaryEntry[],
@@ -65,7 +60,7 @@ export default function DiaryTab({ groups, undatedEntries, username }: DiaryTabP
       <EmptyState icon="📔">
         <p className="max-w-xs text-sm text-base-500">
           Nothing logged yet. Mark an episode watched or rate a show, and it&apos;ll show up here.{' '}
-          <Link to="/search" className="text-accent-400 hover:underline">
+          <Link to={ROUTES.search} className="text-accent-400 hover:underline">
             Find a show
           </Link>{' '}
           to get started.

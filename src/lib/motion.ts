@@ -65,7 +65,6 @@ export const TRIGGER_SWAP_MOTION = {
   transition: { duration: 0.15, ease: EASE_OUT_EXPO },
 } as const
 
-/** Cross-fade between routes. Opacity-only so it stays smooth under reduced-motion. */
 export const ROUTE_TRANSITION_MOTION = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },

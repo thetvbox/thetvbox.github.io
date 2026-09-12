@@ -67,8 +67,6 @@ export default function ShowDetailSeasons({
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
 
-  // Per-season watched/total, for the season tabs' completion checkmark and this season's
-  // progress bar -- `watched` already covers the whole show, so no extra fetch needed.
   const seasonSegments = useMemo(
     () => computeSeasonProgress(show.seasons, countWatchedBySeason(Object.values(watched)))?.segments ?? [],
     [show.seasons, watched],
@@ -92,8 +90,6 @@ export default function ShowDetailSeasons({
     <div className="mt-8 border-t border-hairline pt-6">
       {nextUpcomingEpisode && (
         <p className="mb-3 text-xs text-base-500">
-          {/* "New episode" (not "Next"/"Up next") -- distinct from the per-episode "Up next"
-             badge below, which is about resuming where you left off, not new releases. */}
           New episode: S{nextUpcomingEpisode.season_number}E{nextUpcomingEpisode.episode_number} airs{' '}
           {formatShortDate(nextUpcomingEpisode.air_date!)}
         </p>

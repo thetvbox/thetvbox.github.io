@@ -15,7 +15,6 @@ export default function ShowCard({
 }: {
   show: TmdbShowSummary
   provider?: ResolvedProvider | null
-  /** Position in its grid, for a staggered entrance matching every other poster grid in the app. */
   index?: number
 }) {
   const year = yearFromDate(show.first_air_date)

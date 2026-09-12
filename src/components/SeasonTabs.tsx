@@ -8,8 +8,6 @@ interface SeasonTabsProps {
   seasons: TmdbSeasonSummary[]
   active: number
   onSelect: (seasonNumber: number) => void
-  /** Per-season watched/total -- badges fully-watched seasons and shows a watched-count tooltip
-   *  on hover for the rest. Omit to skip both. */
   segments?: SeasonSegment[]
 }
 

@@ -26,8 +26,6 @@ export function useCorrectedAirDates(show: TmdbShowDetail | null, season: TmdbSe
 
   const nextUpcomingEpisode = useMemo(() => {
     if (!season) return null
-    // Uses each episode's TVmaze-corrected date to decide what's still upcoming, not TMDB's raw
-    // one -- see findNextUpcomingEpisode's own comment for why that distinction matters.
     const ep = findNextUpcomingEpisode(season.episodes, correctedAirDates)
     if (!ep) return null
     return { ...ep, air_date: effectiveAirDate(ep) }

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 import { EASE_OUT_EXPO, scrollBehavior } from '../lib/motion'
+import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
 import ReportBugButton from './ReportBugButton'
 import NotificationsBell from './NotificationsBell'
@@ -147,11 +148,11 @@ function ThemeToggle() {
 }
 
 const NAV_ITEMS = [
-  { to: '/home', label: 'Home', Icon: HomeIcon },
-  { to: '/activity', label: 'Activity', Icon: ActivityIcon },
-  { to: '/search', label: 'Search', Icon: SearchIcon },
-  { to: '/members', label: 'People', Icon: PeopleIcon },
-  { to: '/profile', label: 'Profile', Icon: UserIcon },
+  { to: ROUTES.home, label: 'Home', Icon: HomeIcon },
+  { to: ROUTES.activity, label: 'Activity', Icon: ActivityIcon },
+  { to: ROUTES.search, label: 'Search', Icon: SearchIcon },
+  { to: ROUTES.members, label: 'People', Icon: PeopleIcon },
+  { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
 type UtilityPanel = 'bug' | 'notifications'
@@ -169,10 +170,6 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    // Only the notifications dropdown needs this: it renders inline with no backdrop of its
-    // own. "Report a bug" renders through the shared Modal, which is portaled to document.body
-    // and already closes itself on backdrop click/Escape -- listening here too would see every
-    // click *inside* that portaled panel as "outside" utilityRef and close it immediately.
     if (openPanel !== 'notifications') return
     function handlePointerDown(e: PointerEvent) {
       if (utilityRef.current && !utilityRef.current.contains(e.target as Node)) {
@@ -188,8 +185,8 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
-            to="/home"
-            onClick={() => handleNavClick('/home')}
+            to={ROUTES.home}
+            onClick={() => handleNavClick(ROUTES.home)}
             className="flex min-h-11 items-center gap-2"
           >
             <AppLogo size={24} />

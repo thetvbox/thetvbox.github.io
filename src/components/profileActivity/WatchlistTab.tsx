@@ -4,7 +4,7 @@ import { staggerRowMotion } from '../../lib/motion'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
-import { showRoute } from '../../lib/routes'
+import { ROUTES, showRoute } from '../../lib/routes'
 import type { WatchlistItem } from '../../types'
 
 interface WatchlistTabProps {
@@ -22,7 +22,7 @@ export default function WatchlistTab({ items, isMe, onRemove }: WatchlistTabProp
           {isMe ? 'Nothing on your watchlist yet. ' : 'Nothing here yet. '}
           {isMe && (
             <>
-              <Link to="/search" className="text-accent-400 hover:underline">
+              <Link to={ROUTES.search} className="text-accent-400 hover:underline">
                 Find a show
               </Link>{' '}
               to save one for later.

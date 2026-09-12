@@ -9,7 +9,7 @@ import ChangelogPanel from '../components/ChangelogPanel'
 import DropdownPanel from '../components/DropdownPanel'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
-import { profileRoute } from '../lib/routes'
+import { ROUTES, profileRoute } from '../lib/routes'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
@@ -18,9 +18,6 @@ export default function Profile() {
   const menuRef = useRef<HTMLDivElement>(null)
   useCloseOnNavigate(() => setMenuOpen(false))
 
-  // The menu floats over the page with no backdrop of its own (see ProfileMenuPanel below),
-  // so a click anywhere outside the trigger+menu needs to close it -- same technique as
-  // Navbar's notifications dropdown and Activity's Person filter.
   useEffect(() => {
     if (!menuOpen) return
     function handlePointerDown(e: PointerEvent) {
@@ -47,15 +44,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Year in review / Public view / Sign out used to sit here as three peer-weight
-            buttons -- they're all secondary/occasional actions next to the content below,
-            so they're tucked behind one trigger instead of competing for attention. This is
-            a short action menu, not a content-filter form, so it floats over the page as a
-            dropdown (like NotificationsBell) instead of pushing content down. No header/close
-            button inside the dropdown either -- the trigger's own "More" label already says
-            what this is, and DropdownPanel's `label` still gives it an accessible name; closing
-            is via Escape, an outside click, or re-clicking the trigger (same pattern as
-            Activity's person filter). */}
         <div ref={menuRef} className="relative shrink-0">
           <button
             type="button"
@@ -114,7 +102,7 @@ function ProfileMenuPanel({
     <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
       <div className="space-y-0.5">
         <Link
-          to="/recap"
+          to={ROUTES.recap}
           onClick={onClose}
           className="block rounded-lg px-2.5 py-2 text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
         >

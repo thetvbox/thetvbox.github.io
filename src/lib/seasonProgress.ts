@@ -94,8 +94,6 @@ export async function fetchNextEpisode(showId: number, seasonNumber: number): Pr
       getShowDetail(showId).catch(() => null),
     ])
     const corrected = await getCorrectedAirDates(show?.external_ids?.imdb_id).catch(() => new Map<string, string>())
-    // Decides "next upcoming" by each episode's TVmaze-corrected date, not TMDB's raw one --
-    // see findNextUpcomingEpisode's own comment for why that distinction matters.
     const next = findNextUpcomingEpisode(detail.episodes, corrected)
     const result: NextEpisode | null = next
       ? { seasonNumber, episodeNumber: next.episode_number, airDate: effectiveAirDate(next, corrected)! }

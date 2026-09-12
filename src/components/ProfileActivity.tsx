@@ -86,8 +86,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
   useEffect(() => {
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
@@ -238,11 +236,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
   return (
     <div>
-      {/* Stat cards and the rating histogram used to be two separate floating blocks with
-          their own generous margins; grouping them in one card reads as a single "your
-          numbers" section instead of two disconnected ones. Finished/Episodes watched jump
-          to the tab they summarize -- Shows rated/Hours watched/Avg rating don't have one
-          clean tab equivalent, so they stay purely informational. */}
       <div className="mb-6 rounded-2xl border border-hairline bg-base-900/40 p-4 sm:p-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <StatCard label="Shows rated" value={stats.totalShows} />

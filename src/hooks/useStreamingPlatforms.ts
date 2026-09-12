@@ -14,15 +14,11 @@ export function useStreamingPlatforms(showIds: number[]): {
 
   useEffect(() => {
     if (!key) {
-      // Nothing to fetch for an empty id list -- resets to match, same reasoning as the fetch
-      // effect below.
       // oxlint-disable-next-line react/set-state-in-effect
       setPlatforms(new Map())
       return
     }
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     resolveShowPlatforms(key.split(',').map(Number), detectRegion())

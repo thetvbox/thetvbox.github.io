@@ -27,7 +27,6 @@ function stripMotionProps(props: Record<string, unknown>) {
 
 const tagComponentCache = new Map<string, ComponentType<Record<string, unknown>>>()
 
-/** Test double for framer-motion: renders plain elements/children with no animation delay. */
 export const motion = new Proxy(
   {},
   {

@@ -13,12 +13,6 @@ import {
 interface DropdownPanelProps {
   onClose: () => void
   label: string
-  /** 'right' (default) anchors the panel's right edge to its trigger's right edge -- correct
-   *  for a trigger that sits at (or near) the right edge of the page/its row, like the
-   *  notifications bell, where a centered panel could overflow off-screen. 'center' centers the
-   *  panel under the trigger instead, for a trigger that sits away from any edge. Both are
-   *  transform-free (auto margins / inset, not translate) so they don't fight framer-motion's
-   *  own transform-based scale/y animation. */
   align?: 'right' | 'center'
   className?: string
   children: ReactNode
@@ -29,10 +23,7 @@ const ALIGN_CLASSES = {
   center: 'inset-x-0 mx-auto origin-top',
 } as const
 
-/** Shared shell for this app's floating dropdowns (notifications, person filter, profile menu,
- *  and any future short picklist/menu) -- anchors to a `relative` ancestor, floats over the page
- *  instead of pushing content down like InlinePanel, and owns escape-to-close, focus trap, and
- *  focus-return on close so each consumer doesn't have to wire that up itself. */
+/** Shared shell for this app's floating dropdowns, with escape-to-close, focus trap, and focus-return built in. */
 export default function DropdownPanel({ onClose, label, align = 'right', className = '', children }: DropdownPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   useEscapeAndFocusReturn(true, onClose)

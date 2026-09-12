@@ -17,8 +17,6 @@ interface EpisodeRowProps {
   onToggleWatched: () => Promise<void>
   onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
   rootRef?: Ref<HTMLDivElement>
-  /** The next episode the viewer hasn't watched yet -- badged and highlighted so returning to a
-   *  long-running show lands you on where you left off without hunting for it. */
   isUpNext?: boolean
 }
 

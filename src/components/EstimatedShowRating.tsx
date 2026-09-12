@@ -10,10 +10,7 @@ interface EstimatedShowRatingProps {
   seasons: SeasonRatingWithUser[]
 }
 
-/**
- * Shown next to "Rate this show" once the user has rated 1+ seasons but not the show itself --
- * a live average of just those seasons, expandable to see which ones and how they were rated.
- */
+/** Live average of a show's rated seasons, shown until the user rates the show itself. */
 export default function EstimatedShowRating({ average, seasons }: EstimatedShowRatingProps) {
   const [open, setOpen] = useState(false)
 

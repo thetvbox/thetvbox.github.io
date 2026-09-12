@@ -3,11 +3,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
-// Regression test for a real bug: ReportBugButton renders its panel through the shared Modal,
-// which portals to document.body -- outside the Navbar wrapper div that used to gate the
-// dropdown's own "click outside closes it" listener. Unlike Navbar.test.tsx, this file keeps
-// ReportBugButton and Modal real (only mocking their leaf dependencies) so a click that lands
-// on the portaled dialog is exercised exactly as it would be in the browser.
 vi.mock('framer-motion', () => framerMotionMock)
 vi.mock('../contexts/ThemeContext', () => ({ useTheme: vi.fn() }))
 vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))

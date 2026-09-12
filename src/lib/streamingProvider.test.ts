@@ -99,7 +99,6 @@ describe('resolveShowPlatforms', () => {
 
     const result = await resolveShowPlatforms([101], 'US')
     expect(result.get(101)).toEqual({ provider_name: 'Manual Pick', logo_path: '/manual.png' })
-    // An override answers the question on its own -- no need to also ask TMDB.
     expect(getWatchProviders).not.toHaveBeenCalled()
   })
 

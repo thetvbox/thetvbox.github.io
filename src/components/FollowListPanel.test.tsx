@@ -148,15 +148,12 @@ describe('FollowListPanel', () => {
   it('keeps the same capped-height content box while loading and once the list settles', async () => {
     vi.mocked(fetchFollowersWithUsers).mockResolvedValue([bob])
     renderPanel('followers')
-    // Modal portals to document.body, so query the document rather than RTL's container.
-    // Capped (max-h-64), not fixed (h-64): short lists shouldn't sit in a big empty box.
     expect(document.querySelector('.max-h-64')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
     expect(document.querySelector('.max-h-64')).toBeInTheDocument()
   })
 
   it('sizes the loading skeleton to the already-known follower count', () => {
-    // fetch promises never resolve in this test, so the component stays in its loading state.
     vi.mocked(fetchFollowersWithUsers).mockReturnValue(new Promise(() => {}))
     renderPanel('followers', vi.fn(), undefined, 2)
     expect(document.querySelectorAll('.animate-pulse')).toHaveLength(2)

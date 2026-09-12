@@ -6,21 +6,19 @@ import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import CenteredMessage from '../components/CenteredMessage'
 import Avatar from '../components/Avatar'
-import { compareRoute } from '../lib/routes'
+import { ROUTES, compareRoute } from '../lib/routes'
 import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
 export default function PublicProfile() {
   const { username } = useParams<{ username: string }>()
   const { user: me } = useAuth()
-  const [profile, setProfile] = useState<AppUser | null | undefined>(undefined) // undefined = loading
+  const [profile, setProfile] = useState<AppUser | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!username) return
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setProfile(undefined)
     setError(null)
@@ -65,7 +63,7 @@ export default function PublicProfile() {
         </div>
         {isMe ? (
           <Link
-            to="/profile"
+            to={ROUTES.profile}
             className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
           >
             Edit / sign out

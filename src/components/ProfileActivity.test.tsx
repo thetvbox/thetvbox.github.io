@@ -194,7 +194,6 @@ describe('ProfileActivity', () => {
     await waitFor(() => expect(screen.queryByText('Watch This')).not.toBeInTheDocument())
     expect(removeFromWatchlist).toHaveBeenCalledWith('u1', 1)
     expect(screen.getByText(/Removed Watch This from watchlist/)).toBeInTheDocument()
-    // The count drops out of the tab label along with the item.
     expect(screen.getByText('Watchlist')).toBeInTheDocument()
   })
 

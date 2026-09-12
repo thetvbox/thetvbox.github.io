@@ -1,6 +1,4 @@
-/** One stat tile: a big number with a small label below it. Becomes a button when onClick is
- *  given -- used on Profile to jump straight to the tab a stat summarizes (e.g. "Finished" ->
- *  the History tab), so the numbers double as navigation instead of being purely decorative. */
+/** One stat tile: a big number with a small label below it. Becomes a button when onClick is given. */
 export default function StatCard({
   label,
   value,

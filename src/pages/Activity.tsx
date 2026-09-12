@@ -12,6 +12,7 @@ import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
+import { ROUTES } from '../lib/routes'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
@@ -52,8 +53,6 @@ export default function Activity() {
 
   useEffect(() => {
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
@@ -113,34 +112,20 @@ export default function Activity() {
     [members, activeUsernames],
   )
 
-  // Switching scope (or the feed reloading) can drop the currently-filtered person out of the
-  // pool -- without this, the empty state would misleadingly read "@person hasn't done anything
-  // yet" when really they're just excluded by scope, not inactive.
   useEffect(() => {
     if (filterUsername && !filterableMembers.some((u) => u.username === filterUsername)) {
-      // Deliberately resets (not just hides) the stale selection so it doesn't silently
-      // reappear if the pool changes back; the array-shaped dependency here doesn't fit the
-      // "compare during render" alternative React suggests for simpler prop changes.
       // oxlint-disable-next-line react/set-state-in-effect
       setFilterUsername(null)
     }
   }, [filterUsername, filterableMembers])
 
-  // The Person trigger button only renders with >1 filterable member (see JSX below); switching
-  // scope while the panel is open can shrink that pool, so close it along with the button
-  // disappearing instead of leaving it floating with nothing useful left to pick.
   useEffect(() => {
     if (personFilterOpen && filterableMembers.length <= 1) {
-      // Closes the panel in response to its own trigger disappearing; same reasoning as the
-      // filter reset above.
       // oxlint-disable-next-line react/set-state-in-effect
       setPersonFilterOpen(false)
     }
   }, [personFilterOpen, filterableMembers])
 
-  // The panel floats over the page with no backdrop of its own (see PersonFilterPanel below),
-  // so a click anywhere outside the trigger+panel needs to close it -- same technique as
-  // Navbar's notifications dropdown.
   useEffect(() => {
     if (!personFilterOpen) return
     function handlePointerDown(e: PointerEvent) {
@@ -269,7 +254,7 @@ export default function Activity() {
                 See everyone&apos;s activity
               </button>
               {followingIds.size === 0 && (
-                <Link to="/members" className="text-xs text-accent-400 hover:underline">
+                <Link to={ROUTES.members} className="text-xs text-accent-400 hover:underline">
                   Find people to follow
                 </Link>
               )}
@@ -315,16 +300,7 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
   )
 }
 
-/** The "who" drill-down for the feed -- tucked behind the "Filter by person" trigger button
- *  rather than shown as a permanent row, since (unlike the Following/Everyone scope) it's a
- *  secondary, unbounded-cardinality filter most visits never touch. A short picklist like this
- *  reads as a menu, not a content-filter form, so it floats over the page like NotificationsBell's
- *  dropdown (absolute + DROPDOWN_PANEL_* motion) instead of pushing content down like InlinePanel.
- *  No header/close button here -- the trigger button's own label already says what this is, and
- *  DropdownPanel's `label` still gives it an accessible name for screen readers. Closing is via
- *  Escape, an outside click, or re-clicking the trigger (all handled elsewhere); there's no "All"
- *  option either -- clicking the already-selected person again clears the filter instead, same
- *  toggle-off pattern as RatingDistribution's rating buckets. */
+/** The "who" drill-down for the feed, floated behind the "Filter by person" trigger button. */
 function PersonFilterPanel({
   members,
   me,

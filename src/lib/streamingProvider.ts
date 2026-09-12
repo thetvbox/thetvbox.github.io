@@ -80,8 +80,6 @@ export async function resolveShowPlatforms(
 ): Promise<Map<number, ResolvedProvider | null>> {
   const uncached = [...new Set(showIds)].filter((id) => !platformCache.has(cacheKey(id, region)))
 
-  // One request for every show's override instead of one per show -- avoids firing a burst of
-  // parallel Supabase requests every time a poster grid (Home/Search/History) renders.
   const overrides = await fetchStreamingOverrides(uncached).catch(() => new Map<number, StreamingOverride>())
 
   await Promise.all(

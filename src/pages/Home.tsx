@@ -20,8 +20,13 @@ import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
-import { ACTIVITY_FETCH_LIMIT, PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
-import { listDetailRoute, showRoute } from '../lib/routes'
+import {
+  ACTIVITY_FETCH_LIMIT,
+  HOME_PREVIEW_LIMIT,
+  PROFILE_LISTS_TAB_QUERY,
+  SKELETON_ROWS,
+} from '../lib/constants'
+import { ROUTES, listDetailRoute, showRoute } from '../lib/routes'
 import SeasonProgressBar from '../components/SeasonProgressBar'
 import StreamingBadge from '../components/StreamingBadge'
 import UpcomingRow from '../components/UpcomingRow'
@@ -40,6 +45,8 @@ import type {
   ShowWatchingDismissed,
   WatchlistItem,
 } from '../types'
+
+const MAX_WATCHING_SKELETON_TILES = 10
 
 /** Returns a time-of-day greeting for the header. */
 function greeting(): string {
@@ -65,8 +72,6 @@ export default function Home() {
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
@@ -118,66 +123,53 @@ export default function Home() {
   }, [watched])
 
   const [seasonProgress, setSeasonProgress] = useState<Map<number, SeasonProgress>>(new Map())
+  const [nextEpisodes, setNextEpisodes] = useState<Map<number, NextEpisode>>(new Map())
+  const [enrichedKey, setEnrichedKey] = useState<string | null>(null)
   const watchingIds = useMemo(() => watching.map((s) => s.showId), [watching])
   const watchingKey = watchingIds.join(',')
   const { platforms } = useStreamingPlatforms(watchingIds)
 
   useEffect(() => {
     if (!watchingKey) {
-      // Nothing to fetch for an empty watching list -- resets to match, same reasoning as the
-      // fetch effect below.
       // oxlint-disable-next-line react/set-state-in-effect
       setSeasonProgress(new Map())
+      setNextEpisodes(new Map())
+      setEnrichedKey('')
       return
     }
     let cancelled = false
     const showIds = watchingKey.split(',').map(Number)
     fetchSeasonBreakdowns(showIds)
-      .then((breakdowns) => {
+      .then(async (breakdowns) => {
         if (cancelled) return
-        const next = new Map<number, SeasonProgress>()
+        const progressByShow = new Map<number, SeasonProgress>()
         for (const id of showIds) {
           const seasons = breakdowns.get(id)
           if (!seasons) continue
           const progress = computeSeasonProgress(seasons, watchedBySeasonByShow.get(id) ?? {})
-          if (progress) next.set(id, progress)
+          if (progress) progressByShow.set(id, progress)
         }
-        setSeasonProgress(next)
+        const nextByShow = new Map<number, NextEpisode>()
+        await Promise.all(
+          Array.from(progressByShow.entries()).map(async ([showId, progress]) => {
+            const next = await fetchNextEpisode(showId, progress.currentSeasonNumber)
+            if (next) nextByShow.set(showId, next)
+          }),
+        )
+        if (cancelled) return
+        setSeasonProgress(progressByShow)
+        setNextEpisodes(nextByShow)
       })
       .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEnrichedKey(watchingKey)
+      })
     return () => {
       cancelled = true
     }
   }, [watchingKey, watchedBySeasonByShow])
 
-  const [nextEpisodes, setNextEpisodes] = useState<Map<number, NextEpisode>>(new Map())
-
-  useEffect(() => {
-    if (seasonProgress.size === 0) {
-      // Nothing to fetch with no in-progress seasons -- resets to match, same reasoning as the
-      // fetch effect below.
-      // oxlint-disable-next-line react/set-state-in-effect
-      setNextEpisodes(new Map())
-      return
-    }
-    let cancelled = false
-    Promise.all(
-      Array.from(seasonProgress.entries()).map(async ([showId, progress]) => {
-        const next = await fetchNextEpisode(showId, progress.currentSeasonNumber)
-        return [showId, next] as const
-      }),
-    ).then((results) => {
-      if (cancelled) return
-      const map = new Map<number, NextEpisode>()
-      for (const [showId, next] of results) {
-        if (next) map.set(showId, next)
-      }
-      setNextEpisodes(map)
-    }).catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [seasonProgress])
+  const showWatchingSkeleton = loading || (watchingIds.length > 0 && enrichedKey !== watchingKey)
 
   const upcoming = useMemo<UpcomingItem[]>(() => {
     const items: UpcomingItem[] = []
@@ -196,6 +188,9 @@ export default function Home() {
     return items.sort((a, b) => a.airDate.localeCompare(b.airDate))
   }, [watching, nextEpisodes])
 
+  const watchlistPreview = watchlist.slice(0, HOME_PREVIEW_LIMIT)
+  const listsPreview = lists.slice(0, HOME_PREVIEW_LIMIT)
+
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
@@ -213,8 +208,8 @@ export default function Home() {
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
-      {loading ? (
-        <ShowGridSkeleton count={5} progress />
+      {showWatchingSkeleton ? (
+        <ShowGridSkeleton count={Math.min(watching.length || SKELETON_ROWS, MAX_WATCHING_SKELETON_TILES)} progress />
       ) : watching.length === 0 ? (
         <EmptyState icon="📺" className="mt-4">
           <p className="max-w-xs text-sm text-base-500">
@@ -222,12 +217,12 @@ export default function Home() {
           </p>
           <div className="mt-4 flex items-center gap-3">
             <Link
-              to="/search"
+              to={ROUTES.search}
               className="rounded-lg border border-hairline-strong px-4 py-2 text-sm text-base-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
             >
               Find a show
             </Link>
-            <Link to="/members" className="text-sm text-accent-400 hover:underline">
+            <Link to={ROUTES.members} className="text-sm text-accent-400 hover:underline">
               Find people to follow
             </Link>
           </div>
@@ -299,14 +294,14 @@ export default function Home() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-base-100">Your Watchlist</h2>
             <Link
-              to="/profile"
+              to={ROUTES.profile}
               className="inline-flex min-h-11 items-center text-xs font-medium text-accent-400 hover:underline"
             >
-              See all &rarr;
+              {watchlist.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'} &rarr;
             </Link>
           </div>
           <div className={POSTER_GRID_CLASSES}>
-            {watchlist.map((w, i) => (
+            {watchlistPreview.map((w, i) => (
               <motion.div key={w.id} {...staggerTileMotion(i)}>
                 <Link to={showRoute(w.show_id)} className="group block">
                   <PosterTile posterPath={w.show_poster_path} name={w.show_name} />
@@ -324,14 +319,14 @@ export default function Home() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-base-100">Your Lists</h2>
             <Link
-              to={`/profile?${PROFILE_LISTS_TAB_QUERY}`}
+              to={`${ROUTES.profile}?${PROFILE_LISTS_TAB_QUERY}`}
               className="inline-flex min-h-11 items-center text-xs font-medium text-accent-400 hover:underline"
             >
-              See all &rarr;
+              {lists.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'} &rarr;
             </Link>
           </div>
           <div className="flex flex-wrap gap-2">
-            {lists.map((l) => (
+            {listsPreview.map((l) => (
               <Link
                 key={l.id}
                 to={listDetailRoute(user?.username ?? '', l.id)}

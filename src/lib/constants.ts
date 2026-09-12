@@ -26,10 +26,9 @@ export const SKELETON_ROWS = 5
 export const SKELETON_ROWS_COMPACT = 3
 export const SKELETON_ROWS_WIDE = 6
 
-/** Diary tab renders entries in batches of this size, "Show more" reveals the next batch --
- *  a heavy watcher's full history can run into the thousands of rows, and rendering all of
- *  them as live (animated, image-bearing) DOM nodes at once would make the tab slow to open. */
 export const DIARY_PAGE_SIZE = 40
+
+export const HOME_PREVIEW_LIMIT = 6
 
 export const POSTER_THUMB_SIZE = 'w185'
 

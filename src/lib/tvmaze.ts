@@ -66,9 +66,7 @@ export async function getCorrectedAirDates(imdbId: string | null | undefined): P
   return fetchTvmazeAirDates(tvmazeShowId)
 }
 
-/** An episode's effective air date: TVmaze's correction if there is one, else TMDB's own.
- *  TMDB's raw dates are occasionally off by a day or more -- this is the "truth" every
- *  upcoming-episode calculation should compare against, not the raw TMDB date directly. */
+/** An episode's effective air date: TVmaze's correction if there is one, else TMDB's own. */
 export function effectiveAirDate(
   ep: { season_number: number; episode_number: number; air_date: string | null },
   correctedAirDates: Map<string, string>,
@@ -77,10 +75,7 @@ export function effectiveAirDate(
   return correctedAirDates.get(tvmazeEpisodeKey(ep.season_number, ep.episode_number)) ?? ep.air_date
 }
 
-/** Finds the next not-yet-aired episode in a list, deciding by each episode's corrected air
- *  date via `effectiveAirDate` rather than its raw TMDB one -- comparing against the raw date
- *  can make this skip straight past an episode that's still genuinely upcoming (TMDB says it
- *  already aired a day early) to the one after it. */
+/** Finds the next not-yet-aired episode in a list, deciding by each episode's corrected air date. */
 export function findNextUpcomingEpisode(
   episodes: TmdbEpisode[],
   correctedAirDates: Map<string, string>,

@@ -40,6 +40,16 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Changed
 
+- Home's "Your Watchlist" and "Your Lists" sections now show at most 6
+  items each, with "See all" only appearing when there's actually more
+  to see -- previously the link always read "See all" even for a single
+  item, with nothing more to show. When nothing's hidden, the link now
+  reads "Manage" instead.
+- On Home, a Now Watching tile's season/episode count and "New episode"
+  date used to pop in a beat after the tile's initial paint (two
+  separate data fetches landing at different times). Both now load
+  together, so the skeleton stays up until a tile has everything it'll
+  show, instead of rendering once plain and again fully detailed.
 - The Diary tab now loads 40 entries at a time with a "Show more" button
   instead of rendering a heavy watcher's entire history at once, which
   could mean thousands of animated, image-bearing rows in the DOM on

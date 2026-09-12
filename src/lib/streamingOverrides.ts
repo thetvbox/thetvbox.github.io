@@ -14,10 +14,7 @@ export async function fetchStreamingOverride(showId: number): Promise<StreamingO
   return (data as StreamingOverride) ?? null
 }
 
-/**
- * Batched version of fetchStreamingOverride for resolving many shows at once (Home/Search/History
- * poster grids) -- one request for the whole page instead of one per card, keyed by show_id.
- */
+/** Batched version of fetchStreamingOverride for resolving many shows at once, keyed by show_id. */
 export async function fetchStreamingOverrides(showIds: number[]): Promise<Map<number, StreamingOverride>> {
   if (showIds.length === 0) return new Map()
 

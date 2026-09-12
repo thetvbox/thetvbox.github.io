@@ -7,24 +7,12 @@ import type { ExternalRatings as ExternalRatingsData } from '../types'
 interface ExternalRatingsProps {
   ratings: ExternalRatingsData | null
   imdbId?: string | null
-  /** Show title. Used to link straight to the show's Rotten Tomatoes page -- there's no free
-   *  API that hands back an actual RT page for a show, so this is guessed from the title (see
-   *  rottenTomatoesUrl) rather than looked up. Also lets the RT badge render before OMDb
-   *  resolves, or even when OMDb has no score for this show at all. */
   showName?: string | null
 }
 
-/** Rotten Tomatoes scores of 60% and up are "Fresh"; below that, "Rotten". */
 const ROTTEN_TOMATOES_FRESH_THRESHOLD = 60
 
-/**
- * IMDb rating + Rotten Tomatoes score, sourced from OMDb. The IMDb rating only appears once
- * OMDb resolves one, since there's no other source for it here. The Rotten Tomatoes badge
- * appears as soon as the show itself has loaded, with a "Click to see score" hint linking to a
- * guessed RT page, and swaps in the fresh/rotten glyph and percentage if/when OMDb has an
- * actual score for this show -- these are a bonus, not core functionality, so there's no error
- * state, just less detail.
- */
+/** IMDb rating + Rotten Tomatoes score/link for a show, sourced from OMDb with graceful degradation. */
 export default function ExternalRatings({ ratings, imdbId, showName }: ExternalRatingsProps) {
   const imdbRating = ratings?.imdbRating ?? null
   const rottenTomatoesScore = ratings?.rottenTomatoesScore ?? null

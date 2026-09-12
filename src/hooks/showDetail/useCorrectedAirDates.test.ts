@@ -1,9 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Only getCorrectedAirDates (the network call) is mocked -- effectiveAirDate/findNextUpcomingEpisode
-// are pure and left as their real implementations, since the bug this file guards against lives in
-// how the hook USES them, not in the functions themselves.
 vi.mock('../../lib/tvmaze', async () => {
   const actual = await vi.importActual<typeof import('../../lib/tvmaze')>('../../lib/tvmaze')
   return { ...actual, getCorrectedAirDates: vi.fn() }
@@ -13,9 +10,7 @@ import { getCorrectedAirDates } from '../../lib/tvmaze'
 import { useCorrectedAirDates } from './useCorrectedAirDates'
 import type { TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail } from '../../types'
 
-/** A local YYYY-MM-DD date `daysOffset` days from now, built from local date components (not
- *  toISOString, which can land on a different calendar day near a UTC/local boundary) -- matters
- *  here since these tests use +/-1 day offsets, not dates far enough out to be safe from that. */
+/** A local YYYY-MM-DD date `daysOffset` days from now, built from local date components (not toISOString). */
 function localDateStr(daysOffset: number): string {
   const d = new Date()
   d.setDate(d.getDate() + daysOffset)
@@ -64,9 +59,7 @@ describe('useCorrectedAirDates', () => {
       useCorrectedAirDates(
         show,
         season([
-          // TMDB's raw date for this one already looks like it aired yesterday...
           episode({ episode_number: 5, air_date: localDateStr(-1) }),
-          // ...and a naive raw-date search would fall through to this later episode instead.
           episode({ episode_number: 6, air_date: '2099-12-25' }),
         ]),
       ),

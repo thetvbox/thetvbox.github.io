@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./tmdb', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
-// Only getCorrectedAirDates (the network call) is mocked -- effectiveAirDate/findNextUpcomingEpisode
-// are pure and left as their real implementations, since the bug this file guards against lives in
-// how fetchNextEpisode USES them, not in the functions themselves.
 vi.mock('./tvmaze', async () => {
   const actual = await vi.importActual<typeof import('./tvmaze')>('./tvmaze')
   return { ...actual, getCorrectedAirDates: vi.fn() }
@@ -18,9 +15,7 @@ function season(seasonNumber: number): TmdbSeasonSummary {
   return { id: seasonNumber, season_number: seasonNumber, name: `Season ${seasonNumber}`, episode_count: 10, poster_path: null, air_date: null }
 }
 
-/** A local YYYY-MM-DD date `daysOffset` days from now, built from local date components (not
- *  toISOString, which can land on a different calendar day near a UTC/local boundary) -- matters
- *  here since these tests use +/-1 day offsets, not the far-future dates safe from that flakiness. */
+/** A local YYYY-MM-DD date `daysOffset` days from now, built from local date components (not toISOString). */
 function localDateStr(daysOffset: number): string {
   const d = new Date()
   d.setDate(d.getDate() + daysOffset)
@@ -111,7 +106,6 @@ describe('fetchNextEpisode', () => {
       season_number: 1,
       name: 'Season 1',
       episodes: [
-        // TMDB's raw date for this one already looks like it aired yesterday...
         {
           id: 2,
           episode_number: 5,
@@ -122,7 +116,6 @@ describe('fetchNextEpisode', () => {
           air_date: localDateStr(-1),
           runtime: 30,
         },
-        // ...and a naive raw-date search would fall through to this later episode instead.
         {
           id: 3,
           episode_number: 6,
@@ -136,7 +129,6 @@ describe('fetchNextEpisode', () => {
       ],
     } as never)
     vi.mocked(getShowDetail).mockResolvedValue({ external_ids: { imdb_id: 'tt123' } } as never)
-    // TVmaze says E5 actually airs tomorrow -- genuinely still upcoming.
     const tomorrow = localDateStr(1)
     vi.mocked(getCorrectedAirDates).mockResolvedValue(new Map([['1-5', tomorrow]]))
 

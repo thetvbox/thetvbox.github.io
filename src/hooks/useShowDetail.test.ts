@@ -66,8 +66,6 @@ vi.mock('../lib/rewatches', () => ({
 vi.mock('../lib/lists', () => ({
   fetchListMembershipForShow: vi.fn(() => Promise.resolve(new Set())),
 }))
-// Only getCorrectedAirDates (the network call) is mocked -- effectiveAirDate/findNextUpcomingEpisode
-// are pure and left as their real implementations, since this file's tests don't exercise them.
 vi.mock('../lib/tvmaze', async () => {
   const actual = await vi.importActual<typeof import('../lib/tvmaze')>('../lib/tvmaze')
   return { ...actual, getCorrectedAirDates: vi.fn(() => Promise.resolve(new Map())) }
@@ -134,7 +132,6 @@ function watchedRow(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  // Re-establish every mock's safe default so a previous test's override can't leak into the next.
   vi.mocked(getShowDetail).mockResolvedValue(makeShow())
   vi.mocked(getSeasonDetail).mockResolvedValue({
     id: 1,

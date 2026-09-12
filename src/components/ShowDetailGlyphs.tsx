@@ -1,6 +1,4 @@
-/** Filled accent checkmark when true, an outlined circle when false. Shared "done" indicator --
- *  used for both an individual watched episode and a fully-watched season, so the two states
- *  read as the same concept everywhere they appear. */
+/** Filled accent checkmark when true, an outlined circle when false. */
 export function CheckGlyph({ filled, size = 13 }: { filled: boolean; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="shrink-0">

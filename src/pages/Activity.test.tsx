@@ -129,7 +129,6 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
     fireEvent.click(screen.getByText('@friend'))
 
-    // Dropdown closes and the trigger now shows who's selected.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.getByText('@friend')).toBeInTheDocument()
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
@@ -144,8 +143,6 @@ describe('Activity', () => {
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    // Following-only scope excludes stranger, so the person picker starts with just one
-    // member (friend) -- switch to Everyone first to bring stranger into the pool.
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Everyone'))
     await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
@@ -154,8 +151,6 @@ describe('Activity', () => {
     fireEvent.click(screen.getByText('@stranger'))
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
 
-    // Switching back to Following excludes stranger entirely -- the filter should reset
-    // instead of showing a misleading "hasn't done anything" empty state for them.
     fireEvent.click(screen.getByText('Following'))
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
     expect(screen.queryByText('@stranger')).not.toBeInTheDocument()
@@ -176,8 +171,6 @@ describe('Activity', () => {
     fireEvent.click(screen.getByText('@friend'))
     await waitFor(() => expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument())
 
-    // Reopen (the trigger itself now reads "@friend" too, so scope to it specifically) and
-    // click the now-active @friend row inside the dropdown again -- clears back to unfiltered.
     fireEvent.click(screen.getByRole('button', { name: /@friend/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Filter by person' })
     fireEvent.click(within(dialog).getByText('@friend'))

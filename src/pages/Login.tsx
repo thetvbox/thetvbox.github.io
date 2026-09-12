@@ -9,6 +9,7 @@ import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
+import { ROUTES } from '../lib/routes'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
 
@@ -24,7 +25,7 @@ export default function Login() {
   const emailInputRef = useDesktopAutoFocus(step === 'email')
   const usernameInputRef = useDesktopAutoFocus(step === 'username')
 
-  if (user) return <Navigate to="/home" replace />
+  if (user) return <Navigate to={ROUTES.home} replace />
 
   async function handleEmailSubmit(e: FormEvent) {
     e.preventDefault()
@@ -59,7 +60,6 @@ export default function Login() {
     setBusy(true)
     try {
       await register(email, trimmed)
-      // Successful registration updates the auth state; the Navigate above will fire.
     } catch (err) {
       setError(errorMessage(err, 'Could not create your account. Try again.'))
     } finally {

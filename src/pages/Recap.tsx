@@ -9,7 +9,7 @@ import { summarizeShowActivity } from '../lib/showActivity'
 import { availableRecapYears, buildYearRecap } from '../lib/recap'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
-import { showRoute } from '../lib/routes'
+import { ROUTES, showRoute } from '../lib/routes'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StarGlyph from '../components/StarGlyph'
@@ -29,8 +29,6 @@ export default function Recap() {
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    // Genuinely synchronizing with an external system (a network fetch); known false positive
-    // for this pattern, see https://github.com/facebook/react/issues/34743
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError(null)
@@ -106,7 +104,7 @@ export default function Recap() {
             {error ?? (
               <>
                 Nothing tracked yet.{' '}
-                <Link to="/search" className="text-accent-400 hover:underline">
+                <Link to={ROUTES.search} className="text-accent-400 hover:underline">
                   Find a show
                 </Link>{' '}
                 to get started.
