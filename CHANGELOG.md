@@ -34,6 +34,13 @@ All notable changes to TV Box are documented here. Format loosely follows
   see score" hint -- the fresh/rotten tomato glyph only appears once
   there's an actual score for it to color, rather than as an
   unrecognizable blank circle next to the hint text.
+- Search now has a "Filters" dropdown (next to the search box, same
+  floating-overlay pattern as Activity's "Filter by person"/"Filter by
+  genre") for narrowing results by streaming platform and by genre --
+  works on both the "Trending this week" grid and live search results,
+  and only appears once there's actually something to filter by. Shown
+  as "Filters · N", where N counts the two facets (platform, genre)
+  independently, matching how History's filter count already works.
 - A show you've rated one or more seasons of, but haven't rated overall,
   now shows a live estimate (the average of just those seasons) next to
   "Rate this show" -- click it to see which seasons and how they were
@@ -204,7 +211,9 @@ All notable changes to TV Box are documented here. Format loosely follows
   prompt card, pushing it mostly off-screen on first load (especially
   on mobile) even though it's the most useful thing on the page before
   you've typed anything. The prompt is now a plain line of text instead
-  of a bordered card, so Trending appears much closer to the top.
+  of a bordered card, so Trending appears much closer to the top;
+  the search box and prompt spacing were further tightened so there's
+  noticeably less empty space above Trending now.
 
 ## [1.2.0] - 2026-09-07
 

@@ -4,6 +4,12 @@ export interface TmdbShowSummary {
   poster_path: string | null
   first_air_date: string | null
   vote_average: number
+  genre_ids?: number[]
+}
+
+export interface TmdbGenre {
+  id: number
+  name: string
 }
 
 export interface TmdbSeasonSummary {
@@ -22,7 +28,7 @@ export interface TmdbShowDetail {
   poster_path: string | null
   backdrop_path: string | null
   first_air_date: string | null
-  genres: { id: number; name: string }[]
+  genres: TmdbGenre[]
   number_of_seasons: number
   number_of_episodes: number
   status: string

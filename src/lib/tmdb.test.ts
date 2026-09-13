@@ -55,6 +55,18 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     expect(url).toContain('/trending/tv/week')
   })
 
+  it('getTvGenres fetches genre/tv/list and session-caches the result', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ genres: [{ id: 18, name: 'Drama' }] }))
+    const { getTvGenres } = await import('./tmdb')
+    const first = await getTvGenres()
+    const second = await getTvGenres()
+    expect(first).toEqual([{ id: 18, name: 'Drama' }])
+    expect(second).toBe(first)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    const url = vi.mocked(fetch).mock.calls[0][0] as string
+    expect(url).toContain('/genre/tv/list')
+  })
+
   it('getShowDetail fetches and caches the show detail', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ id: 1, name: 'Show One' }))
     const { getShowDetail } = await import('./tmdb')

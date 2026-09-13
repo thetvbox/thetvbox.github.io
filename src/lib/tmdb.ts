@@ -1,4 +1,5 @@
 import type {
+  TmdbGenre,
   TmdbProviderListItem,
   TmdbSeasonDetail,
   TmdbShowDetail,
@@ -53,6 +54,16 @@ export async function getTrendingShows(): Promise<TmdbShowSummary[]> {
   const data = await tmdbFetch<{ results: TmdbShowSummary[] }>('/trending/tv/week')
   trendingCache = data.results
   return trendingCache
+}
+
+let tvGenresCache: TmdbGenre[] | null = null
+
+/** Fetches TMDB's full TV genre id/name list, session-cached since it never changes within a session. */
+export async function getTvGenres(): Promise<TmdbGenre[]> {
+  if (tvGenresCache) return tvGenresCache
+  const data = await tmdbFetch<{ genres: TmdbGenre[] }>('/genre/tv/list')
+  tvGenresCache = data.genres
+  return tvGenresCache
 }
 
 const showDetailCache = new Map<number, TmdbShowDetail>()

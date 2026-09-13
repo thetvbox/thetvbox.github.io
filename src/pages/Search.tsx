@@ -4,13 +4,23 @@ import ShowCard from '../components/ShowCard'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
 import { POSTER_GRID_CLASSES } from '../components/PosterTile'
-import { searchShows, getTrendingShows, isTmdbConfigured } from '../lib/tmdb'
+import SearchFiltersPanel from '../components/SearchFiltersPanel'
+import { searchShows, getTrendingShows, getTvGenres, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
+import {
+  buildSearchFilterFacets,
+  countActiveSearchFilters,
+  emptySearchFilters,
+  filterShows,
+  isSearchFiltersActive,
+  pruneSearchFilters,
+} from '../lib/searchFilters'
+import type { SearchFilters } from '../lib/searchFilters'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
@@ -21,8 +31,12 @@ export default function Search() {
   const [error, setError] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
   const [trending, setTrending] = useState<TmdbShowSummary[]>([])
+  const [genreNames, setGenreNames] = useState<Map<number, string>>(new Map())
+  const [filters, setFilters] = useState<SearchFilters>(emptySearchFilters())
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const requestId = useRef(0)
+  const filtersRef = useRef<HTMLDivElement>(null)
 
   const posterResults = useMemo(() => results.filter((s) => s.poster_path), [results])
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
@@ -31,6 +45,20 @@ export default function Search() {
   const trendingResults = useMemo(() => trending.filter((s) => s.poster_path), [trending])
   const trendingIds = useMemo(() => trendingResults.map((s) => s.id), [trendingResults])
   const { platforms: trendingPlatforms } = useStreamingPlatforms(trendingIds)
+
+  const searching = query.trim().length > 0
+  const activeShows = searching ? posterResults : trendingResults
+  const activePlatforms = searching ? platforms : trendingPlatforms
+
+  const facets = useMemo(
+    () => buildSearchFilterFacets(activeShows, genreNames, activePlatforms),
+    [activeShows, genreNames, activePlatforms],
+  )
+  const filteredShows = useMemo(
+    () => filterShows(activeShows, filters, genreNames, activePlatforms),
+    [activeShows, filters, genreNames, activePlatforms],
+  )
+  const filtersAvailable = facets.genres.length > 0 || facets.platforms.length > 0
 
   useEffect(() => {
     if (!isTmdbConfigured) return
@@ -44,6 +72,46 @@ export default function Search() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (!isTmdbConfigured) return
+    let cancelled = false
+    getTvGenres()
+      .then((genres) => {
+        if (!cancelled) setGenreNames(new Map(genres.map((g) => [g.id, g.name])))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    // Skip while a just-typed query hasn't resolved yet: posterResults (and so facets) are
+    // momentarily empty between the keystroke and the debounced search landing, which would
+    // otherwise wipe out an active filter selection before the real result set arrives.
+    if (searching && !hasSearched) return
+    // oxlint-disable-next-line react/set-state-in-effect
+    setFilters((prev) => pruneSearchFilters(prev, facets))
+  }, [facets, searching, hasSearched])
+
+  useEffect(() => {
+    if (filtersOpen && !filtersAvailable) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setFiltersOpen(false)
+    }
+  }, [filtersOpen, filtersAvailable])
+
+  useEffect(() => {
+    if (!filtersOpen) return
+    function handlePointerDown(e: PointerEvent) {
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
+        setFiltersOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [filtersOpen])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -91,7 +159,7 @@ export default function Search() {
         Find a show
       </motion.h1>
 
-      <div className="relative mb-6">
+      <div className="relative mb-4">
         <svg
           className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-base-500"
           width="18"
@@ -114,6 +182,38 @@ export default function Search() {
         />
       </div>
 
+      {filtersAvailable && (
+        <div className="mb-6 flex justify-end">
+          <div ref={filtersRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-expanded={filtersOpen}
+              aria-haspopup="true"
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+                filtersOpen || isSearchFiltersActive(filters)
+                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
+                  : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+              }`}
+            >
+              Filters{isSearchFiltersActive(filters) ? ` · ${countActiveSearchFilters(filters)}` : ''}
+            </button>
+
+            <AnimatePresence>
+              {filtersOpen && (
+                <SearchFiltersPanel
+                  key="search-filters"
+                  facets={facets}
+                  filters={filters}
+                  onChange={setFilters}
+                  onClose={() => setFiltersOpen(false)}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
       {!isTmdbConfigured && (
         <div className="mb-6 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
           TMDB isn&apos;t configured yet. Set VITE_TMDB_API_KEY (see DEVELOPMENT.md) to enable search.
@@ -126,35 +226,43 @@ export default function Search() {
 
       {!loading && (
         <AnimatePresence mode="popLayout">
-          {posterResults.length > 0 ? (
+          {filteredShows.length > 0 && searching ? (
             <motion.div
               layout
               className={POSTER_GRID_CLASSES}
             >
-              {posterResults.map((show, i) => (
+              {filteredShows.map((show, i) => (
                 <ShowCard key={show.id} show={show} provider={platforms.get(show.id)} index={i} />
               ))}
             </motion.div>
           ) : hasSearched && !error ? (
             <EmptyState icon="🔍" className="mt-14">
               <p className="text-sm text-base-500">
-                No shows found for &ldquo;{query}&rdquo;.
+                {posterResults.length > 0 ? (
+                  'No shows match the selected filters.'
+                ) : (
+                  <>No shows found for &ldquo;{query}&rdquo;.</>
+                )}
               </p>
             </EmptyState>
-          ) : !query.trim() ? (
+          ) : !searching ? (
             <div>
-              <p className="mb-10 mt-6 text-center text-sm text-base-500">
+              <p className="mb-6 mt-2 text-center text-sm text-base-500">
                 Search for any TV show to mark as now watching, add to watchlist or rate per season.
               </p>
 
               {trendingResults.length > 0 && (
                 <div>
                   <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Trending this week</h2>
-                  <div className={POSTER_GRID_CLASSES}>
-                    {trendingResults.map((show, i) => (
-                      <ShowCard key={show.id} show={show} provider={trendingPlatforms.get(show.id)} index={i} />
-                    ))}
-                  </div>
+                  {filteredShows.length > 0 ? (
+                    <div className={POSTER_GRID_CLASSES}>
+                      {filteredShows.map((show, i) => (
+                        <ShowCard key={show.id} show={show} provider={trendingPlatforms.get(show.id)} index={i} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-base-500">No trending shows match the selected filters.</p>
+                  )}
                 </div>
               )}
             </div>
