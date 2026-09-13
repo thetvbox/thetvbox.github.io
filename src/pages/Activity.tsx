@@ -5,23 +5,30 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
 import { fetchRecentSeasonRatingsAllUsers } from '../lib/seasonRatings'
 import { fetchRecentWatchedAllUsers } from '../lib/watched'
-import { buildFollowActivity, buildGroupActivity, mergeActivityFeed } from '../lib/showActivity'
-import type { ActivityFeedItem } from '../lib/showActivity'
+import { fetchStartedAllUsers } from '../lib/showStarted'
+import { fetchDismissedAllUsers } from '../lib/showDismissed'
+import { fetchDroppedAllUsers } from '../lib/showDropped'
+import { buildFollowActivity, buildFriendsWatching, buildGroupActivity, mergeActivityFeed } from '../lib/showActivity'
+import type { ActivityFeedItem, FriendWatchingEntry } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
+import { getShowDetailsBulk } from '../lib/tmdb'
 import { dayKey, formatDiaryHeading } from '../lib/date'
-import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
+import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
 import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
-import { ROUTES } from '../lib/routes'
+import { ROUTES, showRoute } from '../lib/routes'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
+import Chip from '../components/Chip'
 import DropdownPanel from '../components/DropdownPanel'
+import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
+import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
-import type { AppUser } from '../types'
+import type { AppUser, TmdbShowDetail } from '../types'
 
 interface DayGroup {
   heading: string
@@ -41,6 +48,9 @@ function actorId(item: ActivityFeedItem, usernameToId: Map<string, string>): str
 export default function Activity() {
   const { user: me } = useAuth()
   const [feed, setFeed] = useState<ActivityFeedItem[]>([])
+  const [watching, setWatching] = useState<FriendWatchingEntry[]>([])
+  const [showDetails, setShowDetails] = useState<Map<number, TmdbShowDetail>>(new Map())
+  const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set())
   const [members, setMembers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [scope, setScope] = useState<Scope>('following')
@@ -60,16 +70,31 @@ export default function Activity() {
       fetchRecentShowRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
       fetchRecentWatchedAllUsers(GROUP_ACTIVITY_WATCHED_FETCH_LIMIT),
       fetchRecentSeasonRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
+      fetchStartedAllUsers(),
+      fetchDismissedAllUsers(),
+      fetchDroppedAllUsers(),
       fetchAllUsers(),
       fetchAllFollows(),
       me ? fetchFollowingIds(me.id) : Promise.resolve(new Set<string>()),
     ])
-      .then(([ratingRows, watchedRows, seasonRatingRows, users, follows, following]) => {
+      .then((results) => {
         if (!cancelled) {
+          const [
+            ratingRows,
+            watchedRows,
+            seasonRatingRows,
+            startedRows,
+            dismissedRows,
+            droppedRows,
+            users,
+            follows,
+            following,
+          ] = results
           const showEvents = buildGroupActivity(ratingRows, watchedRows, seasonRatingRows)
           const usernameById = new Map(users.map((u) => [u.id, u.username]))
           const followEvents = buildFollowActivity(follows, usernameById)
           setFeed(mergeActivityFeed(showEvents, followEvents))
+          setWatching(buildFriendsWatching(ratingRows, watchedRows, startedRows, dismissedRows, droppedRows))
           setMembers(users)
           setFollowingIds(following)
         }
@@ -84,6 +109,25 @@ export default function Activity() {
       cancelled = true
     }
   }, [me])
+
+  const watchingShowIdsKey = useMemo(() => Array.from(new Set(watching.map((w) => w.showId))).join(','), [watching])
+
+  useEffect(() => {
+    if (!watchingShowIdsKey) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setShowDetails(new Map())
+      return
+    }
+    let cancelled = false
+    getShowDetailsBulk(watchingShowIdsKey.split(',').map(Number))
+      .then((map) => {
+        if (!cancelled) setShowDetails(map)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [watchingShowIdsKey])
 
   useEffect(() => {
     if (!loading && !scopeTouched.current && followingIds.size === 0) {
@@ -106,11 +150,51 @@ export default function Activity() {
     })
   }, [feed, scope, me, followingIds, usernameToId])
 
-  const activeUsernames = useMemo(() => new Set(scoped.map(actorUsername)), [scoped])
+  const scopedWatching = useMemo(() => {
+    if (!me) return []
+    return watching.filter((w) => w.userId !== me.id && (scope === 'everyone' || followingIds.has(w.userId)))
+  }, [watching, scope, me, followingIds])
+
+  const activeUsernames = useMemo(() => {
+    const usernames = new Set(scoped.map(actorUsername))
+    for (const w of scopedWatching) usernames.add(w.username)
+    return usernames
+  }, [scoped, scopedWatching])
+
   const filterableMembers = useMemo(
     () => members.filter((u) => activeUsernames.has(u.username)),
     [members, activeUsernames],
   )
+
+  const personFilteredWatching = useMemo(
+    () => (filterUsername ? scopedWatching.filter((w) => w.username === filterUsername) : scopedWatching),
+    [scopedWatching, filterUsername],
+  )
+
+  const watchingGenres = useMemo(() => {
+    const genres = new Set<string>()
+    for (const w of personFilteredWatching) {
+      for (const g of showDetails.get(w.showId)?.genres ?? []) genres.add(g.name)
+    }
+    return Array.from(genres).sort()
+  }, [personFilteredWatching, showDetails])
+
+  const filteredWatching = useMemo(() => {
+    if (selectedGenres.size === 0) return personFilteredWatching
+    return personFilteredWatching.filter((w) => {
+      const genres = showDetails.get(w.showId)?.genres
+      return genres?.some((g) => selectedGenres.has(g.name))
+    })
+  }, [personFilteredWatching, selectedGenres, showDetails])
+
+  function toggleGenre(genre: string) {
+    setSelectedGenres((prev) => {
+      const next = new Set(prev)
+      if (next.has(genre)) next.delete(genre)
+      else next.add(genre)
+      return next
+    })
+  }
 
   useEffect(() => {
     if (filterUsername && !filterableMembers.some((u) => u.username === filterUsername)) {
@@ -168,15 +252,25 @@ export default function Activity() {
         : 'Nobody you follow has done anything yet.'
       : "Nobody's rated or finished a show yet. Be the first."
 
+  const watchingEmptyMessage = filterUsername
+    ? `@${filterUsername} isn't watching anything right now.`
+    : selectedGenres.size > 0
+      ? 'No matches for the selected genres.'
+      : scope === 'following'
+        ? followingIds.size === 0
+          ? "You're not following anyone yet."
+          : 'Nobody you follow is watching anything right now.'
+        : "Nobody's watching anything right now."
+
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
+    <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
         <h1 className="font-display text-xl font-semibold text-base-100 sm:text-2xl">Activity</h1>
         <p className="mt-1 text-sm text-base-500">
           {filterUsername
             ? `What @${filterUsername} has been up to.`
             : scope === 'following'
-              ? "What people you follow have been up to."
+              ? 'What people you follow have been up to.'
               : 'What the group has been up to.'}
         </p>
       </motion.div>
@@ -235,6 +329,43 @@ export default function Activity() {
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
+      <div className="mb-10">
+        <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
+        <p className="mt-1 text-sm text-base-500">
+          {filterUsername
+            ? `What @${filterUsername} is watching right now.`
+            : scope === 'following'
+              ? 'What people you follow are watching right now.'
+              : "What everyone's watching right now."}
+        </p>
+
+        {watchingGenres.length > 1 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {watchingGenres.map((genre) => (
+              <Chip key={genre} active={selectedGenres.has(genre)} onClick={() => toggleGenre(genre)}>
+                {genre}
+              </Chip>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4">
+          {loading ? (
+            <ShowGridSkeleton count={5} />
+          ) : filteredWatching.length === 0 ? (
+            <p className="text-sm text-base-500">{watchingEmptyMessage}</p>
+          ) : (
+            <div className={POSTER_GRID_CLASSES}>
+              {filteredWatching.map((entry, i) => (
+                <FriendWatchingTile key={`${entry.userId}-${entry.showId}`} entry={entry} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Recent Activity</h2>
+
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: SKELETON_ROWS_WIDE }).map((_, i) => (
@@ -265,9 +396,7 @@ export default function Activity() {
         <div className="space-y-6">
           {dayGroups.map((group) => (
             <div key={group.heading + group.items[0].key}>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">
-                {group.heading}
-              </h3>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">{group.heading}</h3>
               <div className="space-y-2">
                 {group.items.map((item, i) => (
                   <motion.div key={item.key} {...staggerRowMotion(i)}>
@@ -297,6 +426,25 @@ function ScopeChip({ active, onClick, children }: { active: boolean; onClick: ()
     >
       {children}
     </button>
+  )
+}
+
+function FriendWatchingTile({ entry, index }: { entry: FriendWatchingEntry; index: number }) {
+  return (
+    <motion.div {...staggerTileMotion(index)}>
+      <Link to={showRoute(entry.showId)} className="group block">
+        <PosterTile posterPath={entry.showPosterPath} name={entry.showName} />
+        <p className="mt-2 truncate text-sm font-medium text-base-100">{entry.showName}</p>
+        <p className="text-xs text-base-400">
+          {entry.watchedCount}
+          {entry.totalEpisodes ? `/${entry.totalEpisodes}` : ''} episodes
+        </p>
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <Avatar username={entry.username} size="xs" />
+          <span className="truncate text-xs text-base-500">@{entry.username}</span>
+        </div>
+      </Link>
+    </motion.div>
   )
 }
 

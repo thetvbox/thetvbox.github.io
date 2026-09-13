@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
-import { TABLE_SHOW_STARTED } from './constants'
-import type { ShowStarted } from '../types'
+import { fetchPaginated } from './pagination'
+import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_STARTED } from './constants'
+import type { ShowStarted, ShowStartedWithUser } from '../types'
 
 /** Fetches all shows one user has explicitly started. */
 export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]> {
@@ -8,6 +9,19 @@ export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]
 
   if (error) throw error
   return (data ?? []) as ShowStarted[]
+}
+
+/** Every started-show row across the whole group, joined with usernames, for a group "now watching" view. */
+export async function fetchStartedAllUsers(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<ShowStartedWithUser[]> {
+  return fetchPaginated<ShowStartedWithUser>(async (from, to) => {
+    const { data, error, count } = await supabase
+      .from(TABLE_SHOW_STARTED)
+      .select('*, users(username)', { count: 'exact' })
+      .order('started_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as ShowStartedWithUser[] | null, error, count }
+  }, limit)
 }
 
 /** Fetches one user's started status for a single show, or null if not started. */

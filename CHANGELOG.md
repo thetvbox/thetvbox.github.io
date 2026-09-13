@@ -8,6 +8,12 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Added
 
+- Activity now has a "Now Watching" section showing what people you follow
+  (or everyone, via the same Following/Everyone toggle the rest of the page
+  uses) are currently in the middle of -- their poster, episode progress,
+  and who's watching it. Filterable by genre with a row of chips, the same
+  pattern already used for genre filtering on History. Your own shows are
+  left out since Home already covers those.
 - Show Detail now shows the IMDb rating and Rotten Tomatoes score next to
   a show's year/seasons/status, sourced from OMDb -- requires an optional
   free OMDb API key (see .env.example); scores just don't show up without

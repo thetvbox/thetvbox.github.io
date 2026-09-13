@@ -8,6 +8,13 @@ vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../lib/showRatings', () => ({ fetchRecentShowRatingsAllUsers: vi.fn() }))
 vi.mock('../lib/seasonRatings', () => ({ fetchRecentSeasonRatingsAllUsers: vi.fn() }))
 vi.mock('../lib/watched', () => ({ fetchRecentWatchedAllUsers: vi.fn() }))
+vi.mock('../lib/showStarted', () => ({ fetchStartedAllUsers: vi.fn() }))
+vi.mock('../lib/showDismissed', () => ({ fetchDismissedAllUsers: vi.fn() }))
+vi.mock('../lib/showDropped', () => ({ fetchDroppedAllUsers: vi.fn() }))
+vi.mock('../lib/tmdb', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/tmdb')>()),
+  getShowDetailsBulk: vi.fn(),
+}))
 vi.mock('../lib/users', () => ({ fetchAllUsers: vi.fn() }))
 vi.mock('../lib/follows', () => ({ fetchAllFollows: vi.fn(), fetchFollowingIds: vi.fn() }))
 vi.mock('../components/ActivityRow', () => ({
@@ -21,10 +28,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
 import { fetchRecentSeasonRatingsAllUsers } from '../lib/seasonRatings'
 import { fetchRecentWatchedAllUsers } from '../lib/watched'
+import { fetchStartedAllUsers } from '../lib/showStarted'
+import { fetchDismissedAllUsers } from '../lib/showDismissed'
+import { fetchDroppedAllUsers } from '../lib/showDropped'
+import { getShowDetailsBulk } from '../lib/tmdb'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import Activity from './Activity'
-import type { AppUser, Follow, ShowRatingWithUser } from '../types'
+import type { AppUser, Follow, ShowRatingWithUser, ShowStartedWithUser, TmdbShowDetail } from '../types'
 
 const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
 const friend: AppUser = { id: 'u2', email: 'friend@example.com', username: 'friend', created_at: '2026-01-01T00:00:00Z' }
@@ -44,6 +55,39 @@ function ratingFor(user: AppUser, overrides: Partial<ShowRatingWithUser> = {}): 
   }
 }
 
+function startedFor(user: AppUser, overrides: Partial<ShowStartedWithUser> = {}): ShowStartedWithUser {
+  return {
+    id: `s-${user.id}`,
+    user_id: user.id,
+    show_id: 1,
+    show_name: 'Show One',
+    show_poster_path: null,
+    show_total_episodes: 10,
+    started_at: '2026-01-01T00:00:00Z',
+    users: { username: user.username },
+    ...overrides,
+  }
+}
+
+function showDetail(overrides: Partial<TmdbShowDetail> = {}): TmdbShowDetail {
+  return {
+    id: 1,
+    name: 'Show One',
+    overview: '',
+    poster_path: null,
+    backdrop_path: null,
+    first_air_date: '2020-05-01',
+    genres: [{ id: 1, name: 'Drama' }],
+    number_of_seasons: 1,
+    number_of_episodes: 10,
+    status: 'Ended',
+    origin_country: ['US'],
+    original_language: 'en',
+    seasons: [],
+    ...overrides,
+  }
+}
+
 function renderActivity() {
   return render(
     <MemoryRouter>
@@ -56,6 +100,10 @@ beforeEach(() => {
   vi.mocked(fetchRecentShowRatingsAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchRecentSeasonRatingsAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchRecentWatchedAllUsers).mockReset().mockResolvedValue([])
+  vi.mocked(fetchStartedAllUsers).mockReset().mockResolvedValue([])
+  vi.mocked(fetchDismissedAllUsers).mockReset().mockResolvedValue([])
+  vi.mocked(fetchDroppedAllUsers).mockReset().mockResolvedValue([])
+  vi.mocked(getShowDetailsBulk).mockReset().mockResolvedValue(new Map())
   vi.mocked(fetchAllUsers).mockReset().mockResolvedValue([me, friend, stranger])
   vi.mocked(fetchAllFollows).mockReset().mockResolvedValue([])
   vi.mocked(fetchFollowingIds).mockReset().mockResolvedValue(new Set())
@@ -227,5 +275,71 @@ describe('Activity', () => {
     vi.mocked(fetchAllFollows).mockResolvedValue([follow])
     renderActivity()
     await waitFor(() => expect(screen.getByText('Followed stranger')).toBeInTheDocument())
+  })
+
+  it('shows a friend\'s in-progress show in Now Watching, excluding the signed-in user\'s own', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([startedFor(friend), startedFor(me, { id: 's-me', show_id: 9 })])
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    expect(screen.getByText('@friend')).toBeInTheDocument()
+    expect(screen.getByText('0/10 episodes')).toBeInTheDocument()
+  })
+
+  it("hides a followed person's Now Watching entry after switching back to Following scope", async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(stranger, { id: 's-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    expect(screen.queryByText('Show Two')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Everyone'))
+    await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
+
+    fireEvent.click(screen.getByText('Following'))
+    await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
+    expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
+  })
+
+  it('shows an empty message in Now Watching when nobody followed is watching anything', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    renderActivity()
+    await waitFor(() =>
+      expect(screen.getByText('Nobody you follow is watching anything right now.')).toBeInTheDocument(),
+    )
+  })
+
+  it('offers genre chips once show details resolve, and filters Now Watching by the selected genre', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Drama' })).toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Comedy' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Drama' }))
+    await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
+    expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
+  })
+
+  it('does not show genre chips when everything in Now Watching shares one genre', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([startedFor(friend)])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(new Map([[1, showDetail()]]))
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Drama' })).not.toBeInTheDocument())
   })
 })

@@ -5,11 +5,14 @@ import type {
   Follow,
   SeasonRatingWithUser,
   ShowDropped,
+  ShowDroppedWithUser,
   ShowRating,
   ShowRatingWithUser,
   ShowRewatch,
   ShowStarted,
+  ShowStartedWithUser,
   ShowWatchingDismissed,
+  ShowWatchingDismissedWithUser,
   ShowWatchSummary,
   UndatedShowWatchSummary,
 } from '../types'
@@ -418,6 +421,64 @@ export function buildGroupActivity(
 
   events.sort((a, b) => b.at.localeCompare(a.at))
   return events
+}
+
+export interface FriendWatchingEntry extends ShowActivity {
+  userId: string
+  username: string
+}
+
+/** Merges every member's started/watched/dismissed/dropped rows into "who's watching what right now". */
+export function buildFriendsWatching(
+  ratings: ShowRatingWithUser[],
+  watched: EpisodeWatchedWithUser[],
+  started: ShowStartedWithUser[],
+  dismissed: ShowWatchingDismissedWithUser[],
+  dropped: ShowDroppedWithUser[],
+): FriendWatchingEntry[] {
+  interface UserBucket {
+    username: string
+    ratings: ShowRating[]
+    watched: EpisodeWatched[]
+    started: ShowStarted[]
+    dismissed: ShowWatchingDismissed[]
+    dropped: ShowDropped[]
+  }
+  const byUser = new Map<string, UserBucket>()
+
+  function bucketFor(userId: string, username: string | undefined): UserBucket {
+    let bucket = byUser.get(userId)
+    if (!bucket) {
+      bucket = { username: username ?? 'unknown', ratings: [], watched: [], started: [], dismissed: [], dropped: [] }
+      byUser.set(userId, bucket)
+    } else if (username) {
+      bucket.username = username
+    }
+    return bucket
+  }
+
+  for (const r of ratings) bucketFor(r.user_id, r.users?.username).ratings.push(r)
+  for (const w of watched) bucketFor(w.user_id, w.users?.username).watched.push(w)
+  for (const s of started) bucketFor(s.user_id, s.users?.username).started.push(s)
+  for (const d of dismissed) bucketFor(d.user_id, d.users?.username).dismissed.push(d)
+  for (const d of dropped) bucketFor(d.user_id, d.users?.username).dropped.push(d)
+
+  const entries: FriendWatchingEntry[] = []
+  for (const [userId, bucket] of byUser) {
+    const summaries = summarizeShowActivity(
+      bucket.ratings,
+      bucket.watched,
+      bucket.started,
+      bucket.dismissed,
+      bucket.dropped,
+    )
+    for (const w of nowWatching(summaries)) {
+      entries.push({ ...w, userId, username: bucket.username })
+    }
+  }
+
+  entries.sort((a, b) => (b.lastWatchedAt ?? b.startedAt ?? '').localeCompare(a.lastWatchedAt ?? a.startedAt ?? ''))
+  return entries
 }
 
 export interface FollowActivityEvent {

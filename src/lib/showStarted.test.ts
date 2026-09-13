@@ -4,7 +4,7 @@ import { createQueryBuilder } from '../test/supabaseMock'
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
-import { fetchStartedForUser, fetchStartedItem, startShow } from './showStarted'
+import { fetchStartedAllUsers, fetchStartedForUser, fetchStartedItem, startShow } from './showStarted'
 import type { ShowStarted } from '../types'
 
 function row(overrides: Partial<ShowStarted> = {}): ShowStarted {
@@ -44,6 +44,19 @@ describe('fetchStartedForUser', () => {
   it('throws on a Supabase error', async () => {
     mockFrom({ error: new Error('boom') })
     await expect(fetchStartedForUser('u1')).rejects.toThrow('boom')
+  })
+})
+
+describe('fetchStartedAllUsers', () => {
+  it('passes through a single page of results, joined with usernames', async () => {
+    const rows = [{ ...row(), users: { username: 'friend' } }]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchStartedAllUsers()).toEqual(rows)
+  })
+
+  it('throws on a Supabase error', async () => {
+    mockFrom({ error: new Error('boom') })
+    await expect(fetchStartedAllUsers()).rejects.toThrow('boom')
   })
 })
 

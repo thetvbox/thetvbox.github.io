@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
-import { TABLE_SHOW_WATCHING_DISMISSED } from './constants'
-import type { ShowWatchingDismissed } from '../types'
+import { fetchPaginated } from './pagination'
+import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_WATCHING_DISMISSED } from './constants'
+import type { ShowWatchingDismissed, ShowWatchingDismissedWithUser } from '../types'
 
 /** Fetches all shows one user has hidden from Now Watching. */
 export async function fetchDismissedForUser(userId: string): Promise<ShowWatchingDismissed[]> {
@@ -8,6 +9,21 @@ export async function fetchDismissedForUser(userId: string): Promise<ShowWatchin
 
   if (error) throw error
   return (data ?? []) as ShowWatchingDismissed[]
+}
+
+/** Every dismissed-show row across the whole group, joined with usernames, for a group "now watching" view. */
+export async function fetchDismissedAllUsers(
+  limit = GROUP_ACTIVITY_FETCH_LIMIT,
+): Promise<ShowWatchingDismissedWithUser[]> {
+  return fetchPaginated<ShowWatchingDismissedWithUser>(async (from, to) => {
+    const { data, error, count } = await supabase
+      .from(TABLE_SHOW_WATCHING_DISMISSED)
+      .select('*, users(username)', { count: 'exact' })
+      .order('dismissed_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as ShowWatchingDismissedWithUser[] | null, error, count }
+  }, limit)
 }
 
 /** Fetches one user's dismissed status for a single show, or null if not dismissed. */

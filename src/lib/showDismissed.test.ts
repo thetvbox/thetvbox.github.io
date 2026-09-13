@@ -4,7 +4,7 @@ import { createQueryBuilder } from '../test/supabaseMock'
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
-import { dismissShow, fetchDismissedForUser, fetchDismissedItem, undismissShow } from './showDismissed'
+import { dismissShow, fetchDismissedAllUsers, fetchDismissedForUser, fetchDismissedItem, undismissShow } from './showDismissed'
 import type { ShowWatchingDismissed } from '../types'
 
 function row(overrides: Partial<ShowWatchingDismissed> = {}): ShowWatchingDismissed {
@@ -31,6 +31,19 @@ describe('fetchDismissedForUser', () => {
   it('throws on error', async () => {
     mockFrom({ data: null, error: { message: 'fail' } })
     await expect(fetchDismissedForUser('u1')).rejects.toEqual({ message: 'fail' })
+  })
+})
+
+describe('fetchDismissedAllUsers', () => {
+  it('passes through a single page of results, joined with usernames', async () => {
+    const rows = [{ ...row(), users: { username: 'friend' } }]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchDismissedAllUsers()).toEqual(rows)
+  })
+
+  it('throws on error', async () => {
+    mockFrom({ data: null, error: { message: 'fail' } })
+    await expect(fetchDismissedAllUsers()).rejects.toEqual({ message: 'fail' })
   })
 })
 

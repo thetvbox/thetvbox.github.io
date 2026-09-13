@@ -218,11 +218,19 @@ export interface ShowStarted {
   started_at: string
 }
 
+export interface ShowStartedWithUser extends ShowStarted {
+  users: { username: string } | null
+}
+
 export interface ShowWatchingDismissed {
   id: string
   user_id: string
   show_id: number
   dismissed_at: string
+}
+
+export interface ShowWatchingDismissedWithUser extends ShowWatchingDismissed {
+  users: { username: string } | null
 }
 
 export interface ShowDropped {
@@ -232,6 +240,10 @@ export interface ShowDropped {
   show_name: string
   show_poster_path: string | null
   dropped_at: string
+}
+
+export interface ShowDroppedWithUser extends ShowDropped {
+  users: { username: string } | null
 }
 
 export interface ShowRewatch {

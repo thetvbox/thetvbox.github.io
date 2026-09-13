@@ -4,7 +4,7 @@ import { createQueryBuilder } from '../test/supabaseMock'
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
-import { dropShow, fetchDroppedForUser, fetchDroppedItem, undropShow } from './showDropped'
+import { dropShow, fetchDroppedAllUsers, fetchDroppedForUser, fetchDroppedItem, undropShow } from './showDropped'
 import type { ShowDropped } from '../types'
 
 function row(overrides: Partial<ShowDropped> = {}): ShowDropped {
@@ -46,6 +46,19 @@ describe('fetchDroppedForUser', () => {
   it('throws on error', async () => {
     mockFrom({ data: null, error: { message: 'fail' } })
     await expect(fetchDroppedForUser('u1')).rejects.toEqual({ message: 'fail' })
+  })
+})
+
+describe('fetchDroppedAllUsers', () => {
+  it('passes through a single page of results, joined with usernames', async () => {
+    const rows = [{ ...row(), users: { username: 'friend' } }]
+    mockFrom({ data: rows, count: rows.length })
+    expect(await fetchDroppedAllUsers()).toEqual(rows)
+  })
+
+  it('throws on error', async () => {
+    mockFrom({ data: null, error: { message: 'fail' } })
+    await expect(fetchDroppedAllUsers()).rejects.toEqual({ message: 'fail' })
   })
 })
 

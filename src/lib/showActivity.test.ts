@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildDiaryEntries,
   buildFollowActivity,
+  buildFriendsWatching,
   buildGroupActivity,
   buildUndatedDiaryEntriesFromSummary,
   mergeActivityFeed,
@@ -22,6 +23,7 @@ import type {
   ShowRatingWithUser,
   ShowRewatch,
   ShowStarted,
+  ShowStartedWithUser,
   ShowWatchingDismissed,
   ShowWatchSummary,
   UndatedShowWatchSummary,
@@ -552,6 +554,81 @@ describe('buildGroupActivity', () => {
       [watchedWithUser({ id: 'w9', show_id: 2, watched_at: '2026-06-01T00:00:00Z', show_total_episodes: 1 })],
     )
     expect(events[0].showId).toBe(2)
+  })
+})
+
+describe('buildFriendsWatching', () => {
+  function startedWithUser(overrides: Partial<ShowStartedWithUser> = {}): ShowStartedWithUser {
+    return { ...started(), users: { username: 'alice' }, ...overrides }
+  }
+
+  it('includes a started-but-unfinished show', () => {
+    const entries = buildFriendsWatching([], [], [startedWithUser()], [], [])
+    expect(entries).toHaveLength(1)
+    expect(entries[0]).toMatchObject({ userId: 'u1', username: 'alice', showId: 1, started: true })
+  })
+
+  it('excludes a finished show', () => {
+    const rows = [1, 2].map((n) =>
+      ({ ...watched({ id: `w${n}`, episode_number: n, show_total_episodes: 2 }), users: { username: 'alice' } }),
+    )
+    const entries = buildFriendsWatching([], rows, [], [], [])
+    expect(entries).toHaveLength(0)
+  })
+
+  it('excludes a dismissed show', () => {
+    const entries = buildFriendsWatching(
+      [],
+      [],
+      [startedWithUser()],
+      [{ ...dismissed(), users: { username: 'alice' } }],
+      [],
+    )
+    expect(entries).toHaveLength(0)
+  })
+
+  it('excludes a dropped show', () => {
+    const entries = buildFriendsWatching(
+      [],
+      [],
+      [startedWithUser()],
+      [],
+      [{ ...dropped(), users: { username: 'alice' } }],
+    )
+    expect(entries).toHaveLength(0)
+  })
+
+  it('groups by user, keeping each person\'s watching list separate', () => {
+    const entries = buildFriendsWatching(
+      [],
+      [],
+      [
+        startedWithUser({ user_id: 'u1', users: { username: 'alice' } }),
+        startedWithUser({ id: 's2', user_id: 'u2', show_id: 2, users: { username: 'bob' } }),
+      ],
+      [],
+      [],
+    )
+    expect(entries.map((e) => e.username).sort()).toEqual(['alice', 'bob'])
+  })
+
+  it('sorts entries across users by most recently watched/started first', () => {
+    const entries = buildFriendsWatching(
+      [],
+      [],
+      [
+        startedWithUser({ user_id: 'u1', started_at: '2026-01-01T00:00:00Z' }),
+        startedWithUser({ id: 's2', user_id: 'u2', show_id: 2, started_at: '2026-06-01T00:00:00Z' }),
+      ],
+      [],
+      [],
+    )
+    expect(entries[0].showId).toBe(2)
+  })
+
+  it('falls back to "unknown" when a user record has no username', () => {
+    const entries = buildFriendsWatching([], [], [startedWithUser({ users: null })], [], [])
+    expect(entries[0].username).toBe('unknown')
   })
 })
 
