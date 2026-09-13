@@ -34,6 +34,7 @@ import { fetchDroppedAllUsers } from '../lib/showDropped'
 import { getShowDetailsBulk } from '../lib/tmdb'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
+import { NOW_WATCHING_PREVIEW_LIMIT } from '../lib/constants'
 import Activity from './Activity'
 import type { AppUser, Follow, ShowRatingWithUser, ShowStartedWithUser, TmdbShowDetail } from '../types'
 
@@ -312,7 +313,7 @@ describe('Activity', () => {
     )
   })
 
-  it('offers genre chips once show details resolve, and filters Now Watching by the selected genre', async () => {
+  it('offers a genre filter once show details resolve, and filters Now Watching by the selected genre', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([
       startedFor(friend),
@@ -326,20 +327,77 @@ describe('Activity', () => {
     )
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Drama' })).toBeInTheDocument())
-    expect(screen.getByRole('button', { name: 'Comedy' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Drama' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Genre' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
+    fireEvent.click(within(dialog).getByText('Drama'))
+
     await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
     expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Genre · 1' })).toBeInTheDocument()
   })
 
-  it('does not show genre chips when everything in Now Watching shares one genre', async () => {
+  it('does not show a genre filter when everything in Now Watching shares one genre', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([startedFor(friend)])
     vi.mocked(getShowDetailsBulk).mockResolvedValue(new Map([[1, showDetail()]]))
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Drama' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /Genre/ })).not.toBeInTheDocument()
+  })
+
+  it('closes the genre filter panel via its close button, and Clear resets the selection', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Genre' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
+    fireEvent.click(within(dialog).getByText('Drama'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre · 1' })).toBeInTheDocument())
+
+    fireEvent.click(within(dialog).getByText('Clear'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Filter by genre' })).not.toBeInTheDocument())
+  })
+
+  it('caps Now Watching to a preview, and Show all / Show less reveals or collapses the rest', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    const total = NOW_WATCHING_PREVIEW_LIMIT + 2
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue(
+      Array.from({ length: total }, (_, i) =>
+        startedFor(friend, { id: `s-friend-${i}`, show_id: i + 1, show_name: `Show ${i + 1}` }),
+      ),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText(/episodes$/).length).toBe(NOW_WATCHING_PREVIEW_LIMIT))
+    expect(screen.getByText(`Show all ${total}`)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(`Show all ${total}`))
+    expect(screen.getAllByText(/episodes$/).length).toBe(total)
+
+    fireEvent.click(screen.getByText('Show less'))
+    expect(screen.getAllByText(/episodes$/).length).toBe(NOW_WATCHING_PREVIEW_LIMIT)
+  })
+
+  it('does not show a Show all toggle when Now Watching fits within the preview limit', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([startedFor(friend)])
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    expect(screen.queryByText(/Show all/)).not.toBeInTheDocument()
   })
 })

@@ -29,6 +29,7 @@ export const SKELETON_ROWS_WIDE = 6
 export const DIARY_PAGE_SIZE = 40
 
 export const HOME_PREVIEW_LIMIT = 6
+export const NOW_WATCHING_PREVIEW_LIMIT = 6
 
 export const POSTER_THUMB_SIZE = 'w185'
 

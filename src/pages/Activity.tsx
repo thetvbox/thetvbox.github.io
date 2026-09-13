@@ -15,14 +15,22 @@ import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { getShowDetailsBulk } from '../lib/tmdb'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
-import { GROUP_ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
+import {
+  GROUP_ACTIVITY_FETCH_LIMIT,
+  GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
+  NOW_WATCHING_PREVIEW_LIMIT,
+  SKELETON_ROWS_WIDE,
+} from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
+import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import Chip from '../components/Chip'
 import DropdownPanel from '../components/DropdownPanel'
+import InlinePanel from '../components/InlinePanel'
+import PanelHeader from '../components/PanelHeader'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -51,6 +59,8 @@ export default function Activity() {
   const [watching, setWatching] = useState<FriendWatchingEntry[]>([])
   const [showDetails, setShowDetails] = useState<Map<number, TmdbShowDetail>>(new Map())
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set())
+  const [genreFilterOpen, setGenreFilterOpen] = useState(false)
+  const [showAllWatching, setShowAllWatching] = useState(false)
   const [members, setMembers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [scope, setScope] = useState<Scope>('following')
@@ -196,12 +206,35 @@ export default function Activity() {
     })
   }
 
+  const visibleWatching = showAllWatching ? filteredWatching : filteredWatching.slice(0, NOW_WATCHING_PREVIEW_LIMIT)
+  const selectedGenresKey = useMemo(() => Array.from(selectedGenres).sort().join(','), [selectedGenres])
+
   useEffect(() => {
     if (filterUsername && !filterableMembers.some((u) => u.username === filterUsername)) {
       // oxlint-disable-next-line react/set-state-in-effect
       setFilterUsername(null)
     }
   }, [filterUsername, filterableMembers])
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setSelectedGenres((prev) => {
+      const pruned = new Set(Array.from(prev).filter((g) => watchingGenres.includes(g)))
+      return pruned.size === prev.size ? prev : pruned
+    })
+  }, [watchingGenres])
+
+  useEffect(() => {
+    if (genreFilterOpen && watchingGenres.length <= 1) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setGenreFilterOpen(false)
+    }
+  }, [genreFilterOpen, watchingGenres])
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setShowAllWatching(false)
+  }, [scope, filterUsername, selectedGenresKey])
 
   useEffect(() => {
     if (personFilterOpen && filterableMembers.length <= 1) {
@@ -330,7 +363,23 @@ export default function Activity() {
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       <div className="mb-10">
-        <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
+          {watchingGenres.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setGenreFilterOpen((v) => !v)}
+              aria-pressed={genreFilterOpen}
+              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
+                genreFilterOpen || selectedGenres.size > 0
+                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
+                  : 'text-base-500 hover:bg-hover hover:text-base-200'
+              }`}
+            >
+              Genre{selectedGenres.size > 0 ? ` · ${selectedGenres.size}` : ''}
+            </button>
+          )}
+        </div>
         <p className="mt-1 text-sm text-base-500">
           {filterUsername
             ? `What @${filterUsername} is watching right now.`
@@ -339,27 +388,41 @@ export default function Activity() {
               : "What everyone's watching right now."}
         </p>
 
-        {watchingGenres.length > 1 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {watchingGenres.map((genre) => (
-              <Chip key={genre} active={selectedGenres.has(genre)} onClick={() => toggleGenre(genre)}>
-                {genre}
-              </Chip>
-            ))}
-          </div>
-        )}
+        <AnimatePresence>
+          {genreFilterOpen && (
+            <GenreFilterPanel
+              key="genre-filter"
+              genres={watchingGenres}
+              selected={selectedGenres}
+              onToggle={toggleGenre}
+              onClear={() => setSelectedGenres(new Set())}
+              onClose={() => setGenreFilterOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="mt-4">
           {loading ? (
-            <ShowGridSkeleton count={5} />
+            <ShowGridSkeleton count={NOW_WATCHING_PREVIEW_LIMIT} />
           ) : filteredWatching.length === 0 ? (
             <p className="text-sm text-base-500">{watchingEmptyMessage}</p>
           ) : (
-            <div className={POSTER_GRID_CLASSES}>
-              {filteredWatching.map((entry, i) => (
-                <FriendWatchingTile key={`${entry.userId}-${entry.showId}`} entry={entry} index={i} />
-              ))}
-            </div>
+            <>
+              <div className={POSTER_GRID_CLASSES}>
+                {visibleWatching.map((entry, i) => (
+                  <FriendWatchingTile key={`${entry.userId}-${entry.showId}`} entry={entry} index={i} />
+                ))}
+              </div>
+              {filteredWatching.length > NOW_WATCHING_PREVIEW_LIMIT && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllWatching((v) => !v)}
+                  className="mt-4 text-xs font-medium text-accent-400 hover:underline"
+                >
+                  {showAllWatching ? 'Show less' : `Show all ${filteredWatching.length}`}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -445,6 +508,45 @@ function FriendWatchingTile({ entry, index }: { entry: FriendWatchingEntry; inde
         </div>
       </Link>
     </motion.div>
+  )
+}
+
+/** The genre facet for Now Watching, inline (its result is the poster grid directly below it). */
+function GenreFilterPanel({
+  genres,
+  selected,
+  onToggle,
+  onClear,
+  onClose,
+}: {
+  genres: string[]
+  selected: Set<string>
+  onToggle: (genre: string) => void
+  onClear: () => void
+  onClose: () => void
+}) {
+  useEscapeAndFocusReturn(true, onClose)
+  return (
+    <InlinePanel className="p-3.5" label="Filter by genre">
+      <PanelHeader
+        title="Genre"
+        onClose={onClose}
+        actions={
+          selected.size > 0 && (
+            <button type="button" onClick={onClear} className="text-xs font-medium text-accent-400 hover:underline">
+              Clear
+            </button>
+          )
+        }
+      />
+      <div className="flex flex-wrap gap-1.5">
+        {genres.map((genre) => (
+          <Chip key={genre} active={selected.has(genre)} onClick={() => onToggle(genre)}>
+            {genre}
+          </Chip>
+        ))}
+      </div>
+    </InlinePanel>
   )
 }
 
