@@ -61,9 +61,9 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh bg-base-950">
+    <div className="relative min-h-dvh bg-base-950">
       {showNav && <Navbar />}
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
         <motion.div key={location.pathname} {...ROUTE_TRANSITION_MOTION}>
           <ErrorBoundary>
             <Routes location={location}>

@@ -148,7 +148,7 @@ describe('Home', () => {
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
   })
 
-  it('keeps the skeleton up until season and episode enrichment finishes, avoiding a partial-content flash', async () => {
+  it('keeps the skeleton up until season-progress enrichment finishes, avoiding a partial-content flash', async () => {
     vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
     let resolveBreakdowns!: (value: Map<number, TmdbSeasonSummary[]>) => void
     vi.mocked(fetchSeasonBreakdowns).mockReturnValue(
@@ -156,7 +156,7 @@ describe('Home', () => {
         resolveBreakdowns = resolve
       }),
     )
-    vi.mocked(fetchNextEpisode).mockResolvedValue({ seasonNumber: 1, episodeNumber: 2, airDate: '2026-02-01' })
+    vi.mocked(fetchNextEpisode).mockReturnValue(new Promise(() => {}))
     const { container } = renderHome()
 
     await waitFor(() => expect(fetchSeasonBreakdowns).toHaveBeenCalled())
@@ -166,7 +166,28 @@ describe('Home', () => {
     resolveBreakdowns(new Map([[1, [season({ season_number: 1, episode_count: 10 })]]]))
 
     await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
-    expect(screen.getByText(/New episode/)).toBeInTheDocument()
+    expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument()
+  })
+
+  it('shows the "New episode" badge as a progressive enhancement once TVmaze-backed enrichment resolves, without blocking the tile itself', async () => {
+    vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
+    vi.mocked(fetchSeasonBreakdowns).mockResolvedValue(
+      new Map([[1, [season({ season_number: 1, episode_count: 10 })]]]),
+    )
+    let resolveNextEpisode!: (value: Awaited<ReturnType<typeof fetchNextEpisode>>) => void
+    vi.mocked(fetchNextEpisode).mockReturnValue(
+      new Promise((resolve) => {
+        resolveNextEpisode = resolve
+      }),
+    )
+    renderHome()
+
+    await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
+    expect(screen.queryByText(/New episode/)).not.toBeInTheDocument()
+
+    resolveNextEpisode({ seasonNumber: 1, episodeNumber: 2, airDate: '2026-02-01' })
+
+    await waitFor(() => expect(screen.getByText(/New episode/)).toBeInTheDocument())
   })
 
   it('renders the watchlist section', async () => {

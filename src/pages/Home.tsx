@@ -19,7 +19,7 @@ import {
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
-import { PAGE_HEADER_MOTION, staggerTileMotion } from '../lib/motion'
+import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import {
   ACTIVITY_FETCH_LIMIT,
   HOME_PREVIEW_LIMIT,
@@ -140,7 +140,7 @@ export default function Home() {
     let cancelled = false
     const showIds = watchingKey.split(',').map(Number)
     fetchSeasonBreakdowns(showIds)
-      .then(async (breakdowns) => {
+      .then((breakdowns) => {
         if (cancelled) return
         const progressByShow = new Map<number, SeasonProgress>()
         for (const id of showIds) {
@@ -149,19 +149,26 @@ export default function Home() {
           const progress = computeSeasonProgress(seasons, watchedBySeasonByShow.get(id) ?? {})
           if (progress) progressByShow.set(id, progress)
         }
-        const nextByShow = new Map<number, NextEpisode>()
-        await Promise.all(
+        setSeasonProgress(progressByShow)
+        setEnrichedKey(watchingKey)
+
+        Promise.all(
           Array.from(progressByShow.entries()).map(async ([showId, progress]) => {
             const next = await fetchNextEpisode(showId, progress.currentSeasonNumber)
-            if (next) nextByShow.set(showId, next)
+            return [showId, next] as const
           }),
         )
-        if (cancelled) return
-        setSeasonProgress(progressByShow)
-        setNextEpisodes(nextByShow)
+          .then((results) => {
+            if (cancelled) return
+            const nextByShow = new Map<number, NextEpisode>()
+            for (const [showId, next] of results) {
+              if (next) nextByShow.set(showId, next)
+            }
+            setNextEpisodes(nextByShow)
+          })
+          .catch(() => {})
       })
-      .catch(() => {})
-      .finally(() => {
+      .catch(() => {
         if (!cancelled) setEnrichedKey(watchingKey)
       })
     return () => {
@@ -255,9 +262,9 @@ export default function Home() {
                       : ''}
                   </p>
                   {nextEpisode && (
-                    <p className="text-[11px] text-accent-400">
+                    <motion.p {...TRIGGER_SWAP_MOTION} className="text-[11px] text-accent-400">
                       New episode {formatShortDate(nextEpisode.airDate)}
-                    </p>
+                    </motion.p>
                   )}
                   <div className="mt-1.5">
                     <SeasonProgressBar

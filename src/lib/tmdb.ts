@@ -75,11 +75,16 @@ export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number,
   return map
 }
 
-export async function getSeasonDetail(
-  showId: number,
-  seasonNumber: number,
-): Promise<TmdbSeasonDetail> {
-  return tmdbFetch<TmdbSeasonDetail>(`/tv/${showId}/season/${seasonNumber}`)
+const seasonDetailCache = new Map<string, TmdbSeasonDetail>()
+
+/** Fetches a season's full episode list, session-cached like getShowDetail. */
+export async function getSeasonDetail(showId: number, seasonNumber: number): Promise<TmdbSeasonDetail> {
+  const key = `${showId}:${seasonNumber}`
+  const cached = seasonDetailCache.get(key)
+  if (cached) return cached
+  const detail = await tmdbFetch<TmdbSeasonDetail>(`/tv/${showId}/season/${seasonNumber}`)
+  seasonDetailCache.set(key, detail)
+  return detail
 }
 
 /** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB. */

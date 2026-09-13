@@ -115,6 +115,17 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- Every page felt slower to navigate to than it should: the page-transition
+  fade was written so the outgoing page had to fully finish animating out
+  before the incoming page even started mounting (and firing its data
+  fetches), adding a fixed delay to every single navigation in the app for
+  no visual benefit over letting both cross-fade at once. Separately, Home
+  kept its entire "Now Watching" section behind a loading skeleton until a
+  third-party air-date correction had finished for every show with an
+  upcoming episode, even though only the "New episode" badge actually
+  needed that data -- posters, titles, and watched counts now appear as
+  soon as your own data loads, and the badge fades in a moment later
+  instead of holding the whole section hostage to a slow external API.
 - Opening Activity's "Filter by person" dropdown on a narrow screen could
   push the whole page's viewport wider and shove the trigger row to the
   left, with the dropdown itself overflowing off the right edge. It's now
