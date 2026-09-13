@@ -97,24 +97,12 @@ export default function Compare() {
     return { shared: rows, matchPercent: match }
   }, [myRatings, theirRatings])
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
-      </div>
-    )
+  if (me && username === me.username) {
+    return <CenteredMessage message="You can't compare with yourself." />
   }
 
   if (them === null) {
     return <CenteredMessage message={`No one found with username “${username}”.`} />
-  }
-
-  if (me && username === me.username) {
-    return <CenteredMessage message="You can't compare with yourself." />
   }
 
   return (
@@ -126,7 +114,13 @@ export default function Compare() {
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
-      {shared.length === 0 ? (
+      {loading ? (
+        <div className="space-y-2">
+          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
+          ))}
+        </div>
+      ) : shared.length === 0 ? (
         <EmptyState icon="🤝">
           <p className="max-w-xs text-sm text-base-500">
             No overlap yet — you haven&apos;t rated any of the same shows.

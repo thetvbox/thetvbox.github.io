@@ -190,6 +190,20 @@ All notable changes to TV Box are documented here. Format loosely follows
   on every load before deciding whether you were signed in, even though
   the check itself is instant -- it now resolves in the same render, so
   the spinner no longer appears at all for that step.
+- Compare was the only page in the app whose loading state replaced the
+  entire page with a bare skeleton -- opening it showed a blank flash
+  with no title before "You vs @username" and the rest of the layout
+  appeared. The header now stays up front while the comparison loads
+  underneath it, like every other page.
+- A list's remove button (the × on a poster in List Detail) was only
+  ever shown on hover, with no equivalent for keyboard focus -- tabbing
+  to it on desktop landed an invisible focus ring on a button you
+  couldn't see. It now also appears on keyboard focus, not just hover.
+- Search's "Trending this week" row sat below a tall, heavily-padded
+  prompt card, pushing it mostly off-screen on first load (especially
+  on mobile) even though it's the most useful thing on the page before
+  you've typed anything. The prompt is now a plain line of text instead
+  of a bordered card, so Trending appears much closer to the top.
 
 ## [1.2.0] - 2026-09-07
 

@@ -122,6 +122,15 @@ describe('ListDetail', () => {
     expect(screen.getByLabelText('Remove Show One from this list')).toBeInTheDocument()
   })
 
+  it('keeps the remove button visible on keyboard focus, not just hover', async () => {
+    vi.mocked(fetchUserByUsername).mockResolvedValue(owner)
+    vi.mocked(fetchList).mockResolvedValue(list())
+    vi.mocked(fetchListItems).mockResolvedValue([item()])
+    renderPage()
+    const removeButton = await screen.findByLabelText('Remove Show One from this list')
+    expect(removeButton.className).toContain('focus-visible:opacity-100')
+  })
+
   it('hides owner controls for a visitor', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { ...owner, id: 'visitor1' },

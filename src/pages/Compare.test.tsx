@@ -54,10 +54,11 @@ beforeEach(() => {
 })
 
 describe('Compare', () => {
-  it('shows a loading skeleton before data resolves', () => {
+  it('shows a loading skeleton before data resolves, without losing the page header', () => {
     vi.mocked(fetchUserByUsername).mockReturnValue(new Promise(() => {}))
     const { container } = renderCompare()
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(screen.getByText('You vs @bob')).toBeInTheDocument()
   })
 
   it('shows a not-found message when the target user does not exist', async () => {

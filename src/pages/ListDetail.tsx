@@ -190,7 +190,7 @@ export default function ListDetail() {
                       <button
                         type="button"
                         onClick={() => handleRemove(item)}
-                        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white backdrop-blur-sm transition-opacity duration-200 sm:h-6 sm:w-6 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100"
+                        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white backdrop-blur-sm transition-opacity duration-200 sm:h-6 sm:w-6 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                         aria-label={`Remove ${item.show_name} from this list`}
                       >
                         ×

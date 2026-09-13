@@ -143,14 +143,12 @@ export default function Search() {
             </EmptyState>
           ) : !query.trim() ? (
             <div>
-              <EmptyState icon="📺" className="mt-14">
-                <p className="text-sm text-base-500">
-                  Search for any TV show to mark as now watching, add to watchlist or rate per season.
-                </p>
-              </EmptyState>
+              <p className="mb-10 mt-6 text-center text-sm text-base-500">
+                Search for any TV show to mark as now watching, add to watchlist or rate per season.
+              </p>
 
               {trendingResults.length > 0 && (
-                <div className="mt-12">
+                <div>
                   <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Trending this week</h2>
                   <div className={POSTER_GRID_CLASSES}>
                     {trendingResults.map((show, i) => (
