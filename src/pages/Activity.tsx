@@ -198,7 +198,7 @@ export default function Activity() {
               onClick={() => setPersonFilterOpen((v) => !v)}
               aria-expanded={personFilterOpen}
               aria-haspopup="true"
-              className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
+              className={`flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
                 personFilterOpen || filterUsername
                   ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
                   : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
@@ -315,7 +315,7 @@ function PersonFilterPanel({
   onClose: () => void
 }) {
   return (
-    <DropdownPanel onClose={onClose} label="Filter by person" align="center" className="w-60 p-2">
+    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-2">
       <ul className="max-h-64 space-y-1 overflow-y-auto">
         {members.map((u) => (
           <li key={u.id}>

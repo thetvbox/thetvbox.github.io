@@ -192,7 +192,7 @@ describe('Activity', () => {
     expect(screen.getByRole('dialog', { name: 'Filter by person' })).toHaveClass('absolute')
   })
 
-  it('centers the person-filter dropdown under its trigger instead of right-aligning it', async () => {
+  it('right-aligns the person-filter dropdown to its trigger, so it never overflows the viewport', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
@@ -202,8 +202,8 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Filter by person'))
     const dialog = await screen.findByRole('dialog', { name: 'Filter by person' })
-    expect(dialog).toHaveClass('inset-x-0', 'mx-auto')
-    expect(dialog).not.toHaveClass('right-0')
+    expect(dialog).toHaveClass('right-0')
+    expect(dialog).not.toHaveClass('inset-x-0', 'mx-auto')
   })
 
   it('closes the person-filter dropdown on an outside pointerdown', async () => {
