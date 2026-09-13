@@ -115,6 +115,13 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- Opening Activity's "Filter by person" dropdown on a narrow screen could
+  push the whole page's viewport wider and shove the trigger row to the
+  left, with the dropdown itself overflowing off the right edge. It's now
+  anchored to the trigger's own right edge like every other dropdown in
+  the app, instead of a broken center-alignment mode that only this one
+  dropdown used. The trigger button is also now the same height as the
+  Following/Everyone chips next to it, instead of 4px shorter.
 - The "Upcoming" episode date on Home (and the "New episode" badge on Now
   Watching, and the "Next: airs" line on Show Detail) could jump straight
   to a later episode's date a day or more before the actual next episode
