@@ -54,6 +54,11 @@ describe('RatingDistribution', () => {
     expect(container.firstChild).not.toHaveClass('mb-8')
   })
 
+  it('shows the average rating in the header', () => {
+    renderWithRouter([rating({ id: 'r1', rating: 4 }), rating({ id: 'r2', rating: 5 })])
+    expect(screen.getByText('4.5 avg')).toBeInTheDocument()
+  })
+
   it('renders one bar per half-star bucket', () => {
     renderWithRouter([rating()])
     expect(screen.getAllByRole('button', { name: /show.*rated/ })).toHaveLength(10)

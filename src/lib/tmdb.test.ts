@@ -43,6 +43,18 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     await expect(searchShows('star trek')).rejects.toThrow('TMDB request failed (500)')
   })
 
+  it('getTrendingShows fetches trending/tv/week and session-caches the result', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ results: [{ id: 1, name: 'Show One' }] }))
+    const { getTrendingShows } = await import('./tmdb')
+    const first = await getTrendingShows()
+    const second = await getTrendingShows()
+    expect(first).toEqual([{ id: 1, name: 'Show One' }])
+    expect(second).toBe(first)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    const url = vi.mocked(fetch).mock.calls[0][0] as string
+    expect(url).toContain('/trending/tv/week')
+  })
+
   it('getShowDetail fetches and caches the show detail', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ id: 1, name: 'Show One' }))
     const { getShowDetail } = await import('./tmdb')

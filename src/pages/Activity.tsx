@@ -22,6 +22,7 @@ import {
   SKELETON_ROWS_WIDE,
 } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
@@ -55,6 +56,7 @@ function actorId(item: ActivityFeedItem, usernameToId: Map<string, string>): str
 
 export default function Activity() {
   const { user: me } = useAuth()
+  useDocumentTitle('Activity')
   const [feed, setFeed] = useState<ActivityFeedItem[]>([])
   const [watching, setWatching] = useState<FriendWatchingEntry[]>([])
   const [showDetails, setShowDetails] = useState<Map<number, TmdbShowDetail>>(new Map())

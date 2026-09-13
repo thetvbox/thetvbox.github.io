@@ -9,6 +9,7 @@ import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { useToast } from '../hooks/useToast'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
@@ -29,6 +30,7 @@ export default function ListDetail() {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const { toast, showUndo, showError, dismiss } = useToast()
+  useDocumentTitle(list?.name ?? null)
 
   useEscapeAndFocusReturn(confirmingDelete, () => setConfirmingDelete(false))
 

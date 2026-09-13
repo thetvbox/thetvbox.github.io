@@ -125,7 +125,7 @@ describe('ProfileActivity', () => {
     renderActivity()
     await waitFor(() => expect(screen.getByText('Shows rated')).toBeInTheDocument())
     expect(screen.getByText('2')).toBeInTheDocument()
-    expect(screen.getByText('3.0')).toBeInTheDocument()
+    expect(screen.getByText('3.0 avg')).toBeInTheDocument()
   })
 
   it('clicking the Finished stat jumps to the History tab', async () => {

@@ -7,6 +7,7 @@ import ShowDetailStreaming from '../components/showDetail/ShowDetailStreaming'
 import ShowDetailSeasons from '../components/showDetail/ShowDetailSeasons'
 import { backdropUrl } from '../lib/tmdb'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useShowDetail } from '../hooks/useShowDetail'
 import ErrorText from '../components/ErrorText'
 
@@ -15,6 +16,7 @@ export default function ShowDetail() {
   const showId = Number(id)
   const { user } = useAuth()
   const d = useShowDetail(showId, user)
+  useDocumentTitle(d.show?.name ?? null)
   const location = useLocation()
   const jumpToProgress = Boolean((location.state as { jumpToProgress?: boolean } | null)?.jumpToProgress)
 

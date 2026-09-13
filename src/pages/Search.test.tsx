@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
-vi.mock('../lib/tmdb', () => ({ searchShows: vi.fn(), isTmdbConfigured: true }))
+vi.mock('../lib/tmdb', () => ({ searchShows: vi.fn(), getTrendingShows: vi.fn(), isTmdbConfigured: true }))
 vi.mock('../hooks/useStreamingPlatforms', () => ({ useStreamingPlatforms: vi.fn() }))
 vi.mock('../components/ShowCard', () => ({
   default: ({ show }: { show: { id: number; name: string } }) => <div>{show.name}</div>,
 }))
 
-import { searchShows } from '../lib/tmdb'
+import { searchShows, getTrendingShows } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import Search from './Search'
 import type { TmdbShowSummary } from '../types'
@@ -27,6 +27,7 @@ function show(overrides: Partial<TmdbShowSummary> = {}): TmdbShowSummary {
 
 beforeEach(() => {
   vi.mocked(searchShows).mockReset().mockResolvedValue([])
+  vi.mocked(getTrendingShows).mockReset().mockResolvedValue([])
   vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), loading: false })
 })
 
@@ -79,5 +80,28 @@ describe('Search', () => {
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
     fireEvent.change(input, { target: { value: '' } })
     await waitFor(() => expect(screen.queryByText('Show One')).not.toBeInTheDocument())
+  })
+
+  it('offers trending shows to browse before any search', async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 9, name: 'Trending Show' })])
+    render(<Search />)
+    await waitFor(() => expect(screen.getByText('Trending this week')).toBeInTheDocument())
+    expect(screen.getByText('Trending Show')).toBeInTheDocument()
+  })
+
+  it('does not show a trending section while there are no trending shows yet', () => {
+    render(<Search />)
+    expect(screen.queryByText('Trending this week')).not.toBeInTheDocument()
+  })
+
+  it('hides trending shows once the person starts typing a query', async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 9, name: 'Trending Show' })])
+    vi.mocked(searchShows).mockResolvedValue([show({ id: 1, name: 'Star Trek' })])
+    render(<Search />)
+    await waitFor(() => expect(screen.getByText('Trending Show')).toBeInTheDocument())
+
+    fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'star trek' } })
+    await waitFor(() => expect(screen.getByText('Star Trek')).toBeInTheDocument())
+    expect(screen.queryByText('Trending Show')).not.toBeInTheDocument()
   })
 })

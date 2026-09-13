@@ -202,10 +202,9 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
   const stats = useMemo(() => {
     const totalShows = ratings.length
     const finished = activity.filter((s) => s.finished).length
-    const avg = totalShows === 0 ? null : ratings.reduce((sum, r) => sum + r.rating, 0) / totalShows
     const episodesWatched = showSummaries.reduce((sum, s) => sum + s.watched_count, 0)
     const hoursWatched = Math.round(showSummaries.reduce((sum, s) => sum + s.runtime_minutes_sum, 0) / 60)
-    return { totalShows, finished, episodesWatched, avg, hoursWatched }
+    return { totalShows, finished, episodesWatched, hoursWatched }
   }, [ratings, showSummaries, activity])
 
   const diaryEntries = useMemo(
@@ -237,12 +236,11 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
   return (
     <div>
       <div className="mb-6 rounded-2xl border border-hairline bg-base-900/40 p-4 sm:p-5">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard label="Shows rated" value={stats.totalShows} />
           <StatCard label="Finished" value={stats.finished} onClick={() => setTab('history')} />
           <StatCard label="Episodes watched" value={stats.episodesWatched} onClick={() => setTab('diary')} />
           <StatCard label="Hours watched" value={stats.hoursWatched} />
-          <StatCard label="Avg rating" value={stats.avg !== null ? stats.avg.toFixed(1) : '—'} />
         </div>
 
         <RatingDistribution ratings={ratings} className="mt-4" />

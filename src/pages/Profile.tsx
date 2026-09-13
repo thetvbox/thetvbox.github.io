@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
@@ -13,6 +14,7 @@ import { ROUTES, profileRoute } from '../lib/routes'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
+  useDocumentTitle(user ? `@${user.username}` : 'Profile')
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)

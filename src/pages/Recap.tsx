@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentWatched } from '../lib/watched'
 import { fetchRecentRewatches } from '../lib/rewatches'
@@ -25,6 +26,7 @@ export default function Recap() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [year, setYear] = useState<number | null>(null)
+  useDocumentTitle(year ? `${year} Year in Review` : 'Year in Review')
 
   useEffect(() => {
     if (!user) return

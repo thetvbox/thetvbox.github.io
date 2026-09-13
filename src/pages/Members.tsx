@@ -7,6 +7,7 @@ import { fetchFollowerIds, fetchFollowingIds } from '../lib/follows'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { SKELETON_ROWS } from '../lib/constants'
 import { profileRoute } from '../lib/routes'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useFollowActions } from '../hooks/useFollowActions'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
@@ -19,6 +20,7 @@ import type { AppUser } from '../types'
 /** People directory: search plus a Follow/Following button and "Follows you" badge per row. */
 export default function Members() {
   const { user: me } = useAuth()
+  useDocumentTitle('People')
   const [users, setUsers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())

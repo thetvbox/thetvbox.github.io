@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentWatched } from '../lib/watched'
 import { fetchStartedForUser } from '../lib/showStarted'
@@ -59,6 +60,7 @@ function greeting(): string {
 
 export default function Home() {
   const { user } = useAuth()
+  useDocumentTitle('Home')
   const [ratings, setRatings] = useState<ShowRating[]>([])
   const [watched, setWatched] = useState<EpisodeWatched[]>([])
   const [started, setStarted] = useState<ShowStarted[]>([])

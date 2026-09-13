@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from '../lib/supabase'
 import AppLogo from '../components/AppLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { EASE_OUT_EXPO } from '../lib/motion'
 import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
 import { ROUTES } from '../lib/routes'
@@ -24,6 +25,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const emailInputRef = useDesktopAutoFocus(step === 'email')
   const usernameInputRef = useDesktopAutoFocus(step === 'username')
+  useDocumentTitle('Sign in')
 
   if (user) return <Navigate to={ROUTES.home} replace />
 

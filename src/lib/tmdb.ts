@@ -45,6 +45,16 @@ export async function searchShows(query: string): Promise<TmdbShowSummary[]> {
   return data.results
 }
 
+let trendingCache: TmdbShowSummary[] | null = null
+
+/** Fetches this week's trending TV shows, session-cached since the list barely moves within a session. */
+export async function getTrendingShows(): Promise<TmdbShowSummary[]> {
+  if (trendingCache) return trendingCache
+  const data = await tmdbFetch<{ results: TmdbShowSummary[] }>('/trending/tv/week')
+  trendingCache = data.results
+  return trendingCache
+}
+
 const showDetailCache = new Map<number, TmdbShowDetail>()
 
 /** Fetches a show's full detail, session-cached, including external_ids for TVmaze cross-referencing. */

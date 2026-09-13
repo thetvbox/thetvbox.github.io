@@ -22,7 +22,7 @@ export default function RatingDistribution({
 }) {
   const [selected, setSelected] = useState<number | null>(null)
 
-  const { counts, byBucket } = useMemo(() => {
+  const { counts, byBucket, avg } = useMemo(() => {
     const c = new Array(BUCKETS.length).fill(0)
     const groups = new Map<number, ShowRating[]>()
     for (const r of ratings) {
@@ -33,7 +33,8 @@ export default function RatingDistribution({
       if (list) list.push(r)
       else groups.set(r.rating, [r])
     }
-    return { counts: c, byBucket: groups }
+    const avg = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null
+    return { counts: c, byBucket: groups, avg }
   }, [ratings])
 
   if (ratings.length === 0) return null
@@ -43,6 +44,15 @@ export default function RatingDistribution({
 
   return (
     <div className={className}>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-medium text-base-500">Ratings</p>
+        {avg !== null && (
+          <p className="flex items-center gap-1 text-xs font-medium text-base-300">
+            {avg.toFixed(1)} avg
+            <StarGlyph size={10} />
+          </p>
+        )}
+      </div>
       <div className="flex h-16 items-end gap-1">
         {BUCKETS.map((b, i) => {
           const hasShows = counts[i] > 0

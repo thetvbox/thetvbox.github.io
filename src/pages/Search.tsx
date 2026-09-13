@@ -4,8 +4,9 @@ import ShowCard from '../components/ShowCard'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import EmptyState from '../components/EmptyState'
 import { POSTER_GRID_CLASSES } from '../components/PosterTile'
-import { searchShows, isTmdbConfigured } from '../lib/tmdb'
+import { searchShows, getTrendingShows, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
@@ -13,17 +14,36 @@ import ErrorText from '../components/ErrorText'
 import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
+  useDocumentTitle('Search')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TmdbShowSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
+  const [trending, setTrending] = useState<TmdbShowSummary[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const requestId = useRef(0)
 
   const posterResults = useMemo(() => results.filter((s) => s.poster_path), [results])
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
   const { platforms } = useStreamingPlatforms(resultIds)
+
+  const trendingResults = useMemo(() => trending.filter((s) => s.poster_path), [trending])
+  const trendingIds = useMemo(() => trendingResults.map((s) => s.id), [trendingResults])
+  const { platforms: trendingPlatforms } = useStreamingPlatforms(trendingIds)
+
+  useEffect(() => {
+    if (!isTmdbConfigured) return
+    let cancelled = false
+    getTrendingShows()
+      .then((shows) => {
+        if (!cancelled) setTrending(shows)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -122,11 +142,24 @@ export default function Search() {
               </p>
             </EmptyState>
           ) : !query.trim() ? (
-            <EmptyState icon="📺" className="mt-14">
-              <p className="text-sm text-base-500">
-                Search for any TV show to mark as now watching, add to watchlist or rate per season.
-              </p>
-            </EmptyState>
+            <div>
+              <EmptyState icon="📺" className="mt-14">
+                <p className="text-sm text-base-500">
+                  Search for any TV show to mark as now watching, add to watchlist or rate per season.
+                </p>
+              </EmptyState>
+
+              {trendingResults.length > 0 && (
+                <div className="mt-12">
+                  <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Trending this week</h2>
+                  <div className={POSTER_GRID_CLASSES}>
+                    {trendingResults.map((show, i) => (
+                      <ShowCard key={show.id} show={show} provider={trendingPlatforms.get(show.id)} index={i} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : null}
         </AnimatePresence>
       )}

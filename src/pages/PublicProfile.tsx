@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchUserByUsername } from '../lib/users'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
@@ -13,6 +14,7 @@ import type { AppUser } from '../types'
 export default function PublicProfile() {
   const { username } = useParams<{ username: string }>()
   const { user: me } = useAuth()
+  useDocumentTitle(username ? `@${username}` : 'Profile')
   const [profile, setProfile] = useState<AppUser | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
 

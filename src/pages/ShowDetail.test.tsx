@@ -200,4 +200,16 @@ describe('ShowDetail', () => {
     renderShowDetail()
     expect(screen.getByText('Toast: Saved!')).toBeInTheDocument()
   })
+
+  it("sets the tab title to the show's name once loaded", () => {
+    vi.mocked(useShowDetail).mockReturnValue(baseState({ show: show({ name: 'Breaking Bad' }) }))
+    renderShowDetail()
+    expect(document.title).toBe('Breaking Bad · TV Box')
+  })
+
+  it('falls back to the base title while the show is still loading', () => {
+    vi.mocked(useShowDetail).mockReturnValue(baseState({ show: null }))
+    renderShowDetail()
+    expect(document.title).toBe('TV Box')
+  })
 })

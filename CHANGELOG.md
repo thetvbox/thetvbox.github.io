@@ -45,9 +45,23 @@ All notable changes to TV Box are documented here. Format loosely follows
   with a small checkmark, and the "X/Y watched" count next to them now
   has a progress bar alongside it (reusing the same bar already used for
   shows on Home) instead of being text-only.
+- Search now offers a "Trending this week" grid of shows to browse before
+  you've typed anything, instead of a bare empty state -- the same TMDB
+  trending feed used elsewhere, with poster art and streaming badges just
+  like search results. It disappears the moment you start typing and
+  quietly doesn't show up at all if the trending fetch fails.
+- Every page now sets its own browser tab title (e.g. "Activity · TV Box",
+  or a show/person's name on their detail page) instead of every tab
+  reading the same static "TV Box", so it's actually possible to tell
+  pages apart when several are open at once.
 
 ### Changed
 
+- Profile's stats grid had a standalone "Avg rating" tile that duplicated
+  the number already shown, bigger and in context, at the top of the
+  ratings chart right below it -- the tile is gone and the chart header
+  now reads e.g. "4.5 avg" next to "Ratings", leaving four evenly-sized
+  stat cards instead of five with an awkward gap on mobile.
 - Home's "Your Watchlist" and "Your Lists" sections now show at most 6
   items each, with "See all" only appearing when there's actually more
   to see -- previously the link always read "See all" even for a single

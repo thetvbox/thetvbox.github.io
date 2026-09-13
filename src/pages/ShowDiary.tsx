@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchShowRating } from '../lib/showRatings'
 import { fetchWatchedForUserAndShow } from '../lib/watched'
 import { fetchRewatchesForShow } from '../lib/rewatches'
@@ -26,6 +27,7 @@ export default function ShowDiary() {
   const [rewatches, setRewatches] = useState<ShowRewatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  useDocumentTitle(rating?.show_name ?? watched[0]?.show_name ?? null)
 
   useEffect(() => {
     if (!username || Number.isNaN(showIdNum)) return

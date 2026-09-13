@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
@@ -27,6 +28,7 @@ interface SharedShow {
 export default function Compare() {
   const { username } = useParams<{ username: string }>()
   const { user: me } = useAuth()
+  useDocumentTitle(username ? `You vs @${username}` : 'Compare')
   const [them, setThem] = useState<AppUser | null | undefined>(undefined)
   const [myRatings, setMyRatings] = useState<ShowRating[]>([])
   const [theirRatings, setTheirRatings] = useState<ShowRating[]>([])
