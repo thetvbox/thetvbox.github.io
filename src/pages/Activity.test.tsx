@@ -327,15 +327,15 @@ describe('Activity', () => {
     )
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Genre' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
     const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
     fireEvent.click(within(dialog).getByText('Drama'))
 
     await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
     expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Genre · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Filter by genre · 1' })).toBeInTheDocument()
   })
 
   it('does not show a genre filter when everything in Now Watching shares one genre', async () => {
@@ -344,10 +344,10 @@ describe('Activity', () => {
     vi.mocked(getShowDetailsBulk).mockResolvedValue(new Map([[1, showDetail()]]))
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
-    expect(screen.queryByRole('button', { name: /Genre/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /filter by genre/i })).not.toBeInTheDocument()
   })
 
-  it('closes the genre filter panel via its close button, and Clear resets the selection', async () => {
+  it('Clear resets the genre selection, and re-clicking the trigger closes the dropdown', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([
       startedFor(friend),
@@ -360,18 +360,58 @@ describe('Activity', () => {
       ]),
     )
     renderActivity()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Genre' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
     const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
     fireEvent.click(within(dialog).getByText('Drama'))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre · 1' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre · 1' })).toBeInTheDocument())
 
     fireEvent.click(within(dialog).getByText('Clear'))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Genre' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Filter by genre' })).not.toBeInTheDocument())
+  })
+
+  it('renders the genre-filter dropdown as a floating overlay, not an inline block', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
+    expect(dialog).toHaveClass('absolute')
+  })
+
+  it('closes the genre-filter dropdown on an outside pointerdown', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by genre' })).toBeInTheDocument())
+
+    fireEvent.pointerDown(document.body)
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('caps Now Watching to a preview, and Show all / Show less reveals or collapses the rest', async () => {

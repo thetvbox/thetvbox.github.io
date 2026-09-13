@@ -23,15 +23,12 @@ import {
 } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import Chip from '../components/Chip'
 import DropdownPanel from '../components/DropdownPanel'
-import InlinePanel from '../components/InlinePanel'
-import PanelHeader from '../components/PanelHeader'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -72,6 +69,7 @@ export default function Activity() {
   const [error, setError] = useState<string | null>(null)
   const scopeTouched = useRef(false)
   const personFilterRef = useRef<HTMLDivElement>(null)
+  const genreFilterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -256,6 +254,17 @@ export default function Activity() {
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [personFilterOpen])
 
+  useEffect(() => {
+    if (!genreFilterOpen) return
+    function handlePointerDown(e: PointerEvent) {
+      if (genreFilterRef.current && !genreFilterRef.current.contains(e.target as Node)) {
+        setGenreFilterOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [genreFilterOpen])
+
   const filtered = useMemo(
     () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
     [scoped, filterUsername],
@@ -368,18 +377,34 @@ export default function Activity() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
           {watchingGenres.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setGenreFilterOpen((v) => !v)}
-              aria-pressed={genreFilterOpen}
-              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
-                genreFilterOpen || selectedGenres.size > 0
-                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-                  : 'text-base-500 hover:bg-hover hover:text-base-200'
-              }`}
-            >
-              Genre{selectedGenres.size > 0 ? ` · ${selectedGenres.size}` : ''}
-            </button>
+            <div ref={genreFilterRef} className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setGenreFilterOpen((v) => !v)}
+                aria-expanded={genreFilterOpen}
+                aria-haspopup="true"
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+                  genreFilterOpen || selectedGenres.size > 0
+                    ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
+                    : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+                }`}
+              >
+                Filter by genre{selectedGenres.size > 0 ? ` · ${selectedGenres.size}` : ''}
+              </button>
+
+              <AnimatePresence>
+                {genreFilterOpen && (
+                  <GenreFilterPanel
+                    key="genre-filter"
+                    genres={watchingGenres}
+                    selected={selectedGenres}
+                    onToggle={toggleGenre}
+                    onClear={() => setSelectedGenres(new Set())}
+                    onClose={() => setGenreFilterOpen(false)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
         <p className="mt-1 text-sm text-base-500">
@@ -389,19 +414,6 @@ export default function Activity() {
               ? 'What people you follow are watching right now.'
               : "What everyone's watching right now."}
         </p>
-
-        <AnimatePresence>
-          {genreFilterOpen && (
-            <GenreFilterPanel
-              key="genre-filter"
-              genres={watchingGenres}
-              selected={selectedGenres}
-              onToggle={toggleGenre}
-              onClear={() => setSelectedGenres(new Set())}
-              onClose={() => setGenreFilterOpen(false)}
-            />
-          )}
-        </AnimatePresence>
 
         <div className="mt-4">
           {loading ? (
@@ -513,7 +525,7 @@ function FriendWatchingTile({ entry, index }: { entry: FriendWatchingEntry; inde
   )
 }
 
-/** The genre facet for Now Watching, inline (its result is the poster grid directly below it). */
+/** The genre facet for Now Watching, floated behind the "Filter by genre" trigger button. */
 function GenreFilterPanel({
   genres,
   selected,
@@ -527,20 +539,17 @@ function GenreFilterPanel({
   onClear: () => void
   onClose: () => void
 }) {
-  useEscapeAndFocusReturn(true, onClose)
   return (
-    <InlinePanel className="p-3.5" label="Filter by genre">
-      <PanelHeader
-        title="Genre"
-        onClose={onClose}
-        actions={
-          selected.size > 0 && (
-            <button type="button" onClick={onClear} className="text-xs font-medium text-accent-400 hover:underline">
-              Clear
-            </button>
-          )
-        }
-      />
+    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-64 p-3">
+      {selected.size > 0 && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mb-2 text-xs font-medium text-accent-400 hover:underline"
+        >
+          Clear
+        </button>
+      )}
       <div className="flex flex-wrap gap-1.5">
         {genres.map((genre) => (
           <Chip key={genre} active={selected.has(genre)} onClick={() => onToggle(genre)}>
@@ -548,7 +557,7 @@ function GenreFilterPanel({
           </Chip>
         ))}
       </div>
-    </InlinePanel>
+    </DropdownPanel>
   )
 }
 

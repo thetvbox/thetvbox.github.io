@@ -13,9 +13,10 @@ All notable changes to TV Box are documented here. Format loosely follows
   uses) are currently in the middle of -- their poster, episode progress,
   and who's watching it. Capped to a preview with a "Show all" toggle so a
   long list doesn't push the feed below it far down the page, and
-  filterable by genre from a compact "Genre" button rather than an
-  always-visible row of chips. Your own shows are left out since Home
-  already covers those.
+  filterable by genre from a "Filter by genre" dropdown -- the same
+  floating-overlay pattern as the "Filter by person" control next to it,
+  rather than an always-visible row of chips. Your own shows are left out
+  since Home already covers those.
 - Show Detail now shows the IMDb rating and Rotten Tomatoes score next to
   a show's year/seasons/status, sourced from OMDb -- requires an optional
   free OMDb API key (see .env.example); scores just don't show up without
