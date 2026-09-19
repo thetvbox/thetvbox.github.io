@@ -114,7 +114,7 @@ export default function ShowDiary() {
               )}
             </div>
             <div className="min-w-0">
-              <h1 className="font-display text-lg font-semibold text-base-100 sm:text-xl">
+              <h1 className="large-title font-display text-lg font-semibold text-base-100 sm:text-xl">
                 {showName}
               </h1>
               <p className="flex items-center gap-2 text-xs text-base-400">

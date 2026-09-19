@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
@@ -35,6 +35,7 @@ function renderCompare(username = 'bob') {
     <MemoryRouter initialEntries={[`/compare/${username}`]}>
       <Routes>
         <Route path="/compare/:username" element={<Compare />} />
+        <Route path="/members" element={<div>MembersPage</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -102,5 +103,13 @@ describe('Compare', () => {
     vi.mocked(fetchUserByUsername).mockRejectedValue(new Error('load failed'))
     renderCompare()
     await waitFor(() => expect(screen.getByText('load failed')).toBeInTheDocument())
+  })
+
+  it('goes back to the members directory when this is the only screen in history', async () => {
+    vi.mocked(fetchUserByUsername).mockResolvedValue(bob)
+    renderCompare()
+    await waitFor(() => expect(screen.getByText('You vs @bob')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    expect(await screen.findByText('MembersPage')).toBeInTheDocument()
   })
 })

@@ -187,6 +187,7 @@ export default function Navbar() {
           <NavLink
             to={ROUTES.home}
             onClick={() => handleNavClick(ROUTES.home)}
+            viewTransition
             className="flex min-h-11 items-center gap-2"
           >
             <AppLogo size={24} />
@@ -202,6 +203,7 @@ export default function Navbar() {
                   key={to}
                   to={to}
                   onClick={() => handleNavClick(to)}
+                  viewTransition
                   className={({ isActive }) =>
                     `${linkBase} ${
                       isActive
@@ -245,6 +247,7 @@ export default function Navbar() {
             key={to}
             to={to}
             onClick={() => handleNavClick(to)}
+            viewTransition
             className={({ isActive }) =>
               `${linkBase} flex-1 py-2.5 ${isActive ? 'text-accent-400' : 'text-base-400'}`
             }

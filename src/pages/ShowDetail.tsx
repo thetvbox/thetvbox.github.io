@@ -1,5 +1,7 @@
 import { useLocation, useParams } from 'react-router-dom'
 import Toast from '../components/Toast'
+import { useGoBack } from '../hooks/useGoBack'
+import { ROUTES } from '../lib/routes'
 import ShowDetailHero from '../components/showDetail/ShowDetailHero'
 import ShowDetailQuickActions from '../components/showDetail/ShowDetailQuickActions'
 import ShowDetailProgress from '../components/showDetail/ShowDetailProgress'
@@ -11,6 +13,14 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useShowDetail } from '../hooks/useShowDetail'
 import ErrorText from '../components/ErrorText'
 
+function BackGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  )
+}
+
 export default function ShowDetail() {
   const { id } = useParams<{ id: string }>()
   const showId = Number(id)
@@ -19,6 +29,7 @@ export default function ShowDetail() {
   useDocumentTitle(d.show?.name ?? null)
   const location = useLocation()
   const jumpToProgress = Boolean((location.state as { jumpToProgress?: boolean } | null)?.jumpToProgress)
+  const goBack = useGoBack(ROUTES.home)
 
   if (Number.isNaN(showId)) {
     return <ErrorText className="p-8 text-center text-sm">Invalid show.</ErrorText>
@@ -31,6 +42,15 @@ export default function ShowDetail() {
   return (
     <div className="pb-24 md:pb-10">
       <div className="relative h-56 w-full overflow-hidden sm:h-auto sm:aspect-[3/1] sm:max-h-[520px]">
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="Back"
+          title="Back"
+          className="glass-surface absolute left-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full text-base-100 transition-colors duration-200 hover:bg-hover-strong"
+        >
+          <BackGlyph />
+        </button>
         {d.show?.backdrop_path ? (
           <img
             src={backdropUrl(d.show.backdrop_path) ?? undefined}

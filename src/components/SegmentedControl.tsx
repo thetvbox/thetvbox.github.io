@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import type { KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { GLASS_SPRING_SNAPPY } from '../lib/motion'
 
@@ -22,21 +24,62 @@ export default function SegmentedControl<T extends string>({
   label,
   className = '',
 }: SegmentedControlProps<T>) {
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  /** Selects (and focuses) the option at `index`, wrapping around the ends -- the native radiogroup keyboard pattern. */
+  function selectAt(index: number) {
+    const wrapped = (index + options.length) % options.length
+    const option = options[wrapped]
+    if (!option) return
+    onChange(option.value)
+    buttonRefs.current[wrapped]?.focus()
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        e.preventDefault()
+        selectAt(index + 1)
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault()
+        selectAt(index - 1)
+        break
+      case 'Home':
+        e.preventDefault()
+        selectAt(0)
+        break
+      case 'End':
+        e.preventDefault()
+        selectAt(options.length - 1)
+        break
+      default:
+        break
+    }
+  }
+
   return (
     <div
       role="radiogroup"
       aria-label={label}
       className={`glass-surface inline-flex items-center gap-0.5 rounded-full p-1 ${className}`}
     >
-      {options.map((option) => {
+      {options.map((option, index) => {
         const active = option.value === value
         return (
           <button
             key={option.value}
+            ref={(el) => {
+              buttonRefs.current[index] = el
+            }}
             type="button"
             role="radio"
             aria-checked={active}
+            tabIndex={active ? 0 : -1}
             onClick={() => onChange(option.value)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
             className={`relative rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
               active ? 'text-accent-300' : 'text-base-400 hover:text-base-200'
             }`}

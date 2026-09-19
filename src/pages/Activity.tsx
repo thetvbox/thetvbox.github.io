@@ -316,7 +316,7 @@ export default function Activity() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <motion.div {...PAGE_HEADER_MOTION} className="mb-6">
-        <h1 className="font-display text-xl font-semibold text-base-100 sm:text-2xl">Activity</h1>
+        <h1 className="large-title font-display text-xl font-semibold text-base-100 sm:text-2xl">Activity</h1>
         <p className="mt-1 text-sm text-base-500">
           {filterUsername
             ? `What @${filterUsername} has been up to.`

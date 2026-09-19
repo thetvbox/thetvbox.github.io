@@ -11,6 +11,7 @@ import ShareButton from '../components/ShareButton'
 import Toast from '../components/Toast'
 import { useToast } from '../hooks/useToast'
 import { ROUTES, compareRoute } from '../lib/routes'
+import { useGoBack } from '../hooks/useGoBack'
 import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
@@ -21,6 +22,7 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState<AppUser | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const { toast, showInfo, showError: showToastError, dismiss } = useToast()
+  const goBack = useGoBack(ROUTES.members)
 
   useEffect(() => {
     if (!username) return
@@ -50,6 +52,13 @@ export default function PublicProfile() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
+      <button
+        type="button"
+        onClick={goBack}
+        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
+      >
+        &larr; Back
+      </button>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <Avatar username={profile === undefined ? '' : profile.username} size="lg" />
@@ -60,7 +69,7 @@ export default function PublicProfile() {
             {profile === undefined ? (
               <div className="mt-1 h-6 w-32 animate-pulse rounded bg-base-800" />
             ) : (
-              <h1 className="font-display text-lg font-semibold text-base-100 sm:text-xl">
+              <h1 className="large-title font-display text-lg font-semibold text-base-100 sm:text-xl">
                 @{profile.username}
               </h1>
             )}

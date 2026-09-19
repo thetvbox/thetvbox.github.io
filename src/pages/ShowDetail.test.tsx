@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -107,6 +107,7 @@ function renderShowDetail(id = '1') {
     <MemoryRouter initialEntries={[`/show/${id}`]}>
       <Routes>
         <Route path="/show/:id" element={<ShowDetail />} />
+        <Route path="/home" element={<div>HomePage</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -210,5 +211,12 @@ describe('ShowDetail', () => {
     vi.mocked(useShowDetail).mockReturnValue(baseState({ show: null }))
     renderShowDetail()
     expect(document.title).toBe('TV Box')
+  })
+
+  it('goes back to home when the back button is the only screen in history', () => {
+    vi.mocked(useShowDetail).mockReturnValue(baseState({ show: show() }))
+    renderShowDetail()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(screen.getByText('HomePage')).toBeInTheDocument()
   })
 })

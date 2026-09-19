@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -20,6 +20,7 @@ function renderProfile(username = 'bob') {
     <MemoryRouter initialEntries={[`/u/${username}`]}>
       <Routes>
         <Route path="/u/:username" element={<PublicProfile />} />
+        <Route path="/members" element={<div>MembersPage</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -74,5 +75,13 @@ describe('PublicProfile', () => {
     renderProfile('bob')
     await waitFor(() => expect(screen.getByText('Member')).toBeInTheDocument())
     expect(screen.getByText('Compare ratings')).toHaveAttribute('href', '/compare/bob')
+  })
+
+  it('goes back to the members directory when this is the only screen in history', async () => {
+    vi.mocked(fetchUserByUsername).mockResolvedValue(bob)
+    renderProfile('bob')
+    await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    expect(await screen.findByText('MembersPage')).toBeInTheDocument()
   })
 })

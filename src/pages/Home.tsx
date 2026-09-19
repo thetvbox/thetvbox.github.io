@@ -207,7 +207,7 @@ export default function Home() {
           {greeting()}
           {user ? `, @${user.username}` : ''}
         </p>
-        <h1 className="font-display mt-0.5 text-xl font-semibold text-base-100 sm:text-2xl">
+        <h1 className="large-title font-display mt-0.5 text-xl font-semibold text-base-100 sm:text-2xl">
           Now Watching
         </h1>
         <p className="mt-1 text-sm text-base-500">

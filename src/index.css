@@ -258,4 +258,23 @@ button {
       opacity: 0.85;
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .large-title {
+      animation: none;
+    }
+  }
+}
+
+/* View Transitions (Navbar's tab navigation) -- the browser's own
+   cross-fade between the old and new page snapshots. Not driven by
+   prefersReducedMotion() since it's the browser's own animation, not ours,
+   so it's silenced here instead, the same way large-title-collapse is
+   above. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
@@ -52,8 +52,11 @@ function watchedRow(overrides: Partial<EpisodeWatched> = {}): EpisodeWatched {
 
 function renderRecap() {
   return render(
-    <MemoryRouter>
-      <Recap />
+    <MemoryRouter initialEntries={['/recap']}>
+      <Routes>
+        <Route path="/recap" element={<Recap />} />
+        <Route path="/profile" element={<div>ProfilePage</div>} />
+      </Routes>
     </MemoryRouter>,
   )
 }
@@ -110,5 +113,12 @@ describe('Recap', () => {
     expect(screen.getByText('2025').closest('button')).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(screen.getByText('2024'))
     await waitFor(() => expect(screen.getByText('2024').closest('button')).toHaveAttribute('aria-pressed', 'true'))
+  })
+
+  it('goes back to your profile when this is the only screen in history', async () => {
+    renderRecap()
+    await waitFor(() => expect(screen.getByText(/Nothing tracked yet/)).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    expect(await screen.findByText('ProfilePage')).toBeInTheDocument()
   })
 })

@@ -7,7 +7,8 @@ import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { LARGE_ACTIVITY_FETCH_LIMIT, MAX_RATING_DIFF, SKELETON_ROWS } from '../lib/constants'
-import { showRoute } from '../lib/routes'
+import { ROUTES, showRoute } from '../lib/routes'
+import { useGoBack } from '../hooks/useGoBack'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
@@ -34,6 +35,7 @@ export default function Compare() {
   const [theirRatings, setTheirRatings] = useState<ShowRating[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const goBack = useGoBack(ROUTES.members)
 
   useEffect(() => {
     if (!username || !me) return
@@ -107,6 +109,13 @@ export default function Compare() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
+      <button
+        type="button"
+        onClick={goBack}
+        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
+      >
+        &larr; Back
+      </button>
       <motion.h1 {...PAGE_HEADER_MOTION} className="font-display mb-1 text-2xl font-semibold text-base-100">
         You vs @{username}
       </motion.h1>
