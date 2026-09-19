@@ -57,6 +57,13 @@ describe('ShowDetailStreaming', () => {
     expect(screen.getByText('Netflix')).toBeInTheDocument()
   })
 
+  it('lazy-loads the provider logo, decoded off the main thread', () => {
+    renderStreaming({ effectiveProvider: { provider_name: 'Netflix', logo_path: '/netflix.png' } })
+    const img = screen.getByRole('img', { name: 'Netflix' })
+    expect(img).toHaveAttribute('loading', 'lazy')
+    expect(img).toHaveAttribute('decoding', 'async')
+  })
+
   it('shows "Set manually" only when there is a manual override', () => {
     renderStreaming({ effectiveProvider: { provider_name: 'Netflix', logo_path: null }, override: { id: 'o1' } as never })
     expect(screen.getByText('Set manually')).toBeInTheDocument()

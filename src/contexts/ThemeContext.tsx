@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { STORAGE_KEYS } from '../lib/constants'
 
@@ -48,11 +48,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  // Memoized so useTheme() consumers only re-render when the theme itself
+  // changes, not on every ThemeProvider render -- matches AuthContext's
+  // pattern.
+  const value = useMemo<ThemeContextValue>(() => ({ theme, toggleTheme, setTheme }), [theme])
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 // oxlint-disable-next-line react/only-export-components

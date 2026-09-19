@@ -40,6 +40,10 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
     let cancelled = false
 
     function refresh() {
+      // Skip the request entirely while the app is backgrounded -- an
+      // interval that fires every NOTIFICATIONS_POLL_MS regardless of
+      // visibility burns battery/network for nothing the user can see.
+      if (document.hidden) return
       fetchUnseenNotificationCount(userId)
         .then((count) => {
           if (!cancelled) setUnseen(count)
@@ -49,9 +53,17 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
 
     refresh()
     const interval = window.setInterval(refresh, NOTIFICATIONS_POLL_MS)
+    // Catches up immediately when the app comes back to the foreground,
+    // instead of waiting for the next tick of an interval that may have
+    // just been silently skipping while hidden.
+    function handleVisibilityChange() {
+      if (!document.hidden) refresh()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
       cancelled = true
       window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [me])
 

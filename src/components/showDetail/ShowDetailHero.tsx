@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { EASE_OUT_EXPO } from '../../lib/motion'
-import { posterUrl, yearFromDate } from '../../lib/tmdb'
+import { buildSrcSet, posterUrl, yearFromDate } from '../../lib/tmdb'
 import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
 import EstimatedShowRating from '../EstimatedShowRating'
@@ -36,7 +36,14 @@ export default function ShowDetailHero({
       <div className="flex items-start gap-4 sm:gap-6">
         <div className="aspect-[2/3] w-32 shrink-0 self-start overflow-hidden rounded-xl bg-base-800 shadow-2xl shadow-black/50 ring-1 ring-hairline-strong sm:w-44 lg:w-52">
           {show?.poster_path && (
-            <img src={posterUrl(show.poster_path) ?? undefined} alt={show.name} className="h-full w-full object-cover" />
+            <img
+              src={posterUrl(show.poster_path) ?? undefined}
+              srcSet={buildSrcSet(show.poster_path, ['w185', 'w342', 'w500'])}
+              sizes="(min-width: 1024px) 208px, (min-width: 640px) 176px, 128px"
+              alt={show.name}
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           )}
         </div>
 

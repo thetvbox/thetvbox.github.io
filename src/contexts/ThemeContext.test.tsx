@@ -61,4 +61,11 @@ describe('ThemeContext', () => {
   it('throws when useTheme is called outside a provider', () => {
     expect(() => renderHook(() => useTheme())).toThrow('useTheme must be used within a ThemeProvider')
   })
+
+  it('keeps a stable context value reference across re-renders when the theme has not changed', () => {
+    const { result, rerender } = renderHook(() => useTheme(), { wrapper: ThemeProvider })
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+  })
 })

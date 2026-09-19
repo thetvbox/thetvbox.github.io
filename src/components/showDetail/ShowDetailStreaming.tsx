@@ -41,6 +41,8 @@ export default function ShowDetailStreaming({
               <img
                 src={providerLogoUrl(effectiveProvider.logo_path) ?? undefined}
                 alt={effectiveProvider.provider_name}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             ) : (

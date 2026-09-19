@@ -71,6 +71,15 @@ describe('ShowDetailHero', () => {
     expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 
+  it('offers multiple resolutions via srcset for the poster, decoded off the main thread', () => {
+    renderHero()
+    const img = screen.getByRole('img', { name: 'Show One' })
+    expect(img.getAttribute('srcset')).toContain('185w')
+    expect(img.getAttribute('srcset')).toContain('500w')
+    expect(img).toHaveAttribute('sizes', expect.stringContaining('px'))
+    expect(img).toHaveAttribute('decoding', 'async')
+  })
+
   it('renders the rating summary once loaded', () => {
     renderHero()
     expect(screen.getByRole('radiogroup', { name: 'Rate this show' })).toBeInTheDocument()

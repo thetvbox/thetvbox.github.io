@@ -20,6 +20,7 @@ import {
   markNotificationsSeenAndPrune,
 } from '../lib/notifications'
 import NotificationsBell from './NotificationsBell'
+import { NOTIFICATIONS_POLL_MS } from '../lib/constants'
 import type { AppUser, Notification } from '../types'
 
 const me: AppUser = { id: 'me1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
@@ -154,5 +155,26 @@ describe('NotificationsBell', () => {
     renderBell(false, onOpenChange)
     fireEvent.click(screen.getByRole('button', { name: 'Notifications' }))
     expect(onOpenChange).toHaveBeenCalledWith(true)
+  })
+
+  it('skips polling while the document is hidden, and catches up as soon as it becomes visible', async () => {
+    vi.useFakeTimers()
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true, writable: true })
+    try {
+      renderBell(false)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchUnseenNotificationCount).not.toHaveBeenCalled()
+
+      await vi.advanceTimersByTimeAsync(NOTIFICATIONS_POLL_MS)
+      expect(fetchUnseenNotificationCount).not.toHaveBeenCalled()
+
+      Object.defineProperty(document, 'hidden', { configurable: true, value: false, writable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchUnseenNotificationCount).toHaveBeenCalledTimes(1)
+    } finally {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: false, writable: true })
+      vi.useRealTimers()
+    }
   })
 })
