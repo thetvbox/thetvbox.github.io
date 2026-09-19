@@ -16,6 +16,14 @@ export const GLASS_SPRING = { type: 'spring', stiffness: 380, damping: 32, mass:
 /** A snappier spring for small, immediate feedback (a toggle, a tap) rather than a panel-sized transition. */
 export const GLASS_SPRING_SNAPPY = { type: 'spring', stiffness: 520, damping: 30, mass: 0.7 } as const
 
+const DRAG_CLOSE_THRESHOLD_PX = 80
+const DRAG_CLOSE_VELOCITY = 500
+
+/** True if a downward drag-to-dismiss gesture passed the distance or velocity threshold to close a sheet. */
+export function shouldCloseFromDrag(offsetY: number, velocityY: number): boolean {
+  return offsetY > DRAG_CLOSE_THRESHOLD_PX || velocityY > DRAG_CLOSE_VELOCITY
+}
+
 export const DROPDOWN_PANEL_INITIAL = { opacity: 0, scale: 0.95, y: -8 } as const
 export const DROPDOWN_PANEL_ANIMATE = { opacity: 1, scale: 1, y: 0 } as const
 export const DROPDOWN_PANEL_EXIT = {

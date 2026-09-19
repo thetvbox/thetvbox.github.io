@@ -38,7 +38,7 @@ export default function Profile() {
           <Avatar username={user?.username ?? ''} size="lg" />
           <div>
             <p className="text-xs uppercase tracking-wide text-base-500">Signed in as</p>
-            <h1 className="font-display text-lg font-semibold text-base-100 sm:text-xl">
+            <h1 className="large-title font-display text-lg font-semibold text-base-100 sm:text-xl">
               @{user?.username}
             </h1>
             <p className="text-xs text-base-500">{user?.email}</p>

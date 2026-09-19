@@ -235,3 +235,27 @@ button {
     display: none;
   }
 }
+
+/* Collapsing large title, iOS Mail/Messages-style -- shrinks slightly as the
+   page scrolls, driven purely by CSS scroll-timeline so there's no scroll
+   listener or layout thrash. Safari has shipped scroll-driven animations
+   since version 26; browsers without support simply keep the title at its
+   resting size via @supports, a perfectly fine fallback. */
+@supports (animation-timeline: scroll()) {
+  .large-title {
+    transform-origin: left center;
+    animation: large-title-collapse linear both;
+    animation-timeline: scroll(nearest);
+    animation-range: 0 120px;
+  }
+
+  @keyframes large-title-collapse {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(0.86);
+      opacity: 0.85;
+    }
+  }
+}

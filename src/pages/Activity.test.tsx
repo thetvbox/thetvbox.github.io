@@ -133,7 +133,7 @@ describe('Activity', () => {
 
   it('auto-switches to Everyone scope when the user follows no one', async () => {
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Everyone').closest('button')).toHaveAttribute('aria-pressed', 'true'))
+    await waitFor(() => expect(screen.getByText('Everyone').closest('button')).toHaveAttribute('aria-checked', 'true'))
     expect(screen.getByText("Nobody's rated or finished a show yet. Be the first.")).toBeInTheDocument()
   })
 

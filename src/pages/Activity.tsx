@@ -29,6 +29,7 @@ import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import Chip from '../components/Chip'
 import DropdownPanel from '../components/DropdownPanel'
+import SegmentedControl from '../components/SegmentedControl'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -42,6 +43,11 @@ interface DayGroup {
 }
 
 type Scope = 'following' | 'everyone'
+
+const SCOPE_OPTIONS = [
+  { value: 'following', label: 'Following' },
+  { value: 'everyone', label: 'Everyone' },
+] as const
 
 /** Returns who "did" this item, for scope-filtering and the person-chip row. */
 function actorUsername(item: ActivityFeedItem): string {
@@ -320,14 +326,12 @@ export default function Activity() {
       </motion.div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-1.5">
-          <ScopeChip active={scope === 'following'} onClick={() => handleSetScope('following')}>
-            Following
-          </ScopeChip>
-          <ScopeChip active={scope === 'everyone'} onClick={() => handleSetScope('everyone')}>
-            Everyone
-          </ScopeChip>
-        </div>
+        <SegmentedControl
+          options={SCOPE_OPTIONS}
+          value={scope}
+          onChange={handleSetScope}
+          label="Activity scope"
+        />
 
         {filterableMembers.length > 1 && (
           <div ref={personFilterRef} className="relative shrink-0">
@@ -486,23 +490,6 @@ export default function Activity() {
         </div>
       )}
     </div>
-  )
-}
-
-function ScopeChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-        active
-          ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-          : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
-      }`}
-    >
-      {children}
-    </button>
   )
 }
 

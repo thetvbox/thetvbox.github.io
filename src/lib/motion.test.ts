@@ -4,6 +4,7 @@ import {
   GLASS_SPRING_SNAPPY,
   prefersReducedMotion,
   scrollBehavior,
+  shouldCloseFromDrag,
   staggerDelay,
   staggerRowMotion,
   staggerTileMotion,
@@ -101,5 +102,20 @@ describe('GLASS_SPRING presets', () => {
     expect(GLASS_SPRING.type).toBe('spring')
     expect(GLASS_SPRING_SNAPPY.type).toBe('spring')
     expect(GLASS_SPRING_SNAPPY.stiffness).toBeGreaterThan(GLASS_SPRING.stiffness)
+  })
+})
+
+describe('shouldCloseFromDrag', () => {
+  it('closes once the downward drag distance passes the threshold', () => {
+    expect(shouldCloseFromDrag(90, 0)).toBe(true)
+    expect(shouldCloseFromDrag(40, 0)).toBe(false)
+  })
+
+  it('closes on a fast flick even under the distance threshold', () => {
+    expect(shouldCloseFromDrag(10, 600)).toBe(true)
+  })
+
+  it('does not close for a small, slow drag', () => {
+    expect(shouldCloseFromDrag(10, 50)).toBe(false)
   })
 })

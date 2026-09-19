@@ -15,6 +15,13 @@ const MOTION_ONLY_PROPS = new Set([
   'variants',
   'onAnimationComplete',
   'onAnimationStart',
+  'drag',
+  'dragConstraints',
+  'dragElastic',
+  'dragListener',
+  'dragMomentum',
+  'dragSnapToOrigin',
+  'onDragEnd',
 ])
 
 function stripMotionProps(props: Record<string, unknown>) {
