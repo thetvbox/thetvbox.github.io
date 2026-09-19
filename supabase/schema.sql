@@ -1,14 +1,17 @@
 -- TV Box: schema
 -- Run this once in the Supabase SQL Editor (Project -> SQL Editor -> New query).
 --
--- There is no real authentication in this app (no password, no email
--- verification) -- signing in is just "type your email, pick a username".
--- Because of that there's no secure session to key Row Level Security off
--- of, so these tables use permissive policies (any request with the anon
--- key can read/write). That's an intentional tradeoff for a low-stakes
--- personal project. If you ever want real per-user privacy, swap this for
--- Supabase Auth (email OTP or password) and switch these policies to check
--- auth.uid() instead.
+-- Sign-in is passkeys (WebAuthn), not Supabase Auth -- see
+-- supabase/functions/webauthn-registration-options/README.md for the full
+-- design, including the one deliberate email-bootstrap tradeoff for a
+-- user's very first passkey. Because there's still no Supabase Auth
+-- session, most tables below can't key Row Level Security off of
+-- auth.uid() and use permissive policies instead (any request with the
+-- anon key can read/write). That's an intentional tradeoff for a
+-- low-stakes personal project -- the webauthn_credentials/
+-- webauthn_challenges tables further down are the one exception, RLS
+-- enabled with no policies at all, reachable only by the service-role key
+-- the auth Edge Functions use.
 
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
@@ -825,3 +828,146 @@ create trigger trg_notify_on_show_finished
 
 -- Same reasoning as notify_on_follow above.
 revoke execute on function public.notify_on_show_finished() from public, anon, authenticated;
+
+-- One row per browser/device subscribed to Web Push
+-- (src/lib/pushNotifications.ts registers these). RLS is open like most
+-- tables above -- the actual send-capable secret is the VAPID private key,
+-- which only lives in the send-push Edge Function's secrets (see
+-- supabase/functions/send-push/README.md).
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_user_id_idx on public.push_subscriptions (user_id);
+
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists "Anyone can read push_subscriptions" on public.push_subscriptions;
+create policy "Anyone can read push_subscriptions"
+  on public.push_subscriptions for select
+  using (true);
+
+drop policy if exists "Anyone can insert push_subscriptions" on public.push_subscriptions;
+create policy "Anyone can insert push_subscriptions"
+  on public.push_subscriptions for insert
+  with check (true);
+
+drop policy if exists "Anyone can update push_subscriptions" on public.push_subscriptions;
+create policy "Anyone can update push_subscriptions"
+  on public.push_subscriptions for update
+  using (true)
+  with check (true);
+
+drop policy if exists "Anyone can delete push_subscriptions" on public.push_subscriptions;
+create policy "Anyone can delete push_subscriptions"
+  on public.push_subscriptions for delete
+  using (true);
+
+-- Fires the send-push Edge Function after every new notification row, so a
+-- push follows the exact same events the in-app bell already shows -- see
+-- supabase/functions/send-push/README.md. Needs the pg_net extension to
+-- reach the function over HTTP from inside a trigger. Replace the url/
+-- Authorization placeholders below with your own project's Edge Function
+-- URL and anon/publishable key before running this.
+create extension if not exists pg_net;
+
+create or replace function public.send_push_on_notification()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://YOUR-PROJECT-REF.supabase.co/functions/v1/send-push',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer YOUR-ANON-OR-PUBLISHABLE-KEY'
+    ),
+    body := to_jsonb(new)
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_send_push_on_notification on public.notifications;
+create trigger trg_send_push_on_notification
+  after insert on public.notifications
+  for each row execute function public.send_push_on_notification();
+
+-- Same reasoning as notify_on_follow above.
+revoke execute on function public.send_push_on_notification() from public, anon, authenticated;
+
+-- WebAuthn passkey sign-in (see
+-- supabase/functions/webauthn-registration-options/README.md for the full
+-- design). RLS is enabled but has no policies on either table below --
+-- unlike the permissive tables above, a stored public key and signature
+-- counter, or a live challenge, has no legitimate reason to be readable by
+-- the anon key. Only the four webauthn-* Edge Functions' service-role key
+-- can touch these.
+create table if not exists public.webauthn_credentials (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  credential_id text not null unique,
+  public_key text not null,
+  counter bigint not null default 0,
+  device_type text,
+  backed_up boolean not null default false,
+  transports text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz
+);
+
+create index if not exists webauthn_credentials_user_id_idx on public.webauthn_credentials (user_id);
+
+alter table public.webauthn_credentials enable row level security;
+
+create table if not exists public.webauthn_challenges (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  challenge text not null,
+  type text not null check (type in ('registration', 'authentication')),
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists webauthn_challenges_user_id_type_idx on public.webauthn_challenges (user_id, type);
+
+alter table public.webauthn_challenges enable row level security;
+
+-- Personal access tokens for the log-episode-watched Edge Function (see
+-- supabase/functions/log-episode-watched/README.md), used by iOS
+-- Shortcuts/Siri instead of a Supabase session. Only token_hash is ever
+-- stored -- the raw token is shown once at creation and never persisted.
+create table if not exists public.personal_access_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  token_hash text not null unique,
+  label text not null default 'Shortcuts',
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz
+);
+
+create index if not exists personal_access_tokens_user_id_idx on public.personal_access_tokens (user_id);
+
+alter table public.personal_access_tokens enable row level security;
+
+drop policy if exists "Anyone can read personal access tokens" on public.personal_access_tokens;
+create policy "Anyone can read personal access tokens"
+  on public.personal_access_tokens for select
+  using (true);
+
+drop policy if exists "Anyone can create a personal access token" on public.personal_access_tokens;
+create policy "Anyone can create a personal access token"
+  on public.personal_access_tokens for insert
+  with check (true);
+
+drop policy if exists "Anyone can delete personal access tokens" on public.personal_access_tokens;
+create policy "Anyone can delete personal access tokens"
+  on public.personal_access_tokens for delete
+  using (true);
