@@ -57,6 +57,7 @@ export const TABLE_SHOW_LIST_ITEMS = 'show_list_items'
 export const TABLE_SHOW_STREAMING_OVERRIDES = 'show_streaming_overrides'
 export const TABLE_FOLLOWS = 'follows'
 export const TABLE_NOTIFICATIONS = 'notifications'
+export const TABLE_PERSONAL_ACCESS_TOKENS = 'personal_access_tokens'
 
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000

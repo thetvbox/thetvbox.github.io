@@ -7,6 +7,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
+import ShortcutsPanel from '../components/ShortcutsPanel'
 import DropdownPanel from '../components/DropdownPanel'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
@@ -16,6 +17,7 @@ export default function Profile() {
   const { user, signOut } = useAuth()
   useDocumentTitle(user ? `@${user.username}` : 'Profile')
   const [changelogOpen, setChangelogOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   useCloseOnNavigate(() => setMenuOpen(false))
@@ -67,6 +69,7 @@ export default function Profile() {
                 username={user?.username ?? ''}
                 onSignOut={signOut}
                 onClose={() => setMenuOpen(false)}
+                onOpenShortcuts={() => setShortcutsOpen(true)}
               />
             )}
           </AnimatePresence>
@@ -87,6 +90,12 @@ export default function Profile() {
           {changelogOpen && <ChangelogPanel key="changelog" onClose={() => setChangelogOpen(false)} />}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {shortcutsOpen && user && (
+          <ShortcutsPanel key="shortcuts" userId={user.id} onClose={() => setShortcutsOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -95,10 +104,12 @@ function ProfileMenuPanel({
   username,
   onSignOut,
   onClose,
+  onOpenShortcuts,
 }: {
   username: string
   onSignOut: () => void
   onClose: () => void
+  onOpenShortcuts: () => void
 }) {
   return (
     <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
@@ -117,6 +128,16 @@ function ProfileMenuPanel({
         >
           Public view
         </Link>
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            onOpenShortcuts()
+          }}
+          className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
+        >
+          Shortcuts &amp; Siri
+        </button>
         <button
           type="button"
           onClick={() => {
