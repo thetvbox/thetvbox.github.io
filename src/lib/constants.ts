@@ -58,9 +58,16 @@ export const TABLE_SHOW_STREAMING_OVERRIDES = 'show_streaming_overrides'
 export const TABLE_FOLLOWS = 'follows'
 export const TABLE_NOTIFICATIONS = 'notifications'
 export const TABLE_PERSONAL_ACCESS_TOKENS = 'personal_access_tokens'
+export const TABLE_PUSH_SUBSCRIPTIONS = 'push_subscriptions'
 
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000
 export const PASSCODE_LENGTH = 6
 
 export const PROFILE_LISTS_TAB_QUERY = 'tab=lists'
+
+// Public VAPID key for Web Push -- safe to ship in the client bundle (that's
+// what "public" means here); only the matching private key, held server-side
+// as a Supabase secret, can actually sign a push.
+export const VAPID_PUBLIC_KEY =
+  'BCmuX1JiyjlDr0YaLHP9F8pjqXQyP_--uf15q9XNHCum3e19hiNYGpxOiRpzvaawjispJKkqNsJVHr3AZ12fiNk'
