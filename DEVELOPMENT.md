@@ -8,10 +8,11 @@
 2. Copy `.env.example` to `.env.local` and fill in your own values:
    - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — from your Supabase project's API settings.
    - `VITE_TMDB_API_KEY` — a TMDB v3 API key.
+   - `VITE_OMDB_API_KEY` — optional; a free omdbapi.com key. Powers the IMDb/Rotten Tomatoes badges on Show Detail. Leave unset to just hide those.
    - `VITE_SITE_PASSCODE` — optional; leave unset to disable the passcode gate.
 3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables and RLS policies.
-4. `npm run dev`
-5. Optional: the in-app "Report a bug" button needs the `report-bug` edge function deployed — see [supabase/functions/report-bug/README.md](./supabase/functions/report-bug/README.md). The app works fine without it; that button just won't file anything.
+4. Deploy the Edge Functions sign-in and push notifications depend on — see [Edge Functions](#edge-functions) below. Without these, the app loads but no one can sign in (passkeys are the only auth mechanism).
+5. `npm run dev`
 
 ## Scripts
 
@@ -23,9 +24,21 @@
 - `npm run test:watch` — run tests in watch mode.
 - `npm run test:coverage` — run tests with a coverage report.
 
+## Edge Functions
+
+Six Edge Functions live in `supabase/functions/`; each folder has its own README with deploy instructions (via the Supabase CLI or, for `report-bug`, the Dashboard editor). Four are required for the app to work at all, since passkeys are the only sign-in path:
+
+- `webauthn-registration-options`, `webauthn-registration-verify`, `webauthn-authentication-options`, `webauthn-authentication-verify` — passkey sign-in. See [supabase/functions/webauthn-registration-options/README.md](./supabase/functions/webauthn-registration-options/README.md) for the shared design (covers all four).
+- `send-push` — sends a Web Push notification for every new row in `notifications`, via a Postgres trigger set up in `schema.sql`. Needs `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` set as function secrets ([supabase/functions/send-push/README.md](./supabase/functions/send-push/README.md)); the public key also goes in `src/lib/constants.ts`. Without it deployed, push subscriptions just silently don't deliver — everything else works.
+
+Two are optional — the app works fine without them, just missing that one feature:
+
+- `report-bug` — files a GitHub issue from the in-app "Report a bug" form. See [supabase/functions/report-bug/README.md](./supabase/functions/report-bug/README.md).
+- `log-episode-watched` — lets an iOS Shortcut (and Siri) log an episode as watched via a personal access token. See [supabase/functions/log-episode-watched/README.md](./supabase/functions/log-episode-watched/README.md).
+
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which lints, tests, and builds with the four `VITE_*` variables above (set as repository secrets) before publishing `dist/` to GitHub Pages. A failing lint or test run blocks the deploy.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which lints, tests, and builds with the `VITE_*` variables above (set as repository secrets) before publishing `dist/` to GitHub Pages. A failing lint or test run blocks the deploy. The Edge Functions above are deployed separately (Supabase, not GitHub Pages) and aren't part of this workflow.
 
 ## Project structure
 
@@ -35,4 +48,5 @@ Pushing to `main` runs `.github/workflows/deploy.yml`, which lints, tests, and b
 - `src/hooks/` — reusable hooks (toasts, scroll restoration, escape-to-close, streaming-platform resolution) and page-level state hooks that own a single page's data loading and mutations (e.g. `useShowDetail`).
 - `src/contexts/` — auth and theme, provided at the app root.
 - `supabase/schema.sql` — full schema + RLS policies, safe to re-run (`create table if not exists`, `drop policy if exists` before every `create policy`).
+- `supabase/functions/` — Edge Functions; see [Edge Functions](#edge-functions) above.
 - `scripts/backfill-runtime.mjs` — one-off maintenance script for backfilling episode runtime data on existing rows.

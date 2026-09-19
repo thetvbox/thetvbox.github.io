@@ -62,6 +62,23 @@ All notable changes to TV Box are documented here. Format loosely follows
   or a show/person's name on their detail page) instead of every tab
   reading the same static "TV Box", so it's actually possible to tell
   pages apart when several are open at once.
+- Sign-in now uses passkeys (Face ID, Touch ID, Windows Hello, or a
+  security key) instead of trusting an email address alone, which had no
+  real verification at all -- anyone who knew a friend's email could sign
+  in as them. A new account picks a username and registers a passkey in
+  one step; an existing account signs in with the passkey already on its
+  device. The very first passkey for each of the app's existing users is
+  still bootstrapped by email (the same trust level sign-in always had),
+  but registering a passkey closes that door for good the moment it
+  exists -- from then on, only a device that actually holds the
+  credential can get in.
+- TV Box can now send Web Push notifications -- a new follower, a rating,
+  someone finishing a show -- to your phone or desktop even when the app
+  isn't open, once you turn it on from Profile's new "Push Notifications"
+  menu item. The first time you sign in on a device, the app offers to
+  turn it on right there, the way native apps ask for permissions on
+  first launch, instead of waiting for you to find the setting yourself;
+  it only asks once per device.
 
 ### Changed
 
@@ -214,6 +231,24 @@ All notable changes to TV Box are documented here. Format loosely follows
   of a bordered card, so Trending appears much closer to the top;
   the search box and prompt spacing were further tightened so there's
   noticeably less empty space above Trending now.
+- Another consistency pass: Home, Activity, and a show's Diary page now
+  use the same collapsing large-title header every other page already
+  had, and that collapse now respects "reduce motion" instead of
+  animating regardless. Navigating between pages uses the browser's
+  native View Transitions where supported, for a smoother cross-fade.
+  Profile pages, Compare, Recap, and Show Detail -- the only pages with
+  no way back except the OS/browser back button -- now all have one,
+  falling back to a sensible page instead of leaving the app entirely
+  when there's no in-app history to go back to. Activity's
+  Following/Everyone toggle is now fully keyboard-operable (arrow keys,
+  Home/End) instead of mouse/touch only.
+- Show Detail's poster now requests an image sized for how it's actually
+  displayed instead of always the same fixed size regardless of screen,
+  and a "where to watch" provider logo that was missing lazy-loading
+  (unlike every other logo image in the app) now has it. The unread-
+  notifications check no longer keeps polling every minute while the app
+  is in the background -- it skips the request while hidden and catches
+  up immediately as soon as you come back.
 
 ## [1.2.0] - 2026-09-07
 
