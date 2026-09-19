@@ -30,7 +30,6 @@ function clearStoredUser(): void {
 interface AuthContextValue {
   user: AppUser | null
   loading: boolean
-  findByEmail: (email: string) => Promise<AppUser | null>
   register: (email: string, username: string) => Promise<AppUser>
   signIn: (user: AppUser) => void
   signOut: () => void
@@ -55,16 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      async findByEmail(email: string) {
-        const { data, error } = await supabase
-          .from(TABLE_USERS)
-          .select('*')
-          .eq('email', email.toLowerCase().trim())
-          .maybeSingle()
-        if (error) throw error
-        return (data as AppUser) ?? null
-      },
       async register(email: string, username: string) {
+        // Creates the account row only -- does NOT sign the person in. A user
+        // isn't considered authenticated until they've also registered a
+        // passkey for this row (see src/pages/Login.tsx), so signIn() is a
+        // separate, explicit call the caller makes once that succeeds.
         const { data, error } = await supabase
           .from(TABLE_USERS)
           .insert({ email: email.toLowerCase().trim(), username: username.trim() })
@@ -80,10 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           throw error
         }
-        const newUser = data as AppUser
-        writeStoredUser(JSON.stringify(newUser))
-        setUser(newUser)
-        return newUser
+        return data as AppUser
       },
       signIn(nextUser: AppUser) {
         writeStoredUser(JSON.stringify(nextUser))

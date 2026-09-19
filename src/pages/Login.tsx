@@ -2,8 +2,20 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navigate } from 'react-router-dom'
+import type {
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/browser'
 import { useAuth } from '../contexts/AuthContext'
 import { isSupabaseConfigured } from '../lib/supabase'
+import {
+  fetchAuthenticationOptions,
+  fetchRegistrationOptions,
+  isPasskeySupported,
+  PasskeyCancelledError,
+  registerPasskey,
+  signInWithPasskey,
+} from '../lib/passkey'
 import AppLogo from '../components/AppLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
@@ -14,35 +26,51 @@ import { ROUTES } from '../lib/routes'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
 
-type Step = 'email' | 'username'
+type Step =
+  | { kind: 'email' }
+  | { kind: 'username'; email: string }
+  | { kind: 'signin'; email: string; options: PublicKeyCredentialRequestOptionsJSON }
+  | { kind: 'bootstrap'; userId: string; username: string; options: PublicKeyCredentialCreationOptionsJSON }
 
 export default function Login() {
-  const { user, findByEmail, register, signIn } = useAuth()
-  const [step, setStep] = useState<Step>('email')
+  const { user, register, signIn } = useAuth()
+  const [step, setStep] = useState<Step>({ kind: 'email' })
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const emailInputRef = useDesktopAutoFocus(step === 'email')
-  const usernameInputRef = useDesktopAutoFocus(step === 'username')
+  const emailInputRef = useDesktopAutoFocus(step.kind === 'email')
+  const usernameInputRef = useDesktopAutoFocus(step.kind === 'username')
   useDocumentTitle('Sign in')
 
   if (user) return <Navigate to={ROUTES.home} replace />
 
+  function goToEmailStep() {
+    setStep({ kind: 'email' })
+    setUsername('')
+    setError(null)
+    setNotice(null)
+  }
+
   async function handleEmailSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    setNotice(null)
     if (!EMAIL_PATTERN.test(email)) {
       setError('Enter a valid email address.')
       return
     }
     setBusy(true)
     try {
-      const existing = await findByEmail(email)
-      if (existing) {
-        signIn(existing)
+      const result = await fetchAuthenticationOptions(email)
+      if (result.status === 'ready') {
+        setStep({ kind: 'signin', email, options: result.options })
+      } else if (result.status === 'no_credentials') {
+        const options = await fetchRegistrationOptions(result.user.id)
+        setStep({ kind: 'bootstrap', userId: result.user.id, username: result.user.username, options })
       } else {
-        setStep('username')
+        setStep({ kind: 'username', email })
       }
     } catch (err) {
       setError(errorMessage(err, 'Something went wrong. Try again.'))
@@ -54,6 +82,7 @@ export default function Login() {
   async function handleUsernameSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    setNotice(null)
     const trimmed = username.trim()
     if (!USERNAME_PATTERN.test(trimmed)) {
       setError(`Username must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters: letters, numbers, underscores.`)
@@ -61,12 +90,69 @@ export default function Login() {
     }
     setBusy(true)
     try {
-      await register(email, trimmed)
+      const newUser = await register(email, trimmed)
+      const options = await fetchRegistrationOptions(newUser.id)
+      setStep({ kind: 'bootstrap', userId: newUser.id, username: newUser.username, options })
     } catch (err) {
       setError(errorMessage(err, 'Could not create your account. Try again.'))
     } finally {
       setBusy(false)
     }
+  }
+
+  async function handleSignInWithPasskey(stepValue: Extract<Step, { kind: 'signin' }>) {
+    setError(null)
+    setNotice(null)
+    setBusy(true)
+    try {
+      const signedInUser = await signInWithPasskey(stepValue.email, stepValue.options)
+      signIn(signedInUser)
+    } catch (err) {
+      if (err instanceof PasskeyCancelledError) {
+        setNotice('Passkey request cancelled. Try again when ready.')
+      } else {
+        setError(errorMessage(err, 'Something went wrong. Try again.'))
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleRegisterPasskey(stepValue: Extract<Step, { kind: 'bootstrap' }>) {
+    setError(null)
+    setNotice(null)
+    setBusy(true)
+    try {
+      const signedInUser = await registerPasskey(stepValue.userId, stepValue.options)
+      signIn(signedInUser)
+    } catch (err) {
+      if (err instanceof PasskeyCancelledError) {
+        setNotice('Passkey setup cancelled. Try again when ready.')
+      } else {
+        setError(errorMessage(err, 'Something went wrong. Try again.'))
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!isPasskeySupported()) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(139,92,246,0.35)]" />
+            <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>
+          </div>
+          <div className="rounded-2xl border border-hairline bg-base-850/70 p-6 text-center shadow-xl shadow-black/10 dark:shadow-black/20">
+            <ErrorText className="text-sm">
+              This browser doesn&apos;t support passkeys, which TV Box now uses to sign in.
+              Try a recent version of Chrome, Safari, or Edge.
+            </ErrorText>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -92,7 +178,7 @@ export default function Login() {
 
         <div className="overflow-hidden rounded-2xl border border-hairline bg-base-850/70 p-6 shadow-xl shadow-black/10 dark:shadow-black/20">
           <AnimatePresence mode="wait">
-            {step === 'email' ? (
+            {step.kind === 'email' ? (
               <motion.form
                 key="email"
                 initial={{ opacity: 0, x: 12 }}
@@ -110,7 +196,7 @@ export default function Login() {
                     id="email"
                     ref={emailInputRef}
                     type="email"
-                    autoComplete="email"
+                    autoComplete="email webauthn"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@gmail.com"
@@ -120,11 +206,11 @@ export default function Login() {
                 {error && <ErrorText className="text-xs">{error}</ErrorText>}
                 <PrimaryButton disabled={busy}>{busy ? 'Checking…' : 'Continue'}</PrimaryButton>
                 <p className="text-center text-xs text-base-500">
-                  New here? We&apos;ll ask you to pick a username next. Returning? You&apos;re
-                  straight in — no password needed.
+                  New here? We&apos;ll ask you to pick a username next. Returning? You&apos;ll
+                  sign in with your passkey.
                 </p>
               </motion.form>
-            ) : (
+            ) : step.kind === 'username' ? (
               <motion.form
                 key="username"
                 initial={{ opacity: 0, x: 12 }}
@@ -136,7 +222,7 @@ export default function Login() {
               >
                 <div>
                   <p className="text-sm text-base-300">
-                    First time seeing <span className="font-medium text-base-100">{email}</span>.
+                    First time seeing <span className="font-medium text-base-100">{step.email}</span>.
                     Pick a username to finish creating your account.
                   </p>
                   <input
@@ -156,16 +242,73 @@ export default function Login() {
                 </PrimaryButton>
                 <button
                   type="button"
-                  onClick={() => {
-                    setStep('email')
-                    setUsername('')
-                    setError(null)
-                  }}
+                  onClick={goToEmailStep}
                   className="w-full text-center text-xs text-base-500 hover:text-base-300"
                 >
                   &larr; Use a different email
                 </button>
               </motion.form>
+            ) : step.kind === 'signin' ? (
+              <motion.div
+                key="signin"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+                className="space-y-4"
+              >
+                <p className="text-sm text-base-300">
+                  Welcome back, <span className="font-medium text-base-100">{step.email}</span>.
+                  Sign in with your passkey.
+                </p>
+                {error && <ErrorText className="text-xs">{error}</ErrorText>}
+                {notice && <p className="text-xs text-base-400">{notice}</p>}
+                <PrimaryButton
+                  type="button"
+                  disabled={busy}
+                  onClick={() => handleSignInWithPasskey(step)}
+                >
+                  {busy ? 'Waiting for passkey…' : 'Sign in with passkey'}
+                </PrimaryButton>
+                <button
+                  type="button"
+                  onClick={goToEmailStep}
+                  className="w-full text-center text-xs text-base-500 hover:text-base-300"
+                >
+                  &larr; Use a different email
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="bootstrap"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+                className="space-y-4"
+              >
+                <p className="text-sm text-base-300">
+                  Set up a passkey to finish signing in as{' '}
+                  <span className="font-medium text-base-100">{step.username}</span>. You&apos;ll
+                  use it to sign in from now on -- no more typing your email.
+                </p>
+                {error && <ErrorText className="text-xs">{error}</ErrorText>}
+                {notice && <p className="text-xs text-base-400">{notice}</p>}
+                <PrimaryButton
+                  type="button"
+                  disabled={busy}
+                  onClick={() => handleRegisterPasskey(step)}
+                >
+                  {busy ? 'Setting up…' : 'Set up passkey'}
+                </PrimaryButton>
+                <button
+                  type="button"
+                  onClick={goToEmailStep}
+                  className="w-full text-center text-xs text-base-500 hover:text-base-300"
+                >
+                  &larr; Use a different email
+                </button>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

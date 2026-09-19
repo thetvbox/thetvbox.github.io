@@ -33,7 +33,6 @@ beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: bob,
     loading: false,
-    findByEmail: vi.fn(),
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -93,7 +92,6 @@ describe('Profile', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: bob,
       loading: false,
-      findByEmail: vi.fn(),
       register: vi.fn(),
       signIn: vi.fn(),
       signOut,

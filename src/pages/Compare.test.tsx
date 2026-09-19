@@ -46,7 +46,6 @@ beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: me,
     loading: false,
-    findByEmail: vi.fn(),
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),

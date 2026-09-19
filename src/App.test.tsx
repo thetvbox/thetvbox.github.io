@@ -51,7 +51,6 @@ function authValue(overrides: Partial<ReturnType<typeof useAuth>> = {}) {
   return {
     user: null,
     loading: false,
-    findByEmail: vi.fn(),
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),

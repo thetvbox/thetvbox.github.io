@@ -106,7 +106,6 @@ beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: me,
     loading: false,
-    findByEmail: vi.fn(),
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -257,7 +256,6 @@ describe('ProfileActivity', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { ...me, id: 'someone-else' },
       loading: false,
-      findByEmail: vi.fn(),
       register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),

@@ -47,37 +47,14 @@ describe('AuthContext', () => {
     expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
   })
 
-  it('findByEmail returns the matched user, lowercased and trimmed', async () => {
-    const builder = mockFrom({ data: bob })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    const found = await result.current.findByEmail('  BOB@Example.com  ')
-    expect(found).toEqual(bob)
-    expect(builder.eq).toHaveBeenCalledWith('email', 'bob@example.com')
-  })
-
-  it('findByEmail returns null when no match', async () => {
-    mockFrom({ data: null })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(await result.current.findByEmail('nobody@example.com')).toBeNull()
-  })
-
-  it('findByEmail throws on a Supabase error', async () => {
-    mockFrom({ error: new Error('boom') })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    await expect(result.current.findByEmail('bob@example.com')).rejects.toThrow('boom')
-  })
-
-  it('register saves the new user, persists it, and signs them in', async () => {
+  it('register saves the new user and returns it, without signing them in', async () => {
     mockFrom({ data: bob })
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     const registered = await act(() => result.current.register('bob@example.com', 'bob'))
     expect(registered).toEqual(bob)
-    expect(result.current.user).toEqual(bob)
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.user)!)).toEqual(bob)
+    expect(result.current.user).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
   })
 
   it('register surfaces a friendly message for a duplicate username', async () => {
