@@ -11,10 +11,10 @@ Work through the checklist against the actual changed files, not the whole repo 
 
 ## 1. Comments
 
-- Only functions/methods may have a doc comment, and it must be exactly one line describing what the function does.
+- Only functions/methods -- and meaningfully-named exported constants where the name alone doesn't convey the "what" (e.g. `GLASS_SPRING` in `motion.ts`, `VAPID_PUBLIC_KEY` in `constants.ts`) -- may have a doc comment, and it must be exactly one line.
 - No paragraph comments anywhere -- not above functions, not inline in a function body, not on interface/type fields, not as section dividers, not as JSX comments.
 - `eslint-disable-next-line` (and similar functional lint/compiler directives) are fine -- they aren't documentation.
-- Flag: any multi-line `/** */` block, any multi-line `//` block, any inline `//` comment explaining *why* rather than being itself the one-line function doc, any comment on a type/interface field.
+- Flag: any multi-line `/** */` block, any multi-line `//` block, any inline `//` comment explaining *why* rather than being itself the one-line doc, any comment on a type/interface field. A single-line `/** */` on a well-named const is not itself a violation -- judge whether the name alone already says what the value is.
 
 ## 2. DRY, SRP, and private methods
 
@@ -76,7 +76,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 ## 11. Docs
 
 - A shipped user-visible feature should be reflected in `README.md`'s feature list and `CHANGELOG.md`'s `[Unreleased]` section.
-- A new script, env var, or dev workflow step belongs in `DEVELOPMENT.md`.
+- A new script, env var, dev workflow step, or Edge Function belongs in `DEVELOPMENT.md` (its Edge Functions section).
 
 ## Output format
 
