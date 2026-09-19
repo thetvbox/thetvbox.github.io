@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { TABLE_PUSH_SUBSCRIPTIONS, VAPID_PUBLIC_KEY } from './constants'
+import { STORAGE_KEYS, TABLE_PUSH_SUBSCRIPTIONS, VAPID_PUBLIC_KEY } from './constants'
 
 /** True when this browser can register a push subscription at all. */
 export function isPushSupported(): boolean {
@@ -47,6 +47,36 @@ export async function subscribeToPush(userId: string): Promise<void> {
       { onConflict: 'endpoint' },
     )
   if (error) throw error
+}
+
+/** True when this device has already been offered the one-time post-sign-in push prompt. */
+export function hasSeenPushOnboarding(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.pushOnboardingSeen) === '1'
+  } catch {
+    // Can't tell either way -- treat as seen so a storage failure shows up as
+    // "don't nag", not as the prompt reappearing on every page load.
+    return true
+  }
+}
+
+/** Records that this device has been offered the push prompt, so it isn't shown again. */
+export function markPushOnboardingSeen(): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.pushOnboardingSeen, '1')
+  } catch {}
+}
+
+/**
+ * True when it's worth showing the one-time post-sign-in push prompt: push is
+ * supported, the browser hasn't already decided the permission, this device
+ * isn't already subscribed, and this device hasn't been offered it before.
+ */
+export async function shouldOfferPushOnboarding(): Promise<boolean> {
+  if (hasSeenPushOnboarding()) return false
+  if (!isPushSupported()) return false
+  if (typeof Notification === 'undefined' || Notification.permission !== 'default') return false
+  return !(await isPushSubscribed())
 }
 
 /** Unsubscribes this device from push and removes its saved subscription, if any. */

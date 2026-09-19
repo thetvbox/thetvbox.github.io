@@ -2,6 +2,7 @@ export const STORAGE_KEYS = {
   user: 'tvbox_user',
   theme: 'tvbox-theme',
   gate: 'tvbox_gate_ok',
+  pushOnboardingSeen: 'tvbox_push_onboarding_seen',
 } as const
 
 export const MS_PER_DAY = 86_400_000

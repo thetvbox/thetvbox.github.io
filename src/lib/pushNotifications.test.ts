@@ -1,12 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createQueryBuilder } from '../test/supabaseMock'
+import { STORAGE_KEYS } from './constants'
 
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
 import {
+  hasSeenPushOnboarding,
   isPushSubscribed,
   isPushSupported,
+  markPushOnboardingSeen,
+  shouldOfferPushOnboarding,
   subscribeToPush,
   unsubscribeFromPush,
   urlBase64ToUint8Array,
@@ -26,8 +30,13 @@ function stubServiceWorker(pushManager: Record<string, unknown>) {
   vi.stubGlobal('PushManager', class {})
 }
 
+function stubNotificationPermission(permission: NotificationPermission) {
+  vi.stubGlobal('Notification', { permission })
+}
+
 beforeEach(() => {
   vi.mocked(supabase.from).mockReset()
+  localStorage.clear()
 })
 
 afterEach(() => {
@@ -153,5 +162,47 @@ describe('unsubscribeFromPush', () => {
       }),
     })
     await expect(unsubscribeFromPush()).rejects.toEqual({ message: 'boom' })
+  })
+})
+
+
+describe('hasSeenPushOnboarding / markPushOnboardingSeen', () => {
+  it('is false until the prompt has been marked seen', () => {
+    expect(hasSeenPushOnboarding()).toBe(false)
+    markPushOnboardingSeen()
+    expect(hasSeenPushOnboarding()).toBe(true)
+    expect(localStorage.getItem(STORAGE_KEYS.pushOnboardingSeen)).toBe('1')
+  })
+})
+
+describe('shouldOfferPushOnboarding', () => {
+  it('is true when supported, undecided, unsubscribed, and not yet seen', async () => {
+    stubServiceWorker({ getSubscription: vi.fn().mockResolvedValue(null) })
+    stubNotificationPermission('default')
+    expect(await shouldOfferPushOnboarding()).toBe(true)
+  })
+
+  it('is false once already marked seen', async () => {
+    stubServiceWorker({ getSubscription: vi.fn().mockResolvedValue(null) })
+    stubNotificationPermission('default')
+    markPushOnboardingSeen()
+    expect(await shouldOfferPushOnboarding()).toBe(false)
+  })
+
+  it('is false when push is unsupported', async () => {
+    vi.stubGlobal('navigator', { ...navigator, serviceWorker: {} })
+    expect(await shouldOfferPushOnboarding()).toBe(false)
+  })
+
+  it('is false when the browser permission has already been decided', async () => {
+    stubServiceWorker({ getSubscription: vi.fn().mockResolvedValue(null) })
+    stubNotificationPermission('granted')
+    expect(await shouldOfferPushOnboarding()).toBe(false)
+  })
+
+  it('is false when this device is already subscribed', async () => {
+    stubServiceWorker({ getSubscription: vi.fn().mockResolvedValue({ endpoint: 'https://push.example/1' }) })
+    stubNotificationPermission('default')
+    expect(await shouldOfferPushOnboarding()).toBe(false)
   })
 })

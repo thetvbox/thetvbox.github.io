@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
@@ -7,9 +7,11 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import PasscodeGate from './components/PasscodeGate'
+import PushNotificationsPanel from './components/PushNotificationsPanel'
 import ErrorBoundary from './components/ErrorBoundary'
 import Spinner from './components/Spinner'
 import { hasPassedGate, isGateConfigured } from './lib/siteGate'
+import { markPushOnboardingSeen, shouldOfferPushOnboarding } from './lib/pushNotifications'
 import { ROUTES } from './lib/routes'
 import { ROUTE_TRANSITION_MOTION } from './lib/motion'
 import { useScrollRestoration } from './hooks/useScrollRestoration'
@@ -45,8 +47,25 @@ function AppShell() {
   const location = useLocation()
   const showNav = Boolean(user) && location.pathname !== ROUTES.login
   const [gatePassed, setGatePassed] = useState(hasPassedGate)
+  const [showPushOnboarding, setShowPushOnboarding] = useState(false)
 
   useScrollRestoration()
+
+  // Offers the push-notifications prompt once, right after a person's first
+  // authenticated view on this device -- see shouldOfferPushOnboarding for
+  // the full eligibility check (supported, undecided, unsubscribed, unseen).
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    shouldOfferPushOnboarding().then((should) => {
+      if (cancelled || !should) return
+      markPushOnboardingSeen()
+      setShowPushOnboarding(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -183,6 +202,15 @@ function AppShell() {
             </Routes>
           </ErrorBoundary>
         </motion.div>
+      </AnimatePresence>
+      <AnimatePresence>
+        {showPushOnboarding && user && (
+          <PushNotificationsPanel
+            key="push-onboarding"
+            userId={user.id}
+            onClose={() => setShowPushOnboarding(false)}
+          />
+        )}
       </AnimatePresence>
     </div>
   )
