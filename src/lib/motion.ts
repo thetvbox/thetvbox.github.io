@@ -10,6 +10,12 @@ export function scrollBehavior(): ScrollBehavior {
 
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const
 
+/** Spring feel matching UIKit/SwiftUI's default interactive spring -- for glass-panel morphs and drag gestures. */
+export const GLASS_SPRING = { type: 'spring', stiffness: 380, damping: 32, mass: 0.9 } as const
+
+/** A snappier spring for small, immediate feedback (a toggle, a tap) rather than a panel-sized transition. */
+export const GLASS_SPRING_SNAPPY = { type: 'spring', stiffness: 520, damping: 30, mass: 0.7 } as const
+
 export const DROPDOWN_PANEL_INITIAL = { opacity: 0, scale: 0.95, y: -8 } as const
 export const DROPDOWN_PANEL_ANIMATE = { opacity: 1, scale: 1, y: 0 } as const
 export const DROPDOWN_PANEL_EXIT = {

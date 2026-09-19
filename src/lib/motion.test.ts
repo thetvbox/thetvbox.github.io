@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { prefersReducedMotion, scrollBehavior, staggerDelay, staggerRowMotion, staggerTileMotion } from './motion'
+import {
+  GLASS_SPRING,
+  GLASS_SPRING_SNAPPY,
+  prefersReducedMotion,
+  scrollBehavior,
+  staggerDelay,
+  staggerRowMotion,
+  staggerTileMotion,
+} from './motion'
 
 function stubMatchMedia(matches: boolean) {
   vi.stubGlobal(
@@ -85,5 +93,13 @@ describe('staggerTileMotion', () => {
     const atCap = staggerTileMotion(12, 12)
     const overCap = staggerTileMotion(50, 12)
     expect(overCap.transition.delay).toBe(atCap.transition.delay)
+  })
+})
+
+describe('GLASS_SPRING presets', () => {
+  it('are spring transitions with a snappier damping/stiffness ratio for GLASS_SPRING_SNAPPY', () => {
+    expect(GLASS_SPRING.type).toBe('spring')
+    expect(GLASS_SPRING_SNAPPY.type).toBe('spring')
+    expect(GLASS_SPRING_SNAPPY.stiffness).toBeGreaterThan(GLASS_SPRING.stiffness)
   })
 })

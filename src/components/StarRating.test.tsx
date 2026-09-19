@@ -4,6 +4,9 @@ import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
 
+const { triggerHaptic } = vi.hoisted(() => ({ triggerHaptic: vi.fn() }))
+vi.mock('../lib/haptics', () => ({ triggerHaptic }))
+
 import StarRating from './StarRating'
 
 function stubContainerRect(container: HTMLElement) {
@@ -33,6 +36,14 @@ describe('StarRating', () => {
     render(<StarRating value={2} onChange={vi.fn()} readOnly />)
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('5 stars')).not.toBeInTheDocument()
+  })
+
+  it('fires a haptic tick when a tap commits a rating', () => {
+    triggerHaptic.mockClear()
+    const onChange = vi.fn()
+    render(<StarRating value={0} onChange={onChange} />)
+    fireEvent.click(screen.getByLabelText('3 stars'))
+    expect(triggerHaptic).toHaveBeenCalledTimes(1)
   })
 
   it('clicking a full-star half commits that value', () => {

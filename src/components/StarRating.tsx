@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
+import { triggerHaptic } from '../lib/haptics'
 
 const STAR_INDEXES = Array.from({ length: MAX_RATING }, (_, i) => i + 1)
 
@@ -81,6 +82,7 @@ export default function StarRating({
   function handlePick(starIndex: number, half: boolean) {
     if (!interactive || !onChange) return
     const picked = half ? starIndex - RATING_STEP : starIndex
+    triggerHaptic()
     onChange(picked === value ? 0 : picked)
   }
 
@@ -106,6 +108,7 @@ export default function StarRating({
     dragRef.current = null
     if (!interactive || !drag || drag.pointerId !== e.pointerId || !drag.dragging || !onChange) return
     const picked = valueFromClientX(e.clientX)
+    triggerHaptic()
     onChange(picked === value ? 0 : picked)
     setHoverValue(null)
   }
