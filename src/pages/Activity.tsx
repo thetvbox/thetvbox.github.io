@@ -15,6 +15,7 @@ import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { getShowDetailsBulk } from '../lib/tmdb'
 import { dayKey, formatDiaryHeading } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
+import { offscreenSkipStyle } from '../lib/layout'
 import {
   GROUP_ACTIVITY_FETCH_LIMIT,
   GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
@@ -480,7 +481,7 @@ export default function Activity() {
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-500">{group.heading}</h3>
               <div className="space-y-2">
                 {group.items.map((item, i) => (
-                  <motion.div key={item.key} {...staggerRowMotion(i)}>
+                  <motion.div key={item.key} {...staggerRowMotion(i)} style={offscreenSkipStyle(72)}>
                     {item.kind === 'follow' ? <FollowActivityRow event={item} /> : <ActivityRow event={item} />}
                   </motion.div>
                 ))}

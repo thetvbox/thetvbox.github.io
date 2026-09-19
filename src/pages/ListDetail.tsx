@@ -13,6 +13,7 @@ import { useToast } from '../hooks/useToast'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { PAGE_HEADER_MOTION, TRIGGER_SWAP_MOTION, staggerTileMotion } from '../lib/motion'
+import { offscreenSkipStyle } from '../lib/layout'
 import { PROFILE_LISTS_TAB_QUERY } from '../lib/constants'
 import { errorMessage, pluralSuffix } from '../lib/format'
 import { profileRoute, showRoute } from '../lib/routes'
@@ -192,7 +193,7 @@ export default function ListDetail() {
             ) : (
               <div className={POSTER_GRID_CLASSES}>
                 {items.map((item, i) => (
-                  <motion.div key={item.id} {...staggerTileMotion(i)} className="group relative">
+                  <motion.div key={item.id} {...staggerTileMotion(i)} style={offscreenSkipStyle(300)} className="group relative">
                     <Link to={showRoute(item.show_id)} className="block">
                       <PosterTile posterPath={item.show_poster_path} name={item.show_name} />
                       <p className="mt-2 truncate text-sm font-medium text-base-100">{item.show_name}</p>

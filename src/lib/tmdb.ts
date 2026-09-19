@@ -136,7 +136,7 @@ export function detectRegion(): string {
   }
 }
 
-type ImageSize =
+export type ImageSize =
   | 'w92'
   | 'w154'
   | 'w185'
@@ -147,9 +147,32 @@ type ImageSize =
   | 'w1280'
   | 'original'
 
+const IMAGE_SIZE_WIDTHS: Partial<Record<ImageSize, number>> = {
+  w92: 92,
+  w154: 154,
+  w185: 185,
+  w300: 300,
+  w342: 342,
+  w500: 500,
+  w780: 780,
+  w1280: 1280,
+}
+
 export function posterUrl(path: string | null, size: ImageSize = 'w342'): string | null {
   if (!path) return null
   return `${IMAGE_BASE}/${size}${path}`
+}
+
+/** Builds an `<img srcset>` string offering several TMDB image widths, so the browser picks the right one for the viewport and device pixel ratio. */
+export function buildSrcSet(path: string | null, sizes: ImageSize[]): string | undefined {
+  if (!path) return undefined
+  const entries = sizes
+    .map((size) => {
+      const width = IMAGE_SIZE_WIDTHS[size]
+      return width ? `${IMAGE_BASE}/${size}${path} ${width}w` : null
+    })
+    .filter((entry): entry is string => entry !== null)
+  return entries.length > 0 ? entries.join(', ') : undefined
 }
 
 export function backdropUrl(path: string | null, size: ImageSize = 'w1280'): string | null {

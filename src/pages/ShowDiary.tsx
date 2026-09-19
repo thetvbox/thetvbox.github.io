@@ -10,6 +10,7 @@ import { fetchUserByUsername } from '../lib/users'
 import { posterUrl } from '../lib/tmdb'
 import { formatShortDate } from '../lib/date'
 import { staggerRowMotion } from '../lib/motion'
+import { offscreenSkipStyle } from '../lib/layout'
 import { profileRoute, showRoute } from '../lib/routes'
 import CenteredMessage from '../components/CenteredMessage'
 import StarGlyph from '../components/StarGlyph'
@@ -171,6 +172,7 @@ export default function ShowDiary() {
                   <motion.li
                     key={w.id}
                     {...staggerRowMotion(i)}
+                    style={offscreenSkipStyle(64)}
                     className="flex items-center justify-between rounded-xl border border-hairline bg-base-850/60 p-3"
                   >
                     <div className="min-w-0">

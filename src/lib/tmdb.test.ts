@@ -199,6 +199,30 @@ describe('image URL helpers', () => {
   })
 })
 
+describe('buildSrcSet', () => {
+  it('returns undefined for a null path', async () => {
+    const { buildSrcSet } = await import('./tmdb')
+    expect(buildSrcSet(null, ['w185', 'w342'])).toBeUndefined()
+  })
+
+  it('joins each requested size into a width-descriptor srcset string', async () => {
+    const { buildSrcSet } = await import('./tmdb')
+    expect(buildSrcSet('/p.jpg', ['w185', 'w342', 'w500'])).toBe(
+      'https://image.tmdb.org/t/p/w185/p.jpg 185w, https://image.tmdb.org/t/p/w342/p.jpg 342w, https://image.tmdb.org/t/p/w500/p.jpg 500w',
+    )
+  })
+
+  it('drops sizes with no known pixel width, like "original"', async () => {
+    const { buildSrcSet } = await import('./tmdb')
+    expect(buildSrcSet('/p.jpg', ['w185', 'original'])).toBe('https://image.tmdb.org/t/p/w185/p.jpg 185w')
+  })
+
+  it('returns undefined when no requested size has a known width', async () => {
+    const { buildSrcSet } = await import('./tmdb')
+    expect(buildSrcSet('/p.jpg', ['original'])).toBeUndefined()
+  })
+})
+
 describe('yearFromDate', () => {
   it('returns an empty string for a null date', async () => {
     const { yearFromDate } = await import('./tmdb')

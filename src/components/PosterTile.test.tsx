@@ -9,6 +9,14 @@ describe('PosterTile', () => {
     expect(img).toHaveAttribute('src', expect.stringContaining('/abc.jpg'))
   })
 
+  it('offers multiple resolutions via srcset, sized to the grid breakpoints', () => {
+    render(<PosterTile posterPath="/abc.jpg" name="Show One" />)
+    const img = screen.getByRole('img', { name: 'Show One' })
+    expect(img.getAttribute('srcset')).toContain('185w')
+    expect(img.getAttribute('srcset')).toContain('500w')
+    expect(img).toHaveAttribute('sizes', expect.stringContaining('px'))
+  })
+
   it('falls back to the show name as text when there is no poster', () => {
     render(<PosterTile posterPath={null} name="Show One" />)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()

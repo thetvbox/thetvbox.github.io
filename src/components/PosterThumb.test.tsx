@@ -19,6 +19,13 @@ describe('PosterThumb', () => {
     expect(container.firstChild).toHaveClass('h-16', 'w-11')
   })
 
+  it('sizes the srcset to the actual rendered box width, per size prop', () => {
+    const { container } = render(<PosterThumb posterPath="/abc.jpg" size="lg" />)
+    const img = container.querySelector('img')!
+    expect(img.getAttribute('sizes')).toBe('44px')
+    expect(img.getAttribute('srcset')).toContain('92w')
+  })
+
   it('defaults to the md size class', () => {
     const { container } = render(<PosterThumb posterPath={null} />)
     expect(container.firstChild).toHaveClass('h-14', 'w-10')

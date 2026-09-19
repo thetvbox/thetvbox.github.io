@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
+import { offscreenSkipStyle } from '../../lib/layout'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
 import PosterThumb from '../PosterThumb'
@@ -39,6 +40,7 @@ export default function WatchlistTab({ items, isMe, onRemove }: WatchlistTabProp
         <motion.li
           key={w.id}
           {...staggerRowMotion(i, 8)}
+          style={offscreenSkipStyle(72)}
           className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
         >
           <Link to={showRoute(w.show_id)} className="flex min-w-0 flex-1 items-center gap-3">
