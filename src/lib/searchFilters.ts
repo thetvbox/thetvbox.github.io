@@ -75,8 +75,12 @@ export function filterShows(
   })
 }
 
-/** Drops selections that no longer appear in the current facet list, e.g. after switching from
- * trending to search results. */
+/** True while a just-typed query's results haven't landed yet, so facets/filters would momentarily look empty. */
+export function isSearchResultPending(searching: boolean, hasSearched: boolean): boolean {
+  return searching && !hasSearched
+}
+
+/** Drops selections that no longer appear in the current facet list, e.g. after switching from trending to search results. */
 export function pruneSearchFilters(filters: SearchFilters, facets: SearchFilterFacets): SearchFilters {
   const genres = new Set(Array.from(filters.genres).filter((g) => facets.genres.includes(g)))
   const platforms = new Set(Array.from(filters.platforms).filter((p) => facets.platforms.includes(p)))

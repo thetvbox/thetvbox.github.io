@@ -54,11 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
+      /** Creates the account row only; the caller must call signIn() separately once a passkey is registered (see Login.tsx). */
       async register(email: string, username: string) {
-        // Creates the account row only -- does NOT sign the person in. A user
-        // isn't considered authenticated until they've also registered a
-        // passkey for this row (see src/pages/Login.tsx), so signIn() is a
-        // separate, explicit call the caller makes once that succeeds.
         const { data, error } = await supabase
           .from(TABLE_USERS)
           .insert({ email: email.toLowerCase().trim(), username: username.trim() })

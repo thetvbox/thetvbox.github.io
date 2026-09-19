@@ -28,11 +28,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/**
- * Shares a link via the native share sheet when available, falling back to
- * copying the URL to the clipboard. Resolves with what actually happened so
- * callers can toast appropriately; never throws.
- */
+/** Shares a link via the native share sheet when available, falling back to copying the URL to the clipboard; never throws. */
 export async function shareOrCopyLink(options: ShareOptions): Promise<ShareResult> {
   const url = options.url ?? (typeof window !== 'undefined' ? window.location.href : '')
   const data: ShareData = { title: options.title, text: options.text, url }
@@ -43,7 +39,6 @@ export async function shareOrCopyLink(options: ShareOptions): Promise<ShareResul
       return 'shared'
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return 'cancelled'
-      // Any other share failure falls through to the clipboard fallback below.
     }
   }
 

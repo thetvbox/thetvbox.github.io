@@ -57,13 +57,11 @@ describe('isPushSupported', () => {
 
 describe('urlBase64ToUint8Array', () => {
   it('decodes a URL-safe base64 string into the matching bytes', () => {
-    // "hello" -> base64 "aGVsbG8=" -> url-safe "aGVsbG8"
     const bytes = urlBase64ToUint8Array('aGVsbG8')
     expect(Array.from(bytes)).toEqual([104, 101, 108, 108, 111])
   })
 
   it('handles the -/_ url-safe substitutions', () => {
-    // Bytes 0xfb 0xff encode to base64 "-/8=" in standard form, "-_8" url-safe.
     const bytes = urlBase64ToUint8Array('-_8')
     expect(Array.from(bytes)).toEqual([0xfb, 0xff])
   })

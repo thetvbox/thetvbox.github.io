@@ -30,10 +30,6 @@ export async function subscribeToPush(userId: string): Promise<void> {
   const registration = await navigator.serviceWorker.ready
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    // TS's DOM lib wants an ArrayBuffer-backed BufferSource specifically;
-    // Uint8Array.from(...) is typed generically over ArrayBufferLike, so
-    // browsers' actual (and looser) runtime acceptance of any BufferSource
-    // needs this cast.
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
   })
   const json = subscription.toJSON()
@@ -54,8 +50,6 @@ export function hasSeenPushOnboarding(): boolean {
   try {
     return localStorage.getItem(STORAGE_KEYS.pushOnboardingSeen) === '1'
   } catch {
-    // Can't tell either way -- treat as seen so a storage failure shows up as
-    // "don't nag", not as the prompt reappearing on every page load.
     return true
   }
 }
@@ -67,11 +61,7 @@ export function markPushOnboardingSeen(): void {
   } catch {}
 }
 
-/**
- * True when it's worth showing the one-time post-sign-in push prompt: push is
- * supported, the browser hasn't already decided the permission, this device
- * isn't already subscribed, and this device hasn't been offered it before.
- */
+/** True when push is supported, undecided, unsubscribed, and hasn't been offered on this device before. */
 export async function shouldOfferPushOnboarding(): Promise<boolean> {
   if (hasSeenPushOnboarding()) return false
   if (!isPushSupported()) return false

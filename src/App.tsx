@@ -51,9 +51,6 @@ function AppShell() {
 
   useScrollRestoration()
 
-  // Offers the push-notifications prompt once, right after a person's first
-  // authenticated view on this device -- see shouldOfferPushOnboarding for
-  // the full eligibility check (supported, undecided, unsubscribed, unseen).
   useEffect(() => {
     if (!user) return
     let cancelled = false

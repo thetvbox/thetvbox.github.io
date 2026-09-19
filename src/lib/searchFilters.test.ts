@@ -5,6 +5,7 @@ import {
   emptySearchFilters,
   filterShows,
   isSearchFiltersActive,
+  isSearchResultPending,
   pruneSearchFilters,
 } from './searchFilters'
 import type { ResolvedProvider } from './streamingProvider'
@@ -114,6 +115,15 @@ describe('filterShows', () => {
       platforms,
     )
     expect(result).toEqual([])
+  })
+})
+
+describe('isSearchResultPending', () => {
+  it('is true only while actively searching and results have not landed yet', () => {
+    expect(isSearchResultPending(true, false)).toBe(true)
+    expect(isSearchResultPending(true, true)).toBe(false)
+    expect(isSearchResultPending(false, false)).toBe(false)
+    expect(isSearchResultPending(false, true)).toBe(false)
   })
 })
 

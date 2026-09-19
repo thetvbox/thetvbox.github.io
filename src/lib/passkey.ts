@@ -48,9 +48,7 @@ async function readFunctionError(error: unknown): Promise<FunctionErrorInfo> {
         reason: typeof body?.reason === 'string' ? body.reason : undefined,
         user: body?.user,
       }
-    } catch {
-      // Falls through to the generic message below.
-    }
+    } catch {}
   }
   return { message: 'Something went wrong. Try again.' }
 }

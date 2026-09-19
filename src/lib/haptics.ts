@@ -19,17 +19,9 @@ function getHapticInput(): HTMLInputElement | null {
   }
 }
 
-/**
- * Fires iOS's native Taptic Engine "toggle" haptic, via Safari 17.4+'s
- * undocumented `<input type="checkbox" switch>` behavior. A safe no-op
- * everywhere else -- toggling a hidden, off-screen checkbox has no visible
- * effect on any platform, so this needs no platform detection to stay
- * harmless, and it never throws into the action it's attached to.
- */
+/** Fires iOS's native Taptic Engine "toggle" haptic via Safari 17.4+'s `<input type="checkbox" switch>` trick; a safe no-op everywhere else. */
 export function triggerHaptic(): void {
   try {
     getHapticInput()?.click()
-  } catch {
-    // Best-effort only.
-  }
+  } catch {}
 }

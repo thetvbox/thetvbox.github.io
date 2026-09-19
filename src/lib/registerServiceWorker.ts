@@ -2,8 +2,6 @@
 export function registerServiceWorker(): void {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Best-effort only -- the app works fine without an active service worker.
-    })
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }

@@ -31,8 +31,7 @@ function show(overrides: Partial<TmdbShowSummary> = {}): TmdbShowSummary {
   }
 }
 
-/** Makes the platforms hook resolve per-id from a fixed map, regardless of which id batch
- * (search vs. trending) asks. */
+/** Makes the platforms hook resolve per-id from a fixed map, regardless of which id batch asks. */
 function mockPlatforms(entries: [number, ResolvedProvider][]) {
   const byId = new Map(entries)
   vi.mocked(useStreamingPlatforms).mockImplementation((ids: number[]) => ({
@@ -198,7 +197,6 @@ describe('Search', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     let dialog = await screen.findByRole('dialog', { name: 'Filters' })
-    // No single trending show is both Drama and on Hulu, so this AND-combination matches nothing.
     fireEvent.click(within(dialog).getByText('Drama'))
     fireEvent.click(within(dialog).getByText('Hulu'))
 

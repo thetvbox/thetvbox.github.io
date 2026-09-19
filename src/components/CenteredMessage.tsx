@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
+import { ROUTES } from '../lib/routes'
 
 /** Centered message plus back link, shared by every not-found/failed-to-load page. */
 export default function CenteredMessage({
   message,
-  backTo = '/members',
+  backTo = ROUTES.members,
   backLabel = 'Back to people',
 }: {
   message: string

@@ -67,8 +67,6 @@ export const PASSCODE_LENGTH = 6
 
 export const PROFILE_LISTS_TAB_QUERY = 'tab=lists'
 
-// Public VAPID key for Web Push -- safe to ship in the client bundle (that's
-// what "public" means here); only the matching private key, held server-side
-// as a Supabase secret, can actually sign a push.
+/** Public VAPID key for Web Push; safe to ship client-side, unlike the matching private key held server-side. */
 export const VAPID_PUBLIC_KEY =
   'BCmuX1JiyjlDr0YaLHP9F8pjqXQyP_--uf15q9XNHCum3e19hiNYGpxOiRpzvaawjispJKkqNsJVHr3AZ12fiNk'

@@ -18,6 +18,7 @@ import {
   emptySearchFilters,
   filterShows,
   isSearchFiltersActive,
+  isSearchResultPending,
   pruneSearchFilters,
 } from '../lib/searchFilters'
 import type { SearchFilters } from '../lib/searchFilters'
@@ -87,10 +88,7 @@ export default function Search() {
   }, [])
 
   useEffect(() => {
-    // Skip while a just-typed query hasn't resolved yet: posterResults (and so facets) are
-    // momentarily empty between the keystroke and the debounced search landing, which would
-    // otherwise wipe out an active filter selection before the real result set arrives.
-    if (searching && !hasSearched) return
+    if (isSearchResultPending(searching, hasSearched)) return
     // oxlint-disable-next-line react/set-state-in-effect
     setFilters((prev) => pruneSearchFilters(prev, facets))
   }, [facets, searching, hasSearched])

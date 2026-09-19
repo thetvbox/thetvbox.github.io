@@ -48,9 +48,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }
 
-  // Memoized so useTheme() consumers only re-render when the theme itself
-  // changes, not on every ThemeProvider render -- matches AuthContext's
-  // pattern.
   const value = useMemo<ThemeContextValue>(() => ({ theme, toggleTheme, setTheme }), [theme])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

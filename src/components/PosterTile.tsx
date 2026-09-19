@@ -3,9 +3,8 @@ import { buildSrcSet, posterUrl } from '../lib/tmdb'
 
 export const POSTER_GRID_CLASSES = 'grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
 
-// Mirrors POSTER_GRID_CLASSES's breakpoints so the browser requests a poster
-// sized for the actual column width instead of one fixed size for every tile.
-export const POSTER_GRID_SIZES =
+/** Mirrors POSTER_GRID_CLASSES's breakpoints, so the browser requests a poster sized for the actual column width. */
+const POSTER_GRID_SIZES =
   '(min-width: 1024px) 182px, (min-width: 768px) 220px, (min-width: 640px) 210px, 171px'
 
 /** The poster art box shared by every poster card, with badges/overlays passed in as children. */

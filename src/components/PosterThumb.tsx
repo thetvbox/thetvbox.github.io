@@ -7,7 +7,7 @@ const SIZE_CLASSES = {
   lg: 'h-16 w-11',
 } as const
 
-// Actual rendered box width per size, in px (matches the w-9/w-10/w-11 above), for the `sizes` attribute.
+/** Actual rendered box width per size, in px (matches the w-9/w-10/w-11 above), for the `sizes` attribute. */
 const BOX_WIDTH_PX = {
   sm: 36,
   md: 40,
