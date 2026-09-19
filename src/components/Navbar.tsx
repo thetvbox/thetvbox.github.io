@@ -182,7 +182,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-hairline bg-base-950/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <header className="glass-surface sticky top-0 z-40 border-b border-hairline pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
             to={ROUTES.home}
@@ -238,7 +238,7 @@ export default function Navbar() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
-        className="fixed inset-x-0 bottom-0 z-40 flex transform-gpu border-t border-hairline bg-base-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md will-change-transform md:hidden"
+        className="glass-surface-strong fixed inset-x-0 bottom-0 z-40 flex transform-gpu border-t border-hairline pb-[env(safe-area-inset-bottom)] will-change-transform md:hidden"
       >
         {NAV_ITEMS.map(({ to, label, Icon }) => (
           <NavLink

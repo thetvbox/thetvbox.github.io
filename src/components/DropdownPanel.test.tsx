@@ -14,7 +14,7 @@ describe('DropdownPanel', () => {
       </DropdownPanel>,
     )
     const dialog = screen.getByRole('dialog', { name: 'Notifications' })
-    expect(dialog).toHaveClass('absolute', 'bg-base-900/95', 'backdrop-blur-xl')
+    expect(dialog).toHaveClass('absolute', 'glass-surface-strong')
     expect(screen.getByText('Hello')).toBeInTheDocument()
   })
 

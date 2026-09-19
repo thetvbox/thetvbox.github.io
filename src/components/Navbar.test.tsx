@@ -36,6 +36,12 @@ beforeEach(() => {
 })
 
 describe('Navbar', () => {
+  it('applies the glass surface treatment to the sticky header and mobile tab bar', () => {
+    const { container } = renderNavbar()
+    expect(container.querySelector('header')).toHaveClass('glass-surface')
+    expect(container.querySelector('nav.fixed')).toHaveClass('glass-surface-strong')
+  })
+
   it('renders the nav items, each appearing twice (desktop + mobile)', () => {
     renderNavbar()
     expect(screen.getAllByText('Home')).toHaveLength(2)

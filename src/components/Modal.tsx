@@ -58,7 +58,7 @@ export default function Modal({ onClose, label, children, maxWidth = 'max-w-md',
         animate={MODAL_PANEL_ANIMATE}
         exit={MODAL_PANEL_EXIT}
         transition={MODAL_PANEL_TRANSITION}
-        className={`relative z-10 w-full ${maxWidth} rounded-2xl border border-hairline-strong bg-base-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl ${className}`}
+        className={`glass-surface-strong relative z-10 w-full ${maxWidth} rounded-2xl border border-hairline-strong shadow-2xl shadow-black/40 ${className}`}
       >
         {children}
       </motion.div>

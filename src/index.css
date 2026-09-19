@@ -50,6 +50,12 @@
   --color-hover: rgba(255, 255, 255, 0.05);
   --color-hover-strong: rgba(255, 255, 255, 0.09);
 
+  /* Liquid-Glass-style translucent surface tint, for chrome that should
+     read as glass (nav bars, modals, dropdowns, sheets) rather than a flat
+     solid panel -- paired with the .glass-surface utility below. */
+  --color-glass: rgba(13, 13, 18, 0.55);
+  --color-glass-strong: rgba(13, 13, 18, 0.78);
+
   --animate-fade-in: fade-in 0.35s ease-out both;
   --animate-rise: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 
@@ -103,6 +109,9 @@
   --color-hairline-strong: rgba(15, 23, 42, 0.15);
   --color-hover: rgba(15, 23, 42, 0.045);
   --color-hover-strong: rgba(15, 23, 42, 0.075);
+
+  --color-glass: rgba(255, 255, 255, 0.55);
+  --color-glass-strong: rgba(255, 255, 255, 0.78);
 
   --glow: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.07), transparent);
 }
@@ -179,4 +188,50 @@ button {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Liquid-Glass-inspired translucent surface for app chrome -- backdrop blur
+   plus saturation plus a subtle top sheen, replacing the flatter
+   backdrop-blur-only surfaces this app used before. Two strengths: the
+   base tint for lighter chrome (the top nav), "-strong" for surfaces that
+   need more contrast against busy content behind them (bottom nav, modals,
+   dropdowns). Falls back to a solid surface under prefers-reduced-transparency,
+   for both legibility and the OS accessibility setting's intent. */
+.glass-surface,
+.glass-surface-strong {
+  background-color: var(--color-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-surface-strong {
+  background-color: var(--color-glass-strong);
+}
+
+.glass-surface::before,
+.glass-surface-strong::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%);
+  pointer-events: none;
+}
+
+.light .glass-surface::before,
+.light .glass-surface-strong::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 40%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface,
+  .glass-surface-strong {
+    background-color: var(--color-base-900);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-surface::before,
+  .glass-surface-strong::before {
+    display: none;
+  }
 }

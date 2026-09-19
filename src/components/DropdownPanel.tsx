@@ -33,7 +33,7 @@ export default function DropdownPanel({ onClose, label, className = '', children
       transition={DROPDOWN_PANEL_TRANSITION}
       role="dialog"
       aria-label={label}
-      className={`absolute right-0 top-full z-50 mt-2 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong bg-base-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl ${className}`}
+      className={`glass-surface-strong absolute right-0 top-full z-50 mt-2 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-hairline-strong shadow-2xl shadow-black/40 ${className}`}
     >
       {children}
     </motion.div>

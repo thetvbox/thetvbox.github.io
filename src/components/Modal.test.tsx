@@ -56,7 +56,7 @@ describe('Modal', () => {
         <p>Hello</p>
       </Modal>,
     )
-    expect(screen.getByRole('dialog', { name: 'Followers' })).toHaveClass('bg-base-900/95', 'backdrop-blur-xl')
+    expect(screen.getByRole('dialog', { name: 'Followers' })).toHaveClass('glass-surface-strong')
   })
 
   it('traps Tab within the panel', () => {
