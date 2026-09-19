@@ -29,7 +29,11 @@ export function useToast() {
     setToast({ message, tone: 'error' })
   }, [])
 
+  const showInfo = useCallback((message: string) => {
+    setToast({ message, tone: 'info' })
+  }, [])
+
   const dismiss = useCallback(() => setToast(null), [])
 
-  return { toast, showUndo, showError, dismiss }
+  return { toast, showUndo, showError, showInfo, dismiss }
 }

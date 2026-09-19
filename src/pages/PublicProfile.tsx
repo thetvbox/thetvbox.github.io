@@ -7,6 +7,9 @@ import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import CenteredMessage from '../components/CenteredMessage'
 import Avatar from '../components/Avatar'
+import ShareButton from '../components/ShareButton'
+import Toast from '../components/Toast'
+import { useToast } from '../hooks/useToast'
 import { ROUTES, compareRoute } from '../lib/routes'
 import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
@@ -17,6 +20,7 @@ export default function PublicProfile() {
   useDocumentTitle(username ? `@${username}` : 'Profile')
   const [profile, setProfile] = useState<AppUser | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
+  const { toast, showInfo, showError: showToastError, dismiss } = useToast()
 
   useEffect(() => {
     if (!username) return
@@ -63,24 +67,36 @@ export default function PublicProfile() {
             {profile && <ProfileFollowSection profileId={profile.id} username={profile.username} isMe={isMe} />}
           </div>
         </div>
-        {isMe ? (
-          <Link
-            to={ROUTES.profile}
-            className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
-          >
-            Edit / sign out
-          </Link>
-        ) : (
-          <Link
-            to={compareRoute(username ?? '')}
-            className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
-          >
-            Compare ratings
-          </Link>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {profile && (
+            <ShareButton
+              title={`@${profile.username} on TV Box`}
+              onResult={(result) => {
+                if (result === 'copied') showInfo('Link copied to clipboard')
+                if (result === 'failed') showToastError('Failed to share this profile.')
+              }}
+            />
+          )}
+          {isMe ? (
+            <Link
+              to={ROUTES.profile}
+              className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+            >
+              Edit / sign out
+            </Link>
+          ) : (
+            <Link
+              to={compareRoute(username ?? '')}
+              className="rounded-lg border border-hairline-strong px-3.5 py-2 text-sm text-base-300 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+            >
+              Compare ratings
+            </Link>
+          )}
+        </div>
       </div>
 
       {profile && <ProfileActivity userId={profile.id} username={profile.username} />}
+      <Toast toast={toast} onDismiss={dismiss} />
     </div>
   )
 }

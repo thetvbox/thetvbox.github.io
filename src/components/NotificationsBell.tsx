@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
+import { useAppBadge } from '../hooks/useAppBadge'
 import {
   clearAllNotifications,
   fetchNotifications,
@@ -31,6 +32,7 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
   const [unseen, setUnseen] = useState(0)
 
   useCloseOnNavigate(() => onOpenChange(false))
+  useAppBadge(unseen)
 
   useEffect(() => {
     if (!me) return

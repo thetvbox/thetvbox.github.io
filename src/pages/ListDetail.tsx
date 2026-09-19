@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchUserByUsername } from '../lib/users'
 import { addShowToList, deleteList, fetchList, fetchListItems, removeShowFromList } from '../lib/lists'
 import Toast from '../components/Toast'
+import ShareButton from '../components/ShareButton'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
@@ -29,7 +30,7 @@ export default function ListDetail() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const { toast, showUndo, showError, dismiss } = useToast()
+  const { toast, showUndo, showError, showInfo, dismiss } = useToast()
   useDocumentTitle(list?.name ?? null)
 
   useEscapeAndFocusReturn(confirmingDelete, () => setConfirmingDelete(false))
@@ -135,41 +136,51 @@ export default function ListDetail() {
                   {items.length} show{pluralSuffix(items.length)}
                 </p>
               </div>
-              {isMine && (
-                <AnimatePresence mode="wait" initial={false}>
-                  {confirmingDelete ? (
-                    <motion.div key="confirm" className="flex shrink-0 items-center gap-1.5" {...TRIGGER_SWAP_MOTION}>
-                      <span className="text-xs text-base-500">Delete this list?</span>
-                      <button
+              <div className="flex shrink-0 items-center gap-2">
+                <ShareButton
+                  title={list.name}
+                  text={`${list.name} on TV Box`}
+                  onResult={(result) => {
+                    if (result === 'copied') showInfo('Link copied to clipboard')
+                    if (result === 'failed') showError('Failed to share this list.')
+                  }}
+                />
+                {isMine && (
+                  <AnimatePresence mode="wait" initial={false}>
+                    {confirmingDelete ? (
+                      <motion.div key="confirm" className="flex shrink-0 items-center gap-1.5" {...TRIGGER_SWAP_MOTION}>
+                        <span className="text-xs text-base-500">Delete this list?</span>
+                        <button
+                          type="button"
+                          disabled={deleting}
+                          onClick={handleDeleteList}
+                          className="rounded-lg bg-danger/15 px-2.5 py-1.5 text-xs font-medium text-danger ring-1 ring-danger/40 transition-opacity duration-150 disabled:opacity-60"
+                        >
+                          {deleting ? 'Deleting…' : 'Confirm'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deleting}
+                          onClick={() => setConfirmingDelete(false)}
+                          className="text-xs text-base-500 hover:text-base-300"
+                        >
+                          Cancel
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        key="trigger"
                         type="button"
-                        disabled={deleting}
-                        onClick={handleDeleteList}
-                        className="rounded-lg bg-danger/15 px-2.5 py-1.5 text-xs font-medium text-danger ring-1 ring-danger/40 transition-opacity duration-150 disabled:opacity-60"
+                        onClick={() => setConfirmingDelete(true)}
+                        className="shrink-0 rounded-lg border border-hairline-strong px-3 py-1.5 text-xs text-base-400 transition-colors duration-200 hover:border-danger/40 hover:text-danger"
+                        {...TRIGGER_SWAP_MOTION}
                       >
-                        {deleting ? 'Deleting…' : 'Confirm'}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={deleting}
-                        onClick={() => setConfirmingDelete(false)}
-                        className="text-xs text-base-500 hover:text-base-300"
-                      >
-                        Cancel
-                      </button>
-                    </motion.div>
-                  ) : (
-                    <motion.button
-                      key="trigger"
-                      type="button"
-                      onClick={() => setConfirmingDelete(true)}
-                      className="shrink-0 rounded-lg border border-hairline-strong px-3 py-1.5 text-xs text-base-400 transition-colors duration-200 hover:border-danger/40 hover:text-danger"
-                      {...TRIGGER_SWAP_MOTION}
-                    >
-                      Delete list
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              )}
+                        Delete list
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                )}
+              </div>
             </div>
 
             {items.length === 0 ? (
