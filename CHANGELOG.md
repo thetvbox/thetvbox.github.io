@@ -222,6 +222,16 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- The top bar only had a solid glass background on desktop (`md:glass-surface`),
+  so on mobile it was fully transparent and page content scrolling underneath it
+  visually collided with the icons/wordmark, reading as if the bar itself was
+  moving. It's now `glass-surface` (pinned with `position: sticky`) at every
+  breakpoint. The "TV Box" logo is back in front of the wordmark on mobile too
+  (previously desktop-only), the wordmark text is a size bigger, and Report a
+  bug moved back from Profile's More menu to its own top-bar icon, next to
+  theme/notifications -- the now-redundant per-icon `.icon-float` glass backing
+  was removed along with it, since the header itself provides that background
+  at every size now.
 - The top bar's left side was completely blank on mobile once the app
   chrome redesign hid the desktop-only "TV Box" wordmark below the `md`
   breakpoint, leaving only the theme/notifications icons floating on the
