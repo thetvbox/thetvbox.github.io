@@ -22,7 +22,7 @@ import {
   isSearchResultPending,
   pruneSearchFilters,
 } from '../lib/searchFilters'
-import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES } from '../components/Chip'
+import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
 import type { SearchFilters } from '../lib/searchFilters'
 import type { TmdbShowSummary } from '../types'
 
@@ -180,7 +180,7 @@ export default function Search() {
               onClick={() => setFiltersOpen((v) => !v)}
               aria-expanded={filtersOpen}
               aria-haspopup="true"
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+              className={`${PILL_SIZE_CLASSES} ${
                 filtersOpen || isSearchFiltersActive(filters) ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
               }`}
             >

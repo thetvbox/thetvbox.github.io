@@ -16,7 +16,7 @@ import type { ResolvedProvider } from '../lib/streamingProvider'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useShowDetails } from '../hooks/useShowDetails'
 import HistoryFiltersPanel from './HistoryFiltersPanel'
-import { PILL_ACTIVE_CLASSES } from './Chip'
+import { PILL_ACTIVE_CLASSES, PILL_SIZE_CLASSES } from './Chip'
 import StreamingBadge from './StreamingBadge'
 import EmptyState from './EmptyState'
 import StarGlyph from './StarGlyph'
@@ -116,7 +116,7 @@ export default function HistorySection({
               type="button"
               onClick={() => setSort(key)}
               aria-pressed={sort === key}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+              className={`${PILL_SIZE_CLASSES} ${
                 sort === key ? PILL_ACTIVE_CLASSES : 'text-base-500 hover:bg-hover hover:text-base-200'
               }`}
             >
@@ -128,7 +128,7 @@ export default function HistorySection({
           type="button"
           onClick={() => setFiltersOpen((v) => !v)}
           aria-pressed={filtersOpen}
-          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+          className={`shrink-0 ${PILL_SIZE_CLASSES} ${
             filtersOpen || activeFilterCount > 0 ? PILL_ACTIVE_CLASSES : 'text-base-500 hover:bg-hover hover:text-base-200'
           }`}
         >

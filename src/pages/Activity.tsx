@@ -32,7 +32,7 @@ import Avatar from '../components/Avatar'
 import DropdownPanel from '../components/DropdownPanel'
 import { CheckGlyph } from '../components/ShowDetailGlyphs'
 import SegmentedControl from '../components/SegmentedControl'
-import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES } from '../components/Chip'
+import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -354,7 +354,7 @@ export default function Activity() {
                 onClick={() => setGenreFilterOpen((v) => !v)}
                 aria-expanded={genreFilterOpen}
                 aria-haspopup="true"
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                className={`${PILL_SIZE_CLASSES} ${
                   genreFilterOpen || selectedGenres.size > 0 ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
                 }`}
               >
