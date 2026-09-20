@@ -12,6 +12,7 @@ import { useOutsideClick } from '../hooks/useOutsideClick'
 import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
 import NotificationsBell from './NotificationsBell'
+import ReportBugPanel from './ReportBugPanel'
 import HapticOverlay from './HapticOverlay'
 
 const linkBase =
@@ -125,6 +126,15 @@ function MoonIcon() {
   )
 }
 
+function BugIcon() {
+  return (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="7" width="8" height="11" rx="4" />
+      <path d="M12 7V4.5M9 5.5l-1.5-1.5M15 5.5l1.5-1.5M4.5 10h3M16.5 10h3M4.5 15h3M16.5 15h3M9 18l-2 2M15 18l2 2" />
+    </svg>
+  )
+}
+
 /** Sun/moon icon button that toggles theme instantly, floating top bar's fast-access twin to Profile > Appearance's fuller Theme/Transparency controls. */
 function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme()
@@ -162,10 +172,11 @@ const NAV_ITEMS = [
   { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
-/** Minimal iOS-Apple-TV-style chrome: a transparent top bar with a floating "TV Box" wordmark on the left (icon added back in at the md breakpoint) balancing the floating theme/notifications icons on the right (each page supplies its own large title), and a floating glass bottom tab bar on mobile with a sliding pill behind the active tab -- bug-report still lives in Profile's More menu, and Theme/Transparency also have a fuller home in Profile > Appearance. */
+/** Minimal iOS-Apple-TV-style chrome: a glass top bar (pinned at every breakpoint, so page content scrolls under it rather than through it) with the "TV Box" logo+wordmark on the left and report-bug/theme/notifications icons on the right (each page supplies its own large title), and a floating glass bottom tab bar on mobile with a sliding pill behind the active tab -- Theme/Transparency also have a fuller home in Profile > Appearance. */
 export default function Navbar() {
   const location = useLocation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [bugReportOpen, setBugReportOpen] = useState(false)
   const utilityRef = useOutsideClick<HTMLDivElement>(notificationsOpen, () => setNotificationsOpen(false))
 
   /** Scrolls to top when tapping the tab you're already on. */
@@ -177,16 +188,16 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] md:glass-surface md:border-b md:border-hairline">
+      <header className="glass-surface sticky top-0 z-40 border-b border-hairline pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
             to={ROUTES.home}
             onClick={() => handleNavClick(ROUTES.home)}
             viewTransition
-            className="icon-float flex min-h-11 items-center gap-2 rounded-full px-3.5 md:px-0"
+            className="flex min-h-11 items-center gap-2"
           >
-            <AppLogo size={24} className="hidden md:block" />
-            <span className="font-display text-base font-semibold tracking-tight text-base-100 md:text-lg">
+            <AppLogo size={24} />
+            <span className="font-display text-lg font-semibold tracking-tight text-base-100">
               TV Box
             </span>
           </NavLink>
@@ -217,15 +228,24 @@ export default function Navbar() {
           </nav>
 
           <div ref={utilityRef} className="relative ml-auto flex items-center gap-1">
-            <ThemeToggle className="icon-float" />
-            <NotificationsBell
-              className="icon-float"
-              open={notificationsOpen}
-              onOpenChange={setNotificationsOpen}
-            />
+            <button
+              type="button"
+              onClick={() => setBugReportOpen(true)}
+              aria-label="Report a bug"
+              title="Report a bug"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
+            >
+              <BugIcon />
+            </button>
+            <ThemeToggle />
+            <NotificationsBell open={notificationsOpen} onOpenChange={setNotificationsOpen} />
           </div>
         </div>
       </header>
+
+      <AnimatePresence>
+        {bugReportOpen && <ReportBugPanel key="bug-report" onClose={() => setBugReportOpen(false)} />}
+      </AnimatePresence>
 
       <motion.nav
         initial={{ opacity: 0, y: 10 }}

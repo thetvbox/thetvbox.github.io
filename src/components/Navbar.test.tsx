@@ -43,9 +43,9 @@ beforeEach(() => {
 })
 
 describe('Navbar', () => {
-  it('applies the glass surface treatment to the desktop header and to the mobile tab bar', () => {
+  it('applies the glass surface treatment to the header (pinned at every breakpoint) and to the mobile tab bar', () => {
     const { container } = renderNavbar()
-    expect(container.querySelector('header')).toHaveClass('md:glass-surface')
+    expect(container.querySelector('header')).toHaveClass('glass-surface')
     expect(container.querySelector('nav.fixed')).toHaveClass('glass-surface-strong')
   })
 
@@ -56,17 +56,11 @@ describe('Navbar', () => {
     expect(bottomNav).toHaveClass('inset-x-4')
   })
 
-  it('gives the notifications and theme icons a floating glass backing, suppressed on desktop', () => {
-    renderNavbar()
-    expect(screen.getByText('notifications-closed')).toHaveClass('icon-float')
-    expect(screen.getByLabelText('Switch to light mode')).toHaveClass('icon-float')
-  })
-
-  it('shows the TV Box wordmark on mobile too, with the same floating glass backing as the icons', () => {
+  it('shows the TV Box logo and wordmark at every breakpoint, not just desktop', () => {
     renderNavbar()
     const wordmark = screen.getByText('TV Box').closest('a')
     expect(wordmark).not.toHaveClass('hidden')
-    expect(wordmark).toHaveClass('icon-float')
+    expect(wordmark?.querySelector('svg')).toBeInTheDocument()
   })
 
   it('renders the nav items, each appearing twice (desktop + mobile)', () => {
@@ -82,7 +76,7 @@ describe('Navbar', () => {
     expect(links[1]).toHaveClass('text-accent-400')
   })
 
-  it('renders a theme toggle that calls toggleTheme, but no bug-report trigger -- that stays in Profile', () => {
+  it('renders a theme toggle that calls toggleTheme, and a report-a-bug trigger back in the top bar', () => {
     const toggleTheme = vi.fn()
     vi.mocked(useTheme).mockReturnValue({
       theme: 'dark',
@@ -94,7 +88,7 @@ describe('Navbar', () => {
     renderNavbar()
     fireEvent.click(screen.getByLabelText('Switch to light mode'))
     expect(toggleTheme).toHaveBeenCalledTimes(1)
-    expect(screen.queryByLabelText('Report a bug')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Report a bug')).toBeInTheDocument()
   })
 
   it('toggles the notifications dropdown open and closed', () => {

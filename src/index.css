@@ -235,25 +235,6 @@ button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 40%);
 }
 
-/* Subtle glass backing for a chrome icon (the mobile top bar's notifications bell) that
-   floats directly over page content with no surrounding bar -- keeps it legible over
-   bright or busy imagery the same way the reference iOS app's top-right icons stay
-   legible, without needing a full persistent header. Not needed on desktop, where the
-   icon already sits inside the header's own glass bar. */
-.icon-float {
-  background-color: var(--color-glass);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
-}
-
-@media (min-width: 768px) {
-  .icon-float {
-    background-color: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-
 /* Fades the bottom edge of a capped-height scrollable list/panel (filter chip lists,
    dropdown menus) so it's visually obvious there's more to scroll, without needing JS
    to detect actual overflow -- the same edge-fade cue iOS/tvOS lists use. Harmless on a
@@ -270,8 +251,7 @@ button {
    chrome even when their OS asks apps to avoid it. */
 @media (prefers-reduced-transparency: reduce) {
   :root:not(.transparency-full) .glass-surface,
-  :root:not(.transparency-full) .glass-surface-strong,
-  :root:not(.transparency-full) .icon-float {
+  :root:not(.transparency-full) .glass-surface-strong {
     background-color: var(--color-base-900);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -283,8 +263,7 @@ button {
 }
 
 .transparency-reduced .glass-surface,
-.transparency-reduced .glass-surface-strong,
-.transparency-reduced .icon-float {
+.transparency-reduced .glass-surface-strong {
   background-color: var(--color-base-900);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

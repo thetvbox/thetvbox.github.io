@@ -15,13 +15,6 @@ vi.mock('../components/ChangelogPanel', () => ({
     </div>
   ),
 }))
-vi.mock('../components/ReportBugPanel', () => ({
-  default: ({ onClose }: { onClose: () => void }) => (
-    <div data-testid="bug-report-panel">
-      <button type="button" onClick={onClose}>close-bug-report</button>
-    </div>
-  ),
-}))
 
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -126,15 +119,6 @@ describe('Profile', () => {
     expect(screen.getByTestId('changelog-panel')).toBeInTheDocument()
     fireEvent.click(screen.getByText('close-changelog'))
     expect(screen.queryByTestId('changelog-panel')).not.toBeInTheDocument()
-  })
-
-  it('opens the bug report panel from the More menu, tucked away rather than a persistent nav icon', async () => {
-    renderProfile()
-    fireEvent.click(screen.getByText('More'))
-    fireEvent.click(screen.getByText('Report a bug'))
-    expect(await screen.findByTestId('bug-report-panel')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('close-bug-report'))
-    expect(screen.queryByTestId('bug-report-panel')).not.toBeInTheDocument()
   })
 
   it('renders an Appearance section with Theme and Glass transparency controls', () => {

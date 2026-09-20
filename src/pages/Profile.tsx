@@ -12,7 +12,6 @@ import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
 import ShortcutsPanel from '../components/ShortcutsPanel'
 import PushNotificationsPanel from '../components/PushNotificationsPanel'
-import ReportBugPanel from '../components/ReportBugPanel'
 import DropdownPanel from '../components/DropdownPanel'
 import SegmentedControl from '../components/SegmentedControl'
 import Avatar from '../components/Avatar'
@@ -43,7 +42,6 @@ export default function Profile() {
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [pushOpen, setPushOpen] = useState(false)
-  const [bugReportOpen, setBugReportOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   useCloseOnNavigate(() => setMenuOpen(false))
 
@@ -92,7 +90,6 @@ export default function Profile() {
                 onClose={() => setMenuOpen(false)}
                 onOpenShortcuts={() => openAfterMenuCloses(setShortcutsOpen)}
                 onOpenPush={() => openAfterMenuCloses(setPushOpen)}
-                onOpenBugReport={() => openAfterMenuCloses(setBugReportOpen)}
               />
             )}
           </AnimatePresence>
@@ -147,10 +144,6 @@ export default function Profile() {
           <PushNotificationsPanel key="push" userId={user.id} onClose={() => setPushOpen(false)} />
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {bugReportOpen && user && <ReportBugPanel key="bug-report" onClose={() => setBugReportOpen(false)} />}
-      </AnimatePresence>
     </div>
   )
 }
@@ -161,14 +154,12 @@ function ProfileMenuPanel({
   onClose,
   onOpenShortcuts,
   onOpenPush,
-  onOpenBugReport,
 }: {
   username: string
   onSignOut: () => void
   onClose: () => void
   onOpenShortcuts: () => void
   onOpenPush: () => void
-  onOpenBugReport: () => void
 }) {
   return (
     <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
@@ -206,16 +197,6 @@ function ProfileMenuPanel({
           className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
         >
           Push Notifications
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onClose()
-            onOpenBugReport()
-          }}
-          className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
-        >
-          Report a bug
         </button>
         <button
           type="button"
