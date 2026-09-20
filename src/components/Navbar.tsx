@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useTheme } from '../contexts/ThemeContext'
-import { ICON_SWAP_TRANSITION, MOBILE_TAB_INDICATOR_SPRING, NAV_FADE_IN_TRANSITION, scrollBehavior } from '../lib/motion'
+import { motion } from 'framer-motion'
+import { MOBILE_TAB_INDICATOR_SPRING, NAV_FADE_IN_TRANSITION, scrollBehavior } from '../lib/motion'
 import { useOutsideClick } from '../hooks/useOutsideClick'
 import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
-import ReportBugButton from './ReportBugButton'
 import NotificationsBell from './NotificationsBell'
 import HapticOverlay from './HapticOverlay'
 
@@ -104,52 +102,6 @@ function UserIcon({ active }: { active: boolean }) {
   )
 }
 
-function SunIcon() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <circle cx="12" cy="12" r="4.5" />
-      <path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8" />
-    </svg>
-  )
-}
-
-function MoonIcon() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a.6.6 0 0 0-.76-.76A9.7 9.7 0 1 0 21.26 15.26a.6.6 0 0 0-.76-.76Z" />
-    </svg>
-  )
-}
-
-function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme()
-  const isDark = theme === 'dark'
-
-  return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
-    >
-      <HapticOverlay />
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={theme}
-          initial={{ opacity: 0, rotate: -80, scale: 0.5 }}
-          animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 80, scale: 0.5 }}
-          transition={ICON_SWAP_TRANSITION}
-          className="flex"
-        >
-          {isDark ? <SunIcon /> : <MoonIcon />}
-        </motion.span>
-      </AnimatePresence>
-    </button>
-  )
-}
-
 const NAV_ITEMS = [
   { to: ROUTES.home, label: 'Home', Icon: HomeIcon },
   { to: ROUTES.activity, label: 'Activity', Icon: ActivityIcon },
@@ -158,12 +110,18 @@ const NAV_ITEMS = [
   { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
-type UtilityPanel = 'bug' | 'notifications'
-
+/** App chrome: a minimal top bar and a floating bottom tab bar, in the style of the native
+ * iOS Apple TV app -- no persistent bar surface on mobile (each page supplies its own large
+ * title, which scrolls away with the content; see .large-title in index.css), just a single
+ * glass-backed notifications icon floating top-right. Theme and bug-report, which used to
+ * live here as extra icons, now live in Profile > Appearance and Profile's More menu instead,
+ * the same way a native app tucks settings behind an account screen rather than cluttering
+ * its chrome. Desktop keeps a conventional glass header, since it has no bottom tab bar to
+ * carry primary navigation instead. */
 export default function Navbar() {
   const location = useLocation()
-  const [openPanel, setOpenPanel] = useState<UtilityPanel | null>(null)
-  const utilityRef = useOutsideClick<HTMLDivElement>(openPanel === 'notifications', () => setOpenPanel(null))
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const utilityRef = useOutsideClick<HTMLDivElement>(notificationsOpen, () => setNotificationsOpen(false))
 
   /** Scrolls to top when tapping the tab you're already on. */
   function handleNavClick(to: string) {
@@ -174,13 +132,13 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="glass-surface sticky top-0 z-40 border-b border-hairline pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] md:glass-surface md:border-b md:border-hairline">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink
             to={ROUTES.home}
             onClick={() => handleNavClick(ROUTES.home)}
             viewTransition
-            className="flex min-h-11 items-center gap-2"
+            className="hidden min-h-11 items-center gap-2 md:flex"
           >
             <AppLogo size={24} />
             <span className="font-display text-lg font-semibold tracking-tight text-base-100">
@@ -188,51 +146,46 @@ export default function Navbar() {
             </span>
           </NavLink>
 
-          <div className="flex items-center gap-1">
-            <nav className="hidden items-center gap-1 md:flex">
-              {NAV_ITEMS.map(({ to, label, Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={() => handleNavClick(to)}
-                  viewTransition
-                  className={({ isActive }) =>
-                    `${linkBase} ${
-                      isActive
-                        ? 'bg-accent-500/10 text-accent-300'
-                        : 'text-base-400 hover:bg-hover hover:text-base-100'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <Icon active={isActive} />
-                      {label}
-                    </>
-                  )}
-                </NavLink>
-              ))}
-            </nav>
-            <div ref={utilityRef} className="relative flex items-center gap-1.5">
-              <ThemeToggle />
-              <ReportBugButton
-                open={openPanel === 'bug'}
-                onOpenChange={(isOpen) => setOpenPanel(isOpen ? 'bug' : null)}
-              />
-              <NotificationsBell
-                open={openPanel === 'notifications'}
-                onOpenChange={(isOpen) => setOpenPanel(isOpen ? 'notifications' : null)}
-              />
-            </div>
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV_ITEMS.map(({ to, label, Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={() => handleNavClick(to)}
+                viewTransition
+                className={({ isActive }) =>
+                  `${linkBase} ${
+                    isActive
+                      ? 'bg-accent-500/10 text-accent-300'
+                      : 'text-base-400 hover:bg-hover hover:text-base-100'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon active={isActive} />
+                    {label}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div ref={utilityRef} className="relative ml-auto flex items-center">
+            <NotificationsBell
+              className="icon-float"
+              open={notificationsOpen}
+              onOpenChange={setNotificationsOpen}
+            />
           </div>
         </div>
       </header>
 
       <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={NAV_FADE_IN_TRANSITION}
-        className="glass-surface-strong fixed inset-x-0 bottom-0 z-40 flex transform-gpu border-t border-hairline pb-[env(safe-area-inset-bottom)] will-change-transform md:hidden"
+        className="glass-surface-strong fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex transform-gpu rounded-full border border-hairline-strong px-1 shadow-xl shadow-black/30 will-change-transform md:hidden"
       >
         {NAV_ITEMS.map(({ to, label, Icon }) => (
           <NavLink
@@ -250,7 +203,7 @@ export default function Navbar() {
                 {isActive && (
                   <motion.span
                     layoutId="mobile-tab-dot"
-                    className="absolute top-0.5 h-1 w-1 rounded-full bg-accent-400"
+                    className="absolute top-1 h-1 w-1 rounded-full bg-accent-400"
                     transition={MOBILE_TAB_INDICATOR_SPRING}
                   />
                 )}

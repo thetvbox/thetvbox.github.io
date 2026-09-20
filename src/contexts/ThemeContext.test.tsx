@@ -68,4 +68,34 @@ describe('ThemeContext', () => {
     rerender()
     expect(result.current).toBe(first)
   })
+
+  it('defaults transparency to "system" with no override class on the root', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: ThemeProvider })
+    expect(result.current.transparency).toBe('system')
+    expect(document.documentElement.classList.contains('transparency-reduced')).toBe(false)
+    expect(document.documentElement.classList.contains('transparency-full')).toBe(false)
+  })
+
+  it('picks up a transparency override class already applied to the root by the boot script', () => {
+    document.documentElement.classList.add('transparency-reduced')
+    const { result } = renderHook(() => useTheme(), { wrapper: ThemeProvider })
+    expect(result.current.transparency).toBe('reduced')
+  })
+
+  it('setTransparency applies the matching root class and persists it', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: ThemeProvider })
+    act(() => result.current.setTransparency('full'))
+    expect(result.current.transparency).toBe('full')
+    expect(document.documentElement.classList.contains('transparency-full')).toBe(true)
+    expect(localStorage.getItem(STORAGE_KEYS.transparency)).toBe('full')
+  })
+
+  it('setTransparency("system") clears any override class and its stored value', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: ThemeProvider })
+    act(() => result.current.setTransparency('reduced'))
+    act(() => result.current.setTransparency('system'))
+    expect(document.documentElement.classList.contains('transparency-reduced')).toBe(false)
+    expect(document.documentElement.classList.contains('transparency-full')).toBe(false)
+    expect(localStorage.getItem(STORAGE_KEYS.transparency)).toBeNull()
+  })
 })

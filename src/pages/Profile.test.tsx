@@ -5,6 +5,7 @@ import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
 vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
+vi.mock('../contexts/ThemeContext', () => ({ useTheme: vi.fn() }))
 vi.mock('../components/ProfileActivity', () => ({ default: () => <div data-testid="profile-activity" /> }))
 vi.mock('../components/ProfileFollowSection', () => ({ default: () => <div data-testid="follow-section" /> }))
 vi.mock('../components/ChangelogPanel', () => ({
@@ -14,8 +15,16 @@ vi.mock('../components/ChangelogPanel', () => ({
     </div>
   ),
 }))
+vi.mock('../components/ReportBugPanel', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="bug-report-panel">
+      <button type="button" onClick={onClose}>close-bug-report</button>
+    </div>
+  ),
+}))
 
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import Profile from './Profile'
 import type { AppUser } from '../types'
 
@@ -36,6 +45,13 @@ beforeEach(() => {
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
+  })
+  vi.mocked(useTheme).mockReturnValue({
+    theme: 'dark',
+    toggleTheme: vi.fn(),
+    setTheme: vi.fn(),
+    transparency: 'system',
+    setTransparency: vi.fn(),
   })
 })
 
@@ -110,5 +126,50 @@ describe('Profile', () => {
     expect(screen.getByTestId('changelog-panel')).toBeInTheDocument()
     fireEvent.click(screen.getByText('close-changelog'))
     expect(screen.queryByTestId('changelog-panel')).not.toBeInTheDocument()
+  })
+
+  it('opens the bug report panel from the More menu, tucked away rather than a persistent nav icon', async () => {
+    renderProfile()
+    fireEvent.click(screen.getByText('More'))
+    fireEvent.click(screen.getByText('Report a bug'))
+    expect(await screen.findByTestId('bug-report-panel')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('close-bug-report'))
+    expect(screen.queryByTestId('bug-report-panel')).not.toBeInTheDocument()
+  })
+
+  it('renders an Appearance section with Theme and Glass transparency controls', () => {
+    renderProfile()
+    expect(screen.getByText('Appearance')).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Theme' })).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Glass transparency' })).toBeInTheDocument()
+  })
+
+  it('calls setTheme when a theme option is picked', () => {
+    const setTheme = vi.fn()
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'dark',
+      toggleTheme: vi.fn(),
+      setTheme,
+      transparency: 'system',
+      setTransparency: vi.fn(),
+    })
+    renderProfile()
+    fireEvent.click(screen.getByRole('radio', { name: 'Light' }))
+    expect(setTheme).toHaveBeenCalledWith('light')
+  })
+
+  it('calls setTransparency when a transparency option is picked, and shows its explanation', () => {
+    const setTransparency = vi.fn()
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'dark',
+      toggleTheme: vi.fn(),
+      setTheme: vi.fn(),
+      transparency: 'system',
+      setTransparency,
+    })
+    renderProfile()
+    expect(screen.getByText(/Follows your device's Reduce Transparency setting/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'Full' }))
+    expect(setTransparency).toHaveBeenCalledWith('full')
   })
 })

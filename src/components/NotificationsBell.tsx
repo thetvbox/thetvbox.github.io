@@ -29,10 +29,11 @@ import type { Notification } from '../types'
 interface NotificationsBellProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  className?: string
 }
 
 /** Bell icon in the top bar; opens a dropdown of recent activity from followed users. */
-export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
+export default function NotificationsBell({ open, onOpenChange, className = '' }: NotificationsBellProps) {
   const { user: me } = useAuth()
   const [unseen, setUnseen] = useState(0)
 
@@ -79,7 +80,7 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
         aria-expanded={open}
         aria-haspopup="true"
         title="Notifications"
-        className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
+        className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90 ${className}`}
       >
         <BellGlyph />
         {unseen > 0 && (

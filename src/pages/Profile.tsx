@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
+import type { Transparency } from '../contexts/ThemeContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useOutsideClick } from '../hooks/useOutsideClick'
@@ -10,17 +12,38 @@ import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
 import ShortcutsPanel from '../components/ShortcutsPanel'
 import PushNotificationsPanel from '../components/PushNotificationsPanel'
+import ReportBugPanel from '../components/ReportBugPanel'
 import DropdownPanel from '../components/DropdownPanel'
+import SegmentedControl from '../components/SegmentedControl'
 import Avatar from '../components/Avatar'
 import { appVersion } from '../lib/changelog'
 import { ROUTES, profileRoute } from '../lib/routes'
 
+const THEME_OPTIONS = [
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' },
+] as const
+
+const TRANSPARENCY_OPTIONS = [
+  { value: 'system', label: 'System' },
+  { value: 'reduced', label: 'Reduced' },
+  { value: 'full', label: 'Full' },
+] as const
+
+const TRANSPARENCY_HINT: Record<Transparency, string> = {
+  system: "Follows your device's Reduce Transparency setting.",
+  reduced: 'Chrome always shows as a solid surface.',
+  full: 'Chrome always shows as blurred glass, even if your device prefers reduced transparency.',
+}
+
 export default function Profile() {
   const { user, signOut } = useAuth()
+  const { theme, setTheme, transparency, setTransparency } = useTheme()
   useDocumentTitle(user ? `@${user.username}` : 'Profile')
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [pushOpen, setPushOpen] = useState(false)
+  const [bugReportOpen, setBugReportOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   useCloseOnNavigate(() => setMenuOpen(false))
 
@@ -69,6 +92,7 @@ export default function Profile() {
                 onClose={() => setMenuOpen(false)}
                 onOpenShortcuts={() => openAfterMenuCloses(setShortcutsOpen)}
                 onOpenPush={() => openAfterMenuCloses(setPushOpen)}
+                onOpenBugReport={() => openAfterMenuCloses(setBugReportOpen)}
               />
             )}
           </AnimatePresence>
@@ -78,6 +102,28 @@ export default function Profile() {
       {user && <ProfileActivity userId={user.id} username={user.username} />}
 
       <div className="mt-12 border-t border-hairline pt-4">
+        <h2 className="mb-3 font-display text-lg font-semibold text-base-100">Appearance</h2>
+        <div className="flex flex-wrap items-start gap-x-10 gap-y-4">
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-base-600">Theme</p>
+            <SegmentedControl options={THEME_OPTIONS} value={theme} onChange={setTheme} label="Theme" />
+          </div>
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-base-600">
+              Glass transparency
+            </p>
+            <SegmentedControl
+              options={TRANSPARENCY_OPTIONS}
+              value={transparency}
+              onChange={setTransparency}
+              label="Glass transparency"
+            />
+            <p className="mt-1.5 max-w-[16rem] text-xs text-base-500">{TRANSPARENCY_HINT[transparency]}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 border-t border-hairline pt-4">
         <button
           type="button"
           onClick={() => setChangelogOpen((v) => !v)}
@@ -101,6 +147,10 @@ export default function Profile() {
           <PushNotificationsPanel key="push" userId={user.id} onClose={() => setPushOpen(false)} />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {bugReportOpen && user && <ReportBugPanel key="bug-report" onClose={() => setBugReportOpen(false)} />}
+      </AnimatePresence>
     </div>
   )
 }
@@ -111,12 +161,14 @@ function ProfileMenuPanel({
   onClose,
   onOpenShortcuts,
   onOpenPush,
+  onOpenBugReport,
 }: {
   username: string
   onSignOut: () => void
   onClose: () => void
   onOpenShortcuts: () => void
   onOpenPush: () => void
+  onOpenBugReport: () => void
 }) {
   return (
     <DropdownPanel onClose={onClose} label="More" className="w-56 p-2">
@@ -154,6 +206,16 @@ function ProfileMenuPanel({
           className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
         >
           Push Notifications
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            onOpenBugReport()
+          }}
+          className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-base-200 transition-colors duration-200 hover:bg-hover"
+        >
+          Report a bug
         </button>
         <button
           type="button"

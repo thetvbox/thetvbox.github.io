@@ -4,7 +4,13 @@ import { STORAGE_KEYS } from '../lib/constants'
 
 type Theme = 'light' | 'dark'
 
+/** 'system' follows the OS's own Reduce Transparency setting (the default); 'reduced' and
+ * 'full' are explicit overrides set from Profile > Appearance, for people who want glass
+ * chrome regardless of what their OS prefers either way. */
+export type Transparency = 'system' | 'reduced' | 'full'
+
 const THEME_COLOR = { dark: '#08080c', light: '#f8fafc' } as const
+const TRANSPARENCY_CLASSES = { reduced: 'transparency-reduced', full: 'transparency-full' } as const
 
 /** Reads the theme index.html's boot script already applied, to avoid a flash. */
 function getInitialTheme(): Theme {
@@ -14,16 +20,28 @@ function getInitialTheme(): Theme {
   return 'dark'
 }
 
+/** Reads the transparency override index.html's boot script already applied, to avoid a flash. */
+function getInitialTransparency(): Transparency {
+  if (typeof document !== 'undefined') {
+    if (document.documentElement.classList.contains(TRANSPARENCY_CLASSES.reduced)) return 'reduced'
+    if (document.documentElement.classList.contains(TRANSPARENCY_CLASSES.full)) return 'full'
+  }
+  return 'system'
+}
+
 interface ThemeContextValue {
   theme: Theme
   toggleTheme: () => void
   setTheme: (theme: Theme) => void
+  transparency: Transparency
+  setTransparency: (transparency: Transparency) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const [transparency, setTransparency] = useState<Transparency>(getInitialTransparency)
 
   useEffect(() => {
     const root = document.documentElement
@@ -44,11 +62,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [theme])
 
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove(TRANSPARENCY_CLASSES.reduced, TRANSPARENCY_CLASSES.full)
+    if (transparency !== 'system') {
+      root.classList.add(TRANSPARENCY_CLASSES[transparency])
+    }
+
+    try {
+      if (transparency === 'system') {
+        localStorage.removeItem(STORAGE_KEYS.transparency)
+      } else {
+        localStorage.setItem(STORAGE_KEYS.transparency, transparency)
+      }
+    } catch {}
+  }, [transparency])
+
   function toggleTheme() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }
 
-  const value = useMemo<ThemeContextValue>(() => ({ theme, toggleTheme, setTheme }), [theme])
+  const value = useMemo<ThemeContextValue>(
+    () => ({ theme, toggleTheme, setTheme, transparency, setTransparency }),
+    [theme, transparency],
+  )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

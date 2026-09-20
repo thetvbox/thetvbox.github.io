@@ -1,26 +1,25 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
-vi.mock('../contexts/ThemeContext', () => ({ useTheme: vi.fn() }))
-vi.mock('./ReportBugButton', () => ({
-  default: ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => (
-    <button type="button" onClick={() => onOpenChange(!open)}>
-      {open ? 'bug-open' : 'bug-closed'}
-    </button>
-  ),
-}))
 vi.mock('./NotificationsBell', () => ({
-  default: ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => (
-    <button type="button" onClick={() => onOpenChange(!open)}>
+  default: ({
+    open,
+    onOpenChange,
+    className,
+  }: {
+    open: boolean
+    onOpenChange: (o: boolean) => void
+    className?: string
+  }) => (
+    <button type="button" className={className} onClick={() => onOpenChange(!open)}>
       {open ? 'notifications-open' : 'notifications-closed'}
     </button>
   ),
 }))
 
-import { useTheme } from '../contexts/ThemeContext'
 import Navbar from './Navbar'
 
 function renderNavbar(path = '/home') {
@@ -31,15 +30,23 @@ function renderNavbar(path = '/home') {
   )
 }
 
-beforeEach(() => {
-  vi.mocked(useTheme).mockReturnValue({ theme: 'dark', toggleTheme: vi.fn(), setTheme: vi.fn() })
-})
-
 describe('Navbar', () => {
-  it('applies the glass surface treatment to the sticky header and mobile tab bar', () => {
+  it('applies the glass surface treatment to the desktop header and to the mobile tab bar', () => {
     const { container } = renderNavbar()
-    expect(container.querySelector('header')).toHaveClass('glass-surface')
+    expect(container.querySelector('header')).toHaveClass('md:glass-surface')
     expect(container.querySelector('nav.fixed')).toHaveClass('glass-surface-strong')
+  })
+
+  it('renders the mobile tab bar as a floating pill, inset from the screen edges', () => {
+    const { container } = renderNavbar()
+    const bottomNav = container.querySelector('nav.fixed')
+    expect(bottomNav).toHaveClass('rounded-full')
+    expect(bottomNav).toHaveClass('inset-x-4')
+  })
+
+  it('gives the notifications icon a floating glass backing, suppressed on desktop', () => {
+    renderNavbar()
+    expect(screen.getByText('notifications-closed')).toHaveClass('icon-float')
   })
 
   it('renders the nav items, each appearing twice (desktop + mobile)', () => {
@@ -55,27 +62,18 @@ describe('Navbar', () => {
     expect(links[1]).toHaveClass('text-accent-400')
   })
 
-  it('calls toggleTheme when the theme button is clicked', () => {
-    const toggleTheme = vi.fn()
-    vi.mocked(useTheme).mockReturnValue({ theme: 'dark', toggleTheme, setTheme: vi.fn() })
+  it('does not render a theme toggle or bug-report trigger -- those live in Profile now', () => {
     renderNavbar()
-    fireEvent.click(screen.getByLabelText('Switch to light mode'))
-    expect(toggleTheme).toHaveBeenCalledTimes(1)
+    expect(screen.queryByLabelText(/switch to (light|dark) mode/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Report a bug')).not.toBeInTheDocument()
   })
 
-  it('shows the light-mode label when already dark, and vice versa', () => {
-    vi.mocked(useTheme).mockReturnValue({ theme: 'light', toggleTheme: vi.fn(), setTheme: vi.fn() })
+  it('toggles the notifications dropdown open and closed', () => {
     renderNavbar()
-    expect(screen.getByLabelText('Switch to dark mode')).toBeInTheDocument()
-  })
-
-  it('opens only one utility panel at a time', () => {
-    renderNavbar()
-    fireEvent.click(screen.getByText('bug-closed'))
-    expect(screen.getByText('bug-open')).toBeInTheDocument()
     fireEvent.click(screen.getByText('notifications-closed'))
     expect(screen.getByText('notifications-open')).toBeInTheDocument()
-    expect(screen.getByText('bug-closed')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('notifications-open'))
+    expect(screen.getByText('notifications-closed')).toBeInTheDocument()
   })
 
   it('closes the notifications dropdown on an outside pointerdown', () => {
@@ -84,14 +82,6 @@ describe('Navbar', () => {
     expect(screen.getByText('notifications-open')).toBeInTheDocument()
     fireEvent.pointerDown(document.body)
     expect(screen.getByText('notifications-closed')).toBeInTheDocument()
-  })
-
-  it('does not close the bug-report panel on an outside pointerdown -- its Modal owns that itself', () => {
-    renderNavbar()
-    fireEvent.click(screen.getByText('bug-closed'))
-    expect(screen.getByText('bug-open')).toBeInTheDocument()
-    fireEvent.pointerDown(document.body)
-    expect(screen.getByText('bug-open')).toBeInTheDocument()
   })
 
   it('scrolls to top when clicking the tab already active', () => {

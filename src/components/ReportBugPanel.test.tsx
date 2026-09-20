@@ -10,15 +10,15 @@ vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
 
 import { useAuth } from '../contexts/AuthContext'
 import { submitBugReport } from '../lib/bugReport'
-import ReportBugButton from './ReportBugButton'
+import ReportBugPanel from './ReportBugPanel'
 import type { AppUser } from '../types'
 
 const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
 
-function renderButton(open = false, onOpenChange = vi.fn()) {
+function renderPanel(onClose = vi.fn()) {
   return render(
     <MemoryRouter>
-      <ReportBugButton open={open} onOpenChange={onOpenChange} />
+      <ReportBugPanel onClose={onClose} />
     </MemoryRouter>,
   )
 }
@@ -34,29 +34,16 @@ beforeEach(() => {
   })
 })
 
-describe('ReportBugButton', () => {
-  it('renders only the trigger button when closed', () => {
-    renderButton(false)
-    expect(screen.getByLabelText('Report a bug')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  it('calls onOpenChange when the trigger is clicked', () => {
-    const onOpenChange = vi.fn()
-    renderButton(false, onOpenChange)
-    fireEvent.click(screen.getByLabelText('Report a bug'))
-    expect(onOpenChange).toHaveBeenCalledWith(true)
-  })
-
-  it('renders the form when open', () => {
-    renderButton(true)
+describe('ReportBugPanel', () => {
+  it('renders the form', () => {
+    renderPanel()
     expect(screen.getByRole('dialog', { name: 'Report a bug' })).toBeInTheDocument()
     expect(screen.getByLabelText('Bug title')).toBeInTheDocument()
     expect(screen.getByLabelText('Bug description')).toBeInTheDocument()
   })
 
   it('disables Send report until both fields are filled', () => {
-    renderButton(true)
+    renderPanel()
     const sendButton = screen.getByText('Send report')
     expect(sendButton).toBeDisabled()
     fireEvent.change(screen.getByLabelText('Bug title'), { target: { value: 'Title' } })
@@ -67,7 +54,7 @@ describe('ReportBugButton', () => {
 
   it('submits and shows the success screen with the issue link', async () => {
     vi.mocked(submitBugReport).mockResolvedValue({ url: 'https://github.com/x/x/issues/5', number: 5 })
-    renderButton(true)
+    renderPanel()
     fireEvent.change(screen.getByLabelText('Bug title'), { target: { value: 'Title' } })
     fireEvent.change(screen.getByLabelText('Bug description'), { target: { value: 'Description' } })
     fireEvent.click(screen.getByText('Send report'))
@@ -79,24 +66,24 @@ describe('ReportBugButton', () => {
 
   it('shows an error message when submission fails', async () => {
     vi.mocked(submitBugReport).mockRejectedValue(new Error('network down'))
-    renderButton(true)
+    renderPanel()
     fireEvent.change(screen.getByLabelText('Bug title'), { target: { value: 'Title' } })
     fireEvent.change(screen.getByLabelText('Bug description'), { target: { value: 'Description' } })
     fireEvent.click(screen.getByText('Send report'))
     await waitFor(() => expect(screen.getByText('network down')).toBeInTheDocument())
   })
 
-  it('closes on Escape', () => {
-    const onOpenChange = vi.fn()
-    renderButton(true, onOpenChange)
+  it('calls onClose on Escape', () => {
+    const onClose = vi.fn()
+    renderPanel(onClose)
     fireEvent.keyDown(document, { key: 'Escape' })
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('closes when Cancel is clicked', () => {
-    const onOpenChange = vi.fn()
-    renderButton(true, onOpenChange)
+  it('calls onClose when Cancel is clicked', () => {
+    const onClose = vi.fn()
+    renderPanel(onClose)
     fireEvent.click(screen.getByText('Cancel'))
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

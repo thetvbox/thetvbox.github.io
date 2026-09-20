@@ -1,6 +1,7 @@
 export const STORAGE_KEYS = {
   user: 'tvbox_user',
   theme: 'tvbox-theme',
+  transparency: 'tvbox-transparency',
   gate: 'tvbox_gate_ok',
   pushOnboardingSeen: 'tvbox_push_onboarding_seen',
 } as const

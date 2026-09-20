@@ -8,6 +8,25 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Added
 
+- App chrome redesigned to match the native iOS Apple TV app: the bottom
+  tab bar (mobile) is now a floating glass pill inset from the screen
+  edges instead of a full-width bar, and the top bar is stripped down to
+  just a single notifications icon floating over content -- the app logo,
+  nav links, theme toggle, and bug-report trigger that used to live there
+  are gone on mobile (nav links and logo remain on desktop, which has no
+  bottom tab bar). Each page's own large title now fades and slides away
+  entirely as you scroll, instead of just shrinking slightly, matching
+  the reference app's collapsing-header behavior.
+- Glass transparency is now adjustable from Profile > Appearance: "System"
+  (the default) follows your device's own Reduce Transparency setting,
+  while "Reduced" and "Full" explicitly force chrome to always render
+  solid or always render as blurred glass, overriding the OS setting
+  either way. Theme (Dark/Light) moved to the same Appearance section.
+- Report a bug moved from a top-bar icon into Profile's More menu, next
+  to Shortcuts & Siri and Push Notifications -- tucked behind the account
+  screen the way native apps handle settings/support, instead of sitting
+  as a persistent icon in the chrome.
+
 - Activity now has a "Now Watching" section showing what people you follow
   (or everyone, via the same Following/Everyone toggle the rest of the page
   uses) are currently in the middle of -- their poster, episode progress,
@@ -82,6 +101,22 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Changed
 
+- Every pill-shaped filter/select control -- Chip (Search and History's
+  platform/genre filter chips), SegmentedControl (Activity's
+  Following/Everyone toggle), and the "Filter by person"/"Filter by
+  genre"/"Filters" trigger buttons on Activity, Search, and History --
+  is now a size step bigger (more horizontal and vertical padding,
+  text-sm instead of text-xs) for an easier-to-tap, more modern feel.
+  The sizing and color classes for these are now shared constants
+  (PILL_SIZE_CLASSES/PILL_ACTIVE_CLASSES/PILL_INACTIVE_CLASSES in
+  Chip.tsx) instead of being repeated at each call site, so the whole
+  set stays in sync going forward.
+- Scrollbars are hidden app-wide (no visible track/thumb, on any
+  scrollable element) rather than just on a few explicitly-marked
+  horizontal-scroll rows -- scrolling itself is unaffected, matching how
+  Apple TV and other native-feeling apps never show scrollbar chrome.
+  The now-redundant `.no-scrollbar` utility class and its two call sites
+  were removed.
 - Profile's stats grid had a standalone "Avg rating" tile that duplicated
   the number already shown, bigger and in context, at the top of the
   ratings chart right below it -- the tile is gone and the chart header

@@ -27,6 +27,19 @@
         } catch (e) {
           document.documentElement.classList.add('dark')
         }
+
+        // Same idea for the glass-transparency override, if the person picked
+        // one in Settings instead of following the OS's own Reduce
+        // Transparency setting (the no-override "system" default needs no
+        // class at all -- the prefers-reduced-transparency media query in
+        // index.css handles that case on its own). Kept in sync at runtime
+        // by ThemeContext.
+        try {
+          var storedTransparency = localStorage.getItem('tvbox-transparency')
+          if (storedTransparency === 'reduced' || storedTransparency === 'full') {
+            document.documentElement.classList.add('transparency-' + storedTransparency)
+          }
+        } catch (e) {}
       })()
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

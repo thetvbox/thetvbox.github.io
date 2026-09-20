@@ -1,66 +1,22 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { submitBugReport } from '../lib/bugReport'
 import { appVersion } from '../lib/changelog'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
-import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import { BUG_REPORT_DESCRIPTION_MAX_LENGTH, BUG_REPORT_TITLE_MAX_LENGTH } from '../lib/constants'
 import { errorMessage } from '../lib/format'
 import ErrorText from './ErrorText'
 import Modal from './Modal'
 import PanelHeader from './PanelHeader'
 
-interface ReportBugButtonProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-/** Top-bar trigger for the app's one centered-modal bug report form. */
-export default function ReportBugButton({ open, onOpenChange }: ReportBugButtonProps) {
-  useCloseOnNavigate(() => onOpenChange(false))
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        aria-label="Report a bug"
-        aria-expanded={open}
-        title="Report a bug"
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
-      >
-        <BugGlyph />
-      </button>
-      <AnimatePresence>{open && <ReportBugPanel onClose={() => onOpenChange(false)} />}</AnimatePresence>
-    </>
-  )
-}
-
-function BugGlyph() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 9V7a3 3 0 0 1 6 0v2" />
-      <rect x="6" y="9" width="12" height="10" rx="5" />
-      <path d="M6 13H3M21 13h-3M9 5 7.5 3.5M15 5l1.5-1.5M6 17l-2 2M18 17l2 2" />
-    </svg>
-  )
-}
-
 type Status = 'idle' | 'saving' | 'success' | 'error'
 
-function ReportBugPanel({ onClose }: { onClose: () => void }) {
+/** Centered modal bug-report form, opened from Profile's More menu -- tucked away from the
+ * minimal top bar the same way Settings/Help are tucked behind an account screen in most
+ * native apps, rather than living as a persistent icon in the chrome. */
+export default function ReportBugPanel({ onClose }: { onClose: () => void }) {
   const { user } = useAuth()
   const location = useLocation()
   const [title, setTitle] = useState('')
