@@ -43,11 +43,10 @@ function renderProfile() {
   )
 }
 
+/** Opens the panel and waits for it, since Profile's openAfterMenuCloses opens it a tick late. */
 async function openBugReport() {
   fireEvent.click(screen.getByText('More'))
   fireEvent.click(screen.getByText('Report a bug'))
-  // The menu-item trigger opens the panel a tick after the More menu itself closes
-  // (see Profile's openAfterMenuCloses), so the dialog isn't there synchronously.
   return screen.findByRole('dialog', { name: 'Report a bug' })
 }
 

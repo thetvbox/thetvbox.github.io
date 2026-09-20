@@ -110,14 +110,7 @@ const NAV_ITEMS = [
   { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
-/** App chrome: a minimal top bar and a floating bottom tab bar, in the style of the native
- * iOS Apple TV app -- no persistent bar surface on mobile (each page supplies its own large
- * title, which scrolls away with the content; see .large-title in index.css), just a single
- * glass-backed notifications icon floating top-right. Theme and bug-report, which used to
- * live here as extra icons, now live in Profile > Appearance and Profile's More menu instead,
- * the same way a native app tucks settings behind an account screen rather than cluttering
- * its chrome. Desktop keeps a conventional glass header, since it has no bottom tab bar to
- * carry primary navigation instead. */
+/** Minimal iOS-Apple-TV-style chrome: a transparent top bar (just a floating notifications icon; each page supplies its own large title) and a floating glass bottom tab bar on mobile -- theme and bug-report live in Profile, not here. */
 export default function Navbar() {
   const location = useLocation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)

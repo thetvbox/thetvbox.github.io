@@ -13,9 +13,7 @@ import PanelHeader from './PanelHeader'
 
 type Status = 'idle' | 'saving' | 'success' | 'error'
 
-/** Centered modal bug-report form, opened from Profile's More menu -- tucked away from the
- * minimal top bar the same way Settings/Help are tucked behind an account screen in most
- * native apps, rather than living as a persistent icon in the chrome. */
+/** Centered bug-report modal form, opened from Profile's More menu instead of a persistent top-bar icon. */
 export default function ReportBugPanel({ onClose }: { onClose: () => void }) {
   const { user } = useAuth()
   const location = useLocation()

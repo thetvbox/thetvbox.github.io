@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Set the theme class before first paint (no flash of the wrong
-      // theme). Kept in sync at runtime by ThemeContext, which is the
-      // source of truth after React mounts -- this just resolves the same
-      // preference synchronously, before anything renders.
+      // Sets the theme class before first paint (no flash); ThemeContext stays the source of truth afterward.
       (function () {
         try {
           var stored = localStorage.getItem('tvbox-theme')
@@ -28,12 +25,7 @@
           document.documentElement.classList.add('dark')
         }
 
-        // Same idea for the glass-transparency override, if the person picked
-        // one in Settings instead of following the OS's own Reduce
-        // Transparency setting (the no-override "system" default needs no
-        // class at all -- the prefers-reduced-transparency media query in
-        // index.css handles that case on its own). Kept in sync at runtime
-        // by ThemeContext.
+        // Same idea for the glass-transparency override, when the person picked one in Settings instead of the OS default.
         try {
           var storedTransparency = localStorage.getItem('tvbox-transparency')
           if (storedTransparency === 'reduced' || storedTransparency === 'full') {

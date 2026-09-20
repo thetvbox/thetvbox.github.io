@@ -4,9 +4,6 @@ import { STORAGE_KEYS } from '../lib/constants'
 
 type Theme = 'light' | 'dark'
 
-/** 'system' follows the OS's own Reduce Transparency setting (the default); 'reduced' and
- * 'full' are explicit overrides set from Profile > Appearance, for people who want glass
- * chrome regardless of what their OS prefers either way. */
 export type Transparency = 'system' | 'reduced' | 'full'
 
 const THEME_COLOR = { dark: '#08080c', light: '#f8fafc' } as const
