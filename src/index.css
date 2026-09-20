@@ -39,6 +39,12 @@
   --color-star: #ffb020;
   --color-star-dim: #4a3a1f;
 
+  /* App-mark glass (favicon/home-screen icon/AppLogo) -- deliberately its own
+     neutral slate-glass token, not the violet accent above, so the mark reads
+     as glass rather than as a brand-color badge. */
+  --color-icon-bg-1: #4b5568;
+  --color-icon-bg-2: #181b22;
+
   /* Errors/destructive actions and configuration warnings -- Tailwind's
      static red and amber shades don't flip with the theme, so text using
      them needs its own token (e.g. amber-300 reads fine on near-black but
@@ -105,6 +111,9 @@
 
   --color-star: #b45309;
   --color-star-dim: #fde7bf;
+
+  --color-icon-bg-1: #d7dde6;
+  --color-icon-bg-2: #7c8898;
 
   --color-danger: #dc2626;
   --color-warning: #b45309;
