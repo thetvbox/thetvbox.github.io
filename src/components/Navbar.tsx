@@ -136,7 +136,7 @@ function BugIcon() {
 }
 
 /** Sun/moon icon button that toggles theme instantly, floating top bar's fast-access twin to Profile > Appearance's fuller Theme/Transparency controls. */
-function ThemeToggle({ className = '' }: { className?: string }) {
+function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -146,7 +146,7 @@ function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90 ${className}`}
+      className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
