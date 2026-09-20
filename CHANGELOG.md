@@ -214,6 +214,36 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- The previous app-chrome redesign removed the theme toggle from the top bar
+  entirely (it only lived in Profile > Appearance), and separately `body`'s
+  `overflow-x: hidden` was silently turning it into a scroll container --
+  per the CSS spec, pairing `overflow-x: hidden` with the default
+  `overflow-y: visible` computes `overflow-y` as `auto` -- which broke the
+  notifications bell's `position: sticky` positioning so it scrolled away
+  with the page instead of staying pinned. The theme toggle is back next to
+  the notifications bell in the top bar (Profile > Appearance keeps the
+  fuller control too), and `body` now uses `overflow-x: clip`, which
+  doesn't trigger that scroll-container side effect.
+- The bottom tab bar's active-item indicator was a small 4px dot instead of
+  the sliding pill-shaped highlight used everywhere else selection needs to
+  animate (`SegmentedControl`, filter chips). It's now a full `layoutId`-
+  based pill background behind the active tab's icon and label, matching
+  the rest of the app.
+- Search's Filters panel had no height cap, so opening it with several
+  platforms and genres selected could push its contents down past the
+  bottom nav bar and overlap it. It's now a Platform/Genre switcher (via
+  `SegmentedControl`) showing one category's chips at a time inside a
+  scroll-capped list, instead of stacking every platform and every genre in
+  one unbounded column. Activity's genre filter switched from a
+  single-column list of rows to the same wrapping-chip layout, which uses
+  the panel's full width instead of leaving most of it empty next to short
+  genre names. Every capped-height filter/notification list in the app
+  (Search Filters, Activity's genre filter, History's filter panel, the
+  notifications bell dropdown) now fades its bottom edge when there's more
+  to scroll to, instead of cutting off with no visual hint.
+- Glass surfaces (`glass-surface`/`glass-surface-strong`) are now more
+  translucent and more blurred than the previous redesign pass landed on,
+  closer to visionOS/Apple TV's "Liquid Glass" material.
 - Every page felt slower to navigate to than it should: the page-transition
   fade was written so the outgoing page had to fully finish animating out
   before the incoming page even started mounting (and firing its data
