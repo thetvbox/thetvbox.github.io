@@ -25,7 +25,7 @@ Letterboxd, but for TV shows — search a show, rate it, and track what you've w
 - **Members** — browse everyone who's registered and check out their diaries. Follow people to filter Activity down to just them, and see who follows you back. A bell in the top bar flags new followers, ratings, and finishes from people you follow — and, once you turn it on from Profile's "Push Notifications" menu item, the same alerts as a push notification even when the app isn't open. The app offers to turn that on the first time you sign in on a device.
 - **Compare with a friend** — from anyone's profile, see the shows you've both rated, your taste-match %, and your biggest agreements/disagreements.
 - **Profile** — stats (including hours watched), the Diary, History, Watchlist, Dropped, and Lists tabs described above. "Year in review" pulls those same stats into a per-year recap: shows finished, hours watched, your top-rated show, busiest month, and more.
-- **Light / dark mode** — tap the sun/moon icon in the top bar to switch. It remembers your choice and otherwise follows your system setting.
+- **Appearance** — Profile > Appearance has Light/Dark theme (follows your system setting by default) and a Glass transparency control for the app's frosted-glass chrome ("System" follows your device's own Reduce Transparency setting; "Reduced" and "Full" override it either way). Both remember your choice.
 
 If a passcode gate is enabled, you'll be asked for a shared code before you can reach the sign-in screen at all — ask whoever set up the site for it.
 

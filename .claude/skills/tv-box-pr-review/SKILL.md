@@ -11,14 +11,14 @@ Work through the checklist against the actual changed files, not the whole repo 
 
 ## 1. Comments
 
-- Only functions/methods -- and meaningfully-named exported constants where the name alone doesn't convey the "what" (e.g. `GLASS_SPRING` in `motion.ts`, `VAPID_PUBLIC_KEY` in `constants.ts`) -- may have a doc comment, and it must be exactly one line.
+- Only functions/methods -- and meaningfully-named exported constants where the name alone doesn't convey the "what" (e.g. `GLASS_SPRING` in `motion.ts`, `VAPID_PUBLIC_KEY` in `constants.ts`, `PILL_SIZE_CLASSES` in `Chip.tsx`) -- may have a doc comment, and it must be exactly one line.
 - No paragraph comments anywhere -- not above functions, not inline in a function body, not on interface/type fields, not as section dividers, not as JSX comments.
 - `eslint-disable-next-line` (and similar functional lint/compiler directives) are fine -- they aren't documentation.
 - Flag: any multi-line `/** */` block, any multi-line `//` block, any inline `//` comment explaining *why* rather than being itself the one-line doc, any comment on a type/interface field. A single-line `/** */` on a well-named const is not itself a violation -- judge whether the name alone already says what the value is.
 
 ## 2. DRY, SRP, and private methods
 
-- New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, `BackButton`, `HapticOverlay`, etc.) should reuse or extend it, not hand-roll a near-duplicate. Same for logic, not just UI: a `pointerdown`-outside-closes-panel effect is `useOutsideClick`, and bucketing a list into day-grouped sections is `groupByDay` (`lib/date.ts`) -- both were extracted after being copy-pasted across multiple files.
+- New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, `BackButton`, `HapticOverlay`, etc.) should reuse or extend it, not hand-roll a near-duplicate. Same for logic, not just UI: a `pointerdown`-outside-closes-panel effect is `useOutsideClick`, and bucketing a list into day-grouped sections is `groupByDay` (`lib/date.ts`) -- both were extracted after being copy-pasted across multiple files. A new pill-shaped filter/select control should reuse `PILL_SIZE_CLASSES`/`PILL_ACTIVE_CLASSES`/`PILL_INACTIVE_CLASSES` from `Chip.tsx` rather than hand-writing the same sizing/color classes at its own call site.
 - A component or hook taking on more than one clear responsibility (e.g. a page component that also owns unrelated data-fetching logic that could be its own hook) is a split candidate -- `src/hooks/showDetail/` (one hook per concern, composed by `useShowDetail.ts`) and `ProfileActivity.tsx`'s tab split are the precedent for what "already split appropriately" looks like here.
 - Flag copy-pasted logic across two or more files that isn't already using a shared helper in `src/lib/`.
 - This codebase is almost entirely functional (hooks/components), not classes, so "no private methods unless absolutely needed" mostly shows up as: don't bury multi-step logic in a deeply nested inline closure inside a component when it could be a named, testable top-level function in `src/lib/` or its own hook. In the rare class case (currently just `ErrorBoundary`), avoid adding private instance methods unless the logic genuinely needs instance state -- prefer a plain exported function otherwise.
@@ -47,6 +47,8 @@ Work through the checklist against the actual changed files, not the whole repo 
 - `scrollBehavior()` (not a hardcoded `'smooth'`/`'auto'`) for any direct `window.scrollTo` call, so reduced-motion users are respected.
 - Beyond animation timing specifically, judge new UI against the "buttery smooth and modern" bar this repo has been held to: no abrupt state swaps where a transition would read as intentional (use `InlinePanel`/`TRIGGER_SWAP_MOTION` for trigger-vs-open-panel swaps), no layout jump on load (skeletons from `Skeletons.tsx` for anything with a network round-trip), no obviously dated patterns (native `confirm()`/`alert()`, unstyled default form controls, jarring instant show/hide with no transition at all).
 - Flag anything that looks visually inconsistent with the rest of the page it's on (spacing, radius, color usage) even if it isn't a hard rule violation -- this is one of the few sections where "does this feel like the rest of the app" is itself the standard.
+
+- Theme, glass-transparency, and Report a bug live in Profile (Appearance section / More menu), not in `Navbar.tsx` -- flag any change that adds a persistent icon or trigger for these back into the top bar or bottom nav. A page's own title should use the shared `.large-title` class rather than Navbar owning a title.
 
 ## 7. Error handling and optimistic UI
 
