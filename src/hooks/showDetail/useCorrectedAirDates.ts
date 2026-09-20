@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { effectiveAirDate as resolveAirDate, findNextUpcomingEpisode, getCorrectedAirDates } from '../../lib/tvmaze'
 import type { TmdbSeasonDetail, TmdbShowDetail } from '../../types'
 
@@ -20,9 +20,11 @@ export function useCorrectedAirDates(show: TmdbShowDetail | null, season: TmdbSe
   }, [show])
 
   /** Returns TVmaze's correction for one episode's air date, or its own TMDB date unchanged. */
-  function effectiveAirDate(ep: { season_number: number; episode_number: number; air_date: string | null }): string | null {
-    return resolveAirDate(ep, correctedAirDates)
-  }
+  const effectiveAirDate = useCallback(
+    (ep: { season_number: number; episode_number: number; air_date: string | null }): string | null =>
+      resolveAirDate(ep, correctedAirDates),
+    [correctedAirDates],
+  )
 
   const nextUpcomingEpisode = useMemo(() => {
     if (!season) return null

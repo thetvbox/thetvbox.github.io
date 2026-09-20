@@ -108,9 +108,15 @@ export async function getSeasonDetail(showId: number, seasonNumber: number): Pro
   return detail
 }
 
-/** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB. */
+const watchProvidersCache = new Map<number, TmdbWatchProviders>()
+
+/** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB, session-cached. */
 export async function getWatchProviders(showId: number): Promise<TmdbWatchProviders> {
-  return tmdbFetch<TmdbWatchProviders>(`/tv/${showId}/watch/providers`)
+  const cached = watchProvidersCache.get(showId)
+  if (cached) return cached
+  const data = await tmdbFetch<TmdbWatchProviders>(`/tv/${showId}/watch/providers`)
+  watchProvidersCache.set(showId, data)
+  return data
 }
 
 /** Fetches every streaming provider TMDB knows about for a region. */

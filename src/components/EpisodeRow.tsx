@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { Ref } from 'react'
 import { motion } from 'framer-motion'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import { staggerRowMotion } from '../lib/motion'
 import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
 import DateMarkControl from './DateMarkControl'
@@ -14,13 +14,19 @@ interface EpisodeRowProps {
   watched: boolean
   watchedAt: string | null
   watchedAtUnknown: boolean
-  onToggleWatched: () => Promise<void>
-  onMarkWatchedWithDate: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
+  onToggleWatched: (episodeNumber: number, episodeName: string, runtimeMinutes: number | null) => Promise<void>
+  onMarkWatchedWithDate: (
+    episodeNumber: number,
+    episodeName: string,
+    runtimeMinutes: number | null,
+    input: { watchedAt: string; unknownDate: boolean },
+  ) => Promise<void>
   rootRef?: Ref<HTMLDivElement>
   isUpNext?: boolean
 }
 
-export default function EpisodeRow({
+/** One episode's still, synopsis, and watch controls -- memoized so toggling one episode doesn't re-render the whole season list. */
+function EpisodeRow({
   episode,
   watched,
   watchedAt,
@@ -47,7 +53,7 @@ export default function EpisodeRow({
   async function handleToggle() {
     setSaving(true)
     try {
-      await onToggleWatched()
+      await onToggleWatched(episode.episode_number, episode.name, episode.runtime)
     } finally {
       setSaving(false)
     }
@@ -56,9 +62,7 @@ export default function EpisodeRow({
   return (
     <motion.div
       ref={rootRef}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+      {...staggerRowMotion(0)}
       className={`group rounded-xl border bg-base-850/60 p-3 transition-colors duration-200 hover:bg-base-800/70 sm:p-4 ${
         watched
           ? 'border-hairline ring-1 ring-inset ring-accent-500/25'
@@ -133,6 +137,7 @@ export default function EpisodeRow({
                   type="button"
                   onClick={handleToggle}
                   disabled={saving}
+                  aria-pressed={watched}
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 disabled:opacity-60 ${
                     watched
                       ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
@@ -149,7 +154,7 @@ export default function EpisodeRow({
                 </button>
                 <DateMarkControl
                   label="Watched in the past"
-                  onConfirm={onMarkWatchedWithDate}
+                  onConfirm={(input) => onMarkWatchedWithDate(episode.episode_number, episode.name, episode.runtime, input)}
                   className={watched ? 'invisible' : ''}
                 />
               </>
@@ -160,6 +165,8 @@ export default function EpisodeRow({
     </motion.div>
   )
 }
+
+export default memo(EpisodeRow)
 
 /** Generic "no image" placeholder -- a stand-in for a missing episode still, not any brand mark. */
 function NoStillGlyph() {

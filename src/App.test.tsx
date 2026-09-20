@@ -99,10 +99,10 @@ describe('App', () => {
     expect(screen.getByText('PasscodeGateStub')).toBeInTheDocument()
   })
 
-  it('redirects a signed-out visitor to login for a protected route', () => {
+  it('redirects a signed-out visitor to login for a protected route', async () => {
     window.location.hash = '#/search'
     render(<App />)
-    expect(screen.getByText('LoginPage')).toBeInTheDocument()
+    expect(await screen.findByText('LoginPage')).toBeInTheDocument()
   })
 
   it('renders the requested page for a signed-in user', async () => {
@@ -113,11 +113,11 @@ describe('App', () => {
     expect(screen.getByText('NavbarStub')).toBeInTheDocument()
   })
 
-  it('hides the navbar on the login route even when signed in', () => {
+  it('hides the navbar on the login route even when signed in', async () => {
     vi.mocked(useAuth).mockReturnValue(authValue({ user: me }))
     window.location.hash = '#/login'
     render(<App />)
-    expect(screen.getByText('LoginPage')).toBeInTheDocument()
+    expect(await screen.findByText('LoginPage')).toBeInTheDocument()
     expect(screen.queryByText('NavbarStub')).not.toBeInTheDocument()
   })
 
@@ -128,9 +128,9 @@ describe('App', () => {
     expect(await screen.findByText('HomePage')).toBeInTheDocument()
   })
 
-  it('redirects the root route to login when signed out', () => {
+  it('redirects the root route to login when signed out', async () => {
     render(<App />)
-    expect(screen.getByText('LoginPage')).toBeInTheDocument()
+    expect(await screen.findByText('LoginPage')).toBeInTheDocument()
   })
 
   it('offers the push-onboarding prompt once eligible for a signed-in user', async () => {

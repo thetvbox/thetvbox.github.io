@@ -72,6 +72,13 @@ export default function ShowDetailSeasons({
     [show.seasons, watched],
   )
 
+  // Recomputed only when the season or the TVmaze corrections change (not on every
+  // watch toggle), so EpisodeRow's memoization below actually has something stable to compare.
+  const episodesWithEffectiveDates = useMemo(
+    () => season?.episodes.map((ep) => (ep.air_date ? { ...ep, air_date: effectiveAirDate(ep) } : ep)) ?? null,
+    [season, effectiveAirDate],
+  )
+
   const lastWatchedEpisode = season?.episodes
     .filter((ep) => watched[watchedKey(ep.season_number, ep.episode_number)])
     .at(-1)
@@ -139,15 +146,15 @@ export default function ShowDetailSeasons({
       <div className="space-y-3">
         {loadingSeason
           ? Array.from({ length: 4 }).map((_, i) => <EpisodeRowSkeleton key={i} />)
-          : season?.episodes.map((ep) => (
+          : episodesWithEffectiveDates?.map((ep) => (
               <EpisodeRow
                 key={ep.id}
-                episode={ep.air_date ? { ...ep, air_date: effectiveAirDate(ep) } : ep}
+                episode={ep}
                 watched={Boolean(watched[watchedKey(ep.season_number, ep.episode_number)])}
                 watchedAt={watched[watchedKey(ep.season_number, ep.episode_number)]?.watched_at ?? null}
                 watchedAtUnknown={Boolean(watched[watchedKey(ep.season_number, ep.episode_number)]?.watched_at_unknown)}
-                onToggleWatched={() => onToggleWatched(ep.episode_number, ep.name, ep.runtime)}
-                onMarkWatchedWithDate={(input) => onMarkWatchedWithDate(ep.episode_number, ep.name, ep.runtime, input)}
+                onToggleWatched={onToggleWatched}
+                onMarkWatchedWithDate={onMarkWatchedWithDate}
                 rootRef={ep.episode_number === scrollTargetEpisode?.episode_number ? nextUpRef : undefined}
                 isUpNext={ep.episode_number === nextUpEpisode?.episode_number}
               />

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { getSeasonDetail } from '../../lib/tmdb'
 import { bulkMarkWatched, bulkUnmarkWatched, markWatched, restoreWatched, unmarkWatched, watchedKey } from '../../lib/watched'
@@ -37,66 +37,74 @@ export function useEpisodeWatchHandlers(
     return season.episodes.filter((ep) => watched[watchedKey(ep.season_number, ep.episode_number)]).length
   }, [season, watched])
 
-  async function handleToggleWatched(episodeNumber: number, episodeName: string, runtimeMinutes: number | null) {
-    if (!user || !show || activeSeason === null) return
-    const key = watchedKey(activeSeason, episodeNumber)
+  const watchedRef = useRef(watched)
+  useLayoutEffect(() => {
+    watchedRef.current = watched
+  })
 
-    if (watched[key]) {
-      const previous = watched[key]
-      setWatched((prev) => {
-        const next = { ...prev }
-        delete next[key]
-        return next
-      })
-      try {
-        await unmarkWatched(user.id, show.id, activeSeason, episodeNumber)
-      } catch {
-        setWatched((prev) => ({ ...prev, [key]: previous }))
-        showError('Failed to unmark this episode. Try again.')
+  const handleToggleWatched = useCallback(
+    async (episodeNumber: number, episodeName: string, runtimeMinutes: number | null) => {
+      if (!user || !show || activeSeason === null) return
+      const key = watchedKey(activeSeason, episodeNumber)
+
+      if (watchedRef.current[key]) {
+        const previous = watchedRef.current[key]
+        setWatched((prev) => {
+          const next = { ...prev }
+          delete next[key]
+          return next
+        })
+        try {
+          await unmarkWatched(user.id, show.id, activeSeason, episodeNumber)
+        } catch {
+          setWatched((prev) => ({ ...prev, [key]: previous }))
+          showError('Failed to unmark this episode. Try again.')
+        }
+        return
       }
-      return
-    }
 
-    const optimisticRow: EpisodeWatched = {
-      id: `optimistic-${key}`,
-      user_id: user.id,
-      show_id: show.id,
-      show_name: show.name,
-      show_poster_path: show.poster_path,
-      show_total_episodes: show.number_of_episodes,
-      season_number: activeSeason,
-      episode_number: episodeNumber,
-      episode_name: episodeName,
-      watched_at: new Date().toISOString(),
-      watched_at_unknown: false,
-      runtime_minutes: runtimeMinutes,
-      created_at: new Date().toISOString(),
-    }
-    setWatched((prev) => ({ ...prev, [key]: optimisticRow }))
+      const optimisticRow: EpisodeWatched = {
+        id: `optimistic-${key}`,
+        user_id: user.id,
+        show_id: show.id,
+        show_name: show.name,
+        show_poster_path: show.poster_path,
+        show_total_episodes: show.number_of_episodes,
+        season_number: activeSeason,
+        episode_number: episodeNumber,
+        episode_name: episodeName,
+        watched_at: new Date().toISOString(),
+        watched_at_unknown: false,
+        runtime_minutes: runtimeMinutes,
+        created_at: new Date().toISOString(),
+      }
+      setWatched((prev) => ({ ...prev, [key]: optimisticRow }))
 
-    try {
-      const saved = await markWatched({
-        userId: user.id,
-        showId: show.id,
-        showName: show.name,
-        showPosterPath: show.poster_path,
-        showTotalEpisodes: show.number_of_episodes,
-        seasonNumber: activeSeason,
-        episodeNumber,
-        episodeName,
-        runtimeMinutes,
-      })
-      setWatched((prev) => ({ ...prev, [key]: saved }))
-      onProgress()
-    } catch {
-      setWatched((prev) => {
-        const next = { ...prev }
-        delete next[key]
-        return next
-      })
-      showError('Failed to mark this episode watched. Try again.')
-    }
-  }
+      try {
+        const saved = await markWatched({
+          userId: user.id,
+          showId: show.id,
+          showName: show.name,
+          showPosterPath: show.poster_path,
+          showTotalEpisodes: show.number_of_episodes,
+          seasonNumber: activeSeason,
+          episodeNumber,
+          episodeName,
+          runtimeMinutes,
+        })
+        setWatched((prev) => ({ ...prev, [key]: saved }))
+        onProgress()
+      } catch {
+        setWatched((prev) => {
+          const next = { ...prev }
+          delete next[key]
+          return next
+        })
+        showError('Failed to mark this episode watched. Try again.')
+      }
+    },
+    [user, show, activeSeason, setWatched, showError, onProgress],
+  )
 
   /** Undoes a bulk mark-watched action, restoring overwritten rows and deleting newly-created ones. */
   async function undoBulkMark(
@@ -174,33 +182,36 @@ export function useEpisodeWatchHandlers(
   }
 
   /** Same idea as handleToggleWatched, but logs a single episode on a specific past date. */
-  async function handleMarkWatchedWithDate(
-    episodeNumber: number,
-    episodeName: string,
-    runtimeMinutes: number | null,
-    input: { watchedAt: string; unknownDate: boolean },
-  ) {
-    if (!user || !show || activeSeason === null) return
-    const key = watchedKey(activeSeason, episodeNumber)
-    try {
-      const saved = await bulkMarkWatched({
-        userId: user.id,
-        showId: show.id,
-        showName: show.name,
-        showPosterPath: show.poster_path,
-        showTotalEpisodes: show.number_of_episodes,
-        episodes: [{ seasonNumber: activeSeason, episodeNumber, episodeName, runtimeMinutes }],
-        watchedAt: input.watchedAt,
-        watchedAtUnknown: input.unknownDate,
-      })
-      if (saved[0]) {
-        setWatched((prev) => ({ ...prev, [key]: saved[0] }))
-        onProgress()
+  const handleMarkWatchedWithDate = useCallback(
+    async (
+      episodeNumber: number,
+      episodeName: string,
+      runtimeMinutes: number | null,
+      input: { watchedAt: string; unknownDate: boolean },
+    ) => {
+      if (!user || !show || activeSeason === null) return
+      const key = watchedKey(activeSeason, episodeNumber)
+      try {
+        const saved = await bulkMarkWatched({
+          userId: user.id,
+          showId: show.id,
+          showName: show.name,
+          showPosterPath: show.poster_path,
+          showTotalEpisodes: show.number_of_episodes,
+          episodes: [{ seasonNumber: activeSeason, episodeNumber, episodeName, runtimeMinutes }],
+          watchedAt: input.watchedAt,
+          watchedAtUnknown: input.unknownDate,
+        })
+        if (saved[0]) {
+          setWatched((prev) => ({ ...prev, [key]: saved[0] }))
+          onProgress()
+        }
+      } catch {
+        showError('Failed to mark this episode watched. Try again.')
       }
-    } catch {
-      showError('Failed to mark this episode watched. Try again.')
-    }
-  }
+    },
+    [user, show, activeSeason, setWatched, showError, onProgress],
+  )
 
   /** Marks every aired episode of the active season watched in one action. */
   async function handleMarkSeasonWatched(input: { watchedAt: string; unknownDate: boolean }) {

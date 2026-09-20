@@ -14,8 +14,8 @@ import { markPushOnboardingSeen, shouldOfferPushOnboarding } from './lib/pushNot
 import { ROUTES } from './lib/routes'
 import { ROUTE_TRANSITION_MOTION } from './lib/motion'
 import { useScrollRestoration } from './hooks/useScrollRestoration'
-import Login from './pages/Login'
 
+const Login = lazy(() => import('./pages/Login'))
 const Home = lazy(() => import('./pages/Home'))
 const Activity = lazy(() => import('./pages/Activity'))
 const Search = lazy(() => import('./pages/Search'))
@@ -48,11 +48,13 @@ function AppShell() {
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    shouldOfferPushOnboarding().then((should) => {
-      if (cancelled || !should) return
-      markPushOnboardingSeen()
-      setShowPushOnboarding(true)
-    })
+    shouldOfferPushOnboarding()
+      .then((should) => {
+        if (cancelled || !should) return
+        markPushOnboardingSeen()
+        setShowPushOnboarding(true)
+      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
