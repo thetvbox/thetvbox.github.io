@@ -1,8 +1,4 @@
-// Supabase Edge Function: issues a WebAuthn passkey sign-in challenge for
-// an email, or reports why sign-in with a passkey isn't possible yet
-// (no account, or an account that hasn't set up a passkey). See
-// ../webauthn-registration-options/README.md for the shared design
-// notes; verify_jwt is off for the same reason as its sibling functions.
+// Supabase Edge Function: issues a WebAuthn passkey sign-in challenge for an email. See ../webauthn-registration-options/README.md for the shared design notes.
 
 import { generateAuthenticationOptions } from 'npm:@simplewebauthn/server@14'
 import { CORS_HEADERS, jsonResponse, resolveRelyingParty, serviceClient, storeChallenge } from '../_shared/webauthn.ts'

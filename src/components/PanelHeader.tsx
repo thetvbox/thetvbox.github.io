@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 
-/** Shared header row for panels/dropdowns: an optional leading icon chip, a title, optional
- * secondary actions, and an icon close button. */
+/** Shared header row for panels/dropdowns: an optional icon chip, a title, optional actions, and a close button. */
 export default function PanelHeader({
   title,
   onClose,

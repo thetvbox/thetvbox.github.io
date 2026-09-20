@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { checkPasscode, markGatePassed } from '../lib/siteGate'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import { CARD_ENTRANCE_MOTION } from '../lib/motion'
 import { PASSCODE_LENGTH } from '../lib/constants'
 import AppLogo from './AppLogo'
 import PrimaryButton from './PrimaryButton'
@@ -28,12 +28,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
-        className="w-full max-w-sm"
-      >
+      <motion.div {...CARD_ENTRANCE_MOTION} className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(139,92,246,0.35)]" />
           <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>

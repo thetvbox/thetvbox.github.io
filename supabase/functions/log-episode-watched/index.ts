@@ -1,17 +1,4 @@
-// Supabase Edge Function: logs an episode as watched on behalf of a user,
-// authenticated by a personal access token instead of a Supabase session --
-// this app has no real Supabase Auth (see src/contexts/AuthContext.tsx), and
-// this endpoint is meant to be called from outside the app entirely (an iOS
-// Shortcut's "Get Contents of URL" action, e.g. triggered by a Siri phrase),
-// so there's no browser session to reuse anyway. See
-// supabase/functions/log-episode-watched/README.md for how a user generates
-// a token (in-app, under Profile -> Shortcuts & Siri) and wires up a Shortcut.
-//
-// verify_jwt is disabled for this function -- the Authorization header here
-// carries the user's personal access token, not a Supabase-signed JWT, so
-// the platform's own JWT gate would reject every legitimate request before
-// this code even ran. Auth is instead done by hashing the presented token
-// and looking it up against personal_access_tokens.token_hash below.
+// Supabase Edge Function: logs an episode watched via a personal access token (for iOS Shortcuts). See README.md next to this file for setup notes.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -112,7 +99,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to log the episode' }, 500)
   }
 
-  // Best-effort -- a failure here shouldn't fail the actual log-episode request.
   await supabase
     .from('personal_access_tokens')
     .update({ last_used_at: new Date().toISOString() })

@@ -24,6 +24,27 @@ export function formatDiaryHeading(iso: string): string {
   })
 }
 
+/** Buckets date-sorted items into per-day groups with a formatted heading; items where isUnknownOf is true share one trailing "Watched a while ago" bucket. */
+export function groupByDay<T>(
+  items: T[],
+  atOf: (item: T) => string,
+  isUnknownOf?: (item: T) => boolean,
+): { heading: string; items: T[] }[] {
+  const groups: { heading: string; items: T[] }[] = []
+  let currentKey = ''
+  for (const item of items) {
+    const unknown = isUnknownOf?.(item) ?? false
+    const key = unknown ? 'unknown' : dayKey(atOf(item))
+    if (key !== currentKey) {
+      groups.push({ heading: unknown ? 'Watched a while ago' : formatDiaryHeading(atOf(item)), items: [item] })
+      currentKey = key
+    } else {
+      groups[groups.length - 1].items.push(item)
+    }
+  }
+  return groups
+}
+
 /** Formats a compact "Aug 12" date, parsing date-only strings as a local calendar day. */
 export function formatShortDate(iso: string): string {
   const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso)

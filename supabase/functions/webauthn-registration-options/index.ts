@@ -1,16 +1,4 @@
-// Supabase Edge Function: issues a WebAuthn passkey-registration challenge
-// for an existing user row. See ../_shared/webauthn.ts for the shared
-// origin/RP-ID handling and challenge storage this uses, and
-// README.md next to this file for the full design notes -- in particular
-// why this refuses (403) to run for a user that already has a passkey,
-// which is what keeps a known email from being enough to hijack an
-// already-protected account.
-//
-// verify_jwt is off: this app has no real Supabase Auth (see
-// src/contexts/AuthContext.tsx), so there's no JWT to check here --
-// identity is established by the caller already knowing (or having just
-// created) the target user_id, and this function's own already-has-a-
-// passkey check is the real gate.
+// Supabase Edge Function: issues a WebAuthn passkey-registration challenge for an existing user. See README.md next to this file for the full design notes.
 
 import { generateRegistrationOptions } from 'npm:@simplewebauthn/server@14'
 import {

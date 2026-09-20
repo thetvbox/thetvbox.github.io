@@ -20,7 +20,7 @@ import AppLogo from '../components/AppLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import { CARD_ENTRANCE_MOTION, STEP_SWAP_MOTION } from '../lib/motion'
 import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
 import { ROUTES } from '../lib/routes'
 import { errorMessage } from '../lib/format'
@@ -157,12 +157,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
-        className="w-full max-w-sm"
-      >
+      <motion.div {...CARD_ENTRANCE_MOTION} className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(139,92,246,0.35)]" />
           <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>
@@ -179,15 +174,7 @@ export default function Login() {
         <div className="overflow-hidden rounded-2xl border border-hairline bg-base-850/70 p-6 shadow-xl shadow-black/10 dark:shadow-black/20">
           <AnimatePresence mode="wait">
             {step.kind === 'email' ? (
-              <motion.form
-                key="email"
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                onSubmit={handleEmailSubmit}
-                className="space-y-4"
-              >
+              <motion.form key="email" {...STEP_SWAP_MOTION} onSubmit={handleEmailSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-base-200">
                     Email address
@@ -211,15 +198,7 @@ export default function Login() {
                 </p>
               </motion.form>
             ) : step.kind === 'username' ? (
-              <motion.form
-                key="username"
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                onSubmit={handleUsernameSubmit}
-                className="space-y-4"
-              >
+              <motion.form key="username" {...STEP_SWAP_MOTION} onSubmit={handleUsernameSubmit} className="space-y-4">
                 <div>
                   <p className="text-sm text-base-300">
                     First time seeing <span className="font-medium text-base-100">{step.email}</span>.
@@ -249,14 +228,7 @@ export default function Login() {
                 </button>
               </motion.form>
             ) : step.kind === 'signin' ? (
-              <motion.div
-                key="signin"
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                className="space-y-4"
-              >
+              <motion.div key="signin" {...STEP_SWAP_MOTION} className="space-y-4">
                 <p className="text-sm text-base-300">
                   Welcome back, <span className="font-medium text-base-100">{step.email}</span>.
                   Sign in with your passkey.
@@ -279,14 +251,7 @@ export default function Login() {
                 </button>
               </motion.div>
             ) : (
-              <motion.div
-                key="bootstrap"
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                className="space-y-4"
-              >
+              <motion.div key="bootstrap" {...STEP_SWAP_MOTION} className="space-y-4">
                 <p className="text-sm text-base-300">
                   Set up a passkey to finish signing in as{' '}
                   <span className="font-medium text-base-100">{step.username}</span>. You&apos;ll

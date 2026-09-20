@@ -1,15 +1,4 @@
-// Supabase Edge Function: sends a Web Push notification to every device
-// subscribed for a notification row's recipient. Invoked by the
-// send_push_on_notification() Postgres trigger (see the
-// add_push_subscriptions_and_trigger migration) right after a row is
-// inserted into public.notifications, via pg_net.http_post. See
-// README.md next to this file for the full design notes.
-//
-// verify_jwt is off: pg_net calls this with the anon key as a bearer
-// token (this app has no real user sessions to verify), and the
-// function's own job is narrow enough -- send to devices already on
-// file for the row's own user_id -- that no further auth check adds
-// anything here.
+// Supabase Edge Function: sends a Web Push notification for a new notifications row. See README.md next to this file for how it's triggered and design notes.
 
 import webpush from 'npm:web-push@3.6.7'
 import { createClient } from 'jsr:@supabase/supabase-js@2'

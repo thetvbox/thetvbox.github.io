@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getAllTvProviders, providerLogoUrl } from '../lib/tmdb'
+import { PROVIDER_PICKER_MAX_RESULTS } from '../lib/constants'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import InlinePanel from './InlinePanel'
 import PanelHeader from './PanelHeader'
@@ -69,7 +70,7 @@ export default function ProviderPicker({
     const sorted = filtered
       .slice()
       .sort((a, b) => wellKnownRank(a.provider_name) - wellKnownRank(b.provider_name))
-    return sorted.slice(0, 8)
+    return sorted.slice(0, PROVIDER_PICKER_MAX_RESULTS)
   }, [allProviders, query])
 
   return (

@@ -13,7 +13,7 @@ import type { ActivityFeedItem, FriendWatchingEntry } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { getShowDetailsBulk } from '../lib/tmdb'
-import { dayKey, formatDiaryHeading } from '../lib/date'
+import { groupByDay } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
 import { offscreenSkipStyle } from '../lib/layout'
 import {
@@ -24,6 +24,7 @@ import {
 } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useOutsideClick } from '../hooks/useOutsideClick'
 import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
@@ -75,8 +76,6 @@ export default function Activity() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const scopeTouched = useRef(false)
-  const personFilterRef = useRef<HTMLDivElement>(null)
-  const genreFilterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -250,50 +249,18 @@ export default function Activity() {
     }
   }, [personFilterOpen, filterableMembers])
 
-  useEffect(() => {
-    if (!personFilterOpen) return
-    function handlePointerDown(e: PointerEvent) {
-      if (personFilterRef.current && !personFilterRef.current.contains(e.target as Node)) {
-        setPersonFilterOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [personFilterOpen])
-
-  useEffect(() => {
-    if (!genreFilterOpen) return
-    function handlePointerDown(e: PointerEvent) {
-      if (genreFilterRef.current && !genreFilterRef.current.contains(e.target as Node)) {
-        setGenreFilterOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [genreFilterOpen])
+  const personFilterRef = useOutsideClick<HTMLDivElement>(personFilterOpen, () => setPersonFilterOpen(false))
+  const genreFilterRef = useOutsideClick<HTMLDivElement>(genreFilterOpen, () => setGenreFilterOpen(false))
 
   const filtered = useMemo(
     () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
     [scoped, filterUsername],
   )
 
-  const dayGroups = useMemo<DayGroup[]>(() => {
-    const groups: DayGroup[] = []
-    let currentKey = ''
-    for (const item of filtered) {
-      const key = item.atUnknown ? 'unknown' : dayKey(item.at)
-      if (key !== currentKey) {
-        groups.push({
-          heading: item.atUnknown ? 'Watched a while ago' : formatDiaryHeading(item.at),
-          items: [item],
-        })
-        currentKey = key
-      } else {
-        groups[groups.length - 1].items.push(item)
-      }
-    }
-    return groups
-  }, [filtered])
+  const dayGroups = useMemo<DayGroup[]>(
+    () => groupByDay(filtered, (item) => item.at, (item) => item.atUnknown),
+    [filtered],
+  )
 
   const emptyMessage = filterUsername
     ? `@${filterUsername} hasn't done anything yet.`
@@ -551,8 +518,7 @@ function GenreFilterPanel({
   )
 }
 
-/** One row in the genre list -- the same visual pattern as PersonRow below, so "Filter by genre"
- * reads as the same kind of dropdown as "Filter by person" instead of a wrapped chip cloud. */
+/** One row in the genre list, styled the same as PersonRow below so both filter dropdowns read as one pattern. */
 function GenreRow({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button

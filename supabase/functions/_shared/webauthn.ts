@@ -1,8 +1,4 @@
-// Shared helpers for the webauthn-* Edge Functions. See
-// supabase/functions/webauthn-registration-options/README.md (and its
-// siblings) for the full design notes this supports -- origin/RP ID
-// handling, the account-takeover trade-off, and why this app has no
-// verify_jwt on any of these four functions.
+// Shared helpers for the webauthn-* Edge Functions. See ../webauthn-registration-options/README.md for the full design notes.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 

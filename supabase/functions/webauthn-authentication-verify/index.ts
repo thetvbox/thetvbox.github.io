@@ -1,8 +1,4 @@
-// Supabase Edge Function: verifies a WebAuthn passkey sign-in response
-// against the stored credential's public key. Pairs with
-// ../webauthn-authentication-options; see
-// ../webauthn-registration-options/README.md for the shared design
-// notes. verify_jwt is off for the same reason as its sibling functions.
+// Supabase Edge Function: verifies a WebAuthn passkey sign-in response. See ../webauthn-registration-options/README.md for the shared design notes.
 
 import { verifyAuthenticationResponse } from 'npm:@simplewebauthn/server@14'
 import { base64UrlToBytes, consumeChallenge, CORS_HEADERS, jsonResponse, resolveRelyingParty, serviceClient } from '../_shared/webauthn.ts'

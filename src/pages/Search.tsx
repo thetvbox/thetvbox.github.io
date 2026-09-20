@@ -8,6 +8,7 @@ import SearchFiltersPanel from '../components/SearchFiltersPanel'
 import { searchShows, getTrendingShows, getTvGenres, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useOutsideClick } from '../hooks/useOutsideClick'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
@@ -37,7 +38,6 @@ export default function Search() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const requestId = useRef(0)
-  const filtersRef = useRef<HTMLDivElement>(null)
 
   const posterResults = useMemo(() => results.filter((s) => s.poster_path), [results])
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
@@ -100,16 +100,7 @@ export default function Search() {
     }
   }, [filtersOpen, filtersAvailable])
 
-  useEffect(() => {
-    if (!filtersOpen) return
-    function handlePointerDown(e: PointerEvent) {
-      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
-        setFiltersOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [filtersOpen])
+  const filtersRef = useOutsideClick<HTMLDivElement>(filtersOpen, () => setFiltersOpen(false))
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)

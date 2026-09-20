@@ -86,6 +86,36 @@ export const ROUTE_TRANSITION_MOTION = {
   transition: { duration: 0.15, ease: EASE_OUT_EXPO },
 } as const
 
+/** Fade+slide-up entrance for a centered auth/gate card (Login, PasscodeGate). */
+export const CARD_ENTRANCE_MOTION = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: EASE_OUT_EXPO },
+} as const
+
+/** Fade+horizontal-slide swap between wizard-style steps (Login's email/username/signin/bootstrap). */
+export const STEP_SWAP_MOTION = {
+  initial: { opacity: 0, x: 12 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -12 },
+  transition: { duration: 0.25, ease: EASE_OUT_EXPO },
+} as const
+
+/** Fade+slide entrance/exit for the toast stack. */
+export const TOAST_MOTION = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 8 },
+  transition: { duration: 0.25, ease: EASE_OUT_EXPO },
+} as const
+
+export const HERO_META_TRANSITION = { duration: 0.4, ease: EASE_OUT_EXPO } as const
+export const ICON_SWAP_TRANSITION = { duration: 0.25, ease: EASE_OUT_EXPO } as const
+export const NAV_FADE_IN_TRANSITION = { duration: 0.3, ease: EASE_OUT_EXPO } as const
+export const MOBILE_TAB_INDICATOR_SPRING = { type: 'spring', stiffness: 500, damping: 32 } as const
+export const SEASON_TAB_INDICATOR_SPRING = { type: 'spring', stiffness: 400, damping: 32 } as const
+export const STAR_TAP_SPRING = { type: 'spring', stiffness: 500, damping: 20 } as const
+
 const STAGGER_STEP_SECONDS = 0.02
 const STAGGER_ROW_DURATION = 0.25
 

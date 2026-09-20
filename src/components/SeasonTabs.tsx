@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CheckGlyph } from './ShowDetailGlyphs'
+import { SEASON_TAB_INDICATOR_SPRING } from '../lib/motion'
 import HapticOverlay from './HapticOverlay'
 import type { SeasonSegment } from '../lib/seasonProgress'
 import type { TmdbSeasonSummary } from '../types'
@@ -44,7 +45,7 @@ export default function SeasonTabs({ seasons, active, onSelect, segments = [] }:
               <motion.span
                 layoutId="season-pill"
                 className="absolute inset-0 rounded-full bg-accent-500/15 ring-1 ring-accent-500/40"
-                transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                transition={SEASON_TAB_INDICATOR_SPRING}
               />
             )}
             <span className={`relative inline-flex items-center gap-1.5 ${isActive ? 'text-accent-300' : 'text-base-400'}`}>

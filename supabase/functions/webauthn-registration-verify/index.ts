@@ -1,8 +1,4 @@
-// Supabase Edge Function: verifies a WebAuthn passkey-registration
-// response and stores the new credential. Pairs with
-// ../webauthn-registration-options; see that function's README.md for
-// the full design notes. verify_jwt is off for the same reason as its
-// sibling functions -- see their READMEs.
+// Supabase Edge Function: verifies a WebAuthn passkey-registration response and stores the credential. See ../webauthn-registration-options/README.md for the full design notes.
 
 import { verifyRegistrationResponse } from 'npm:@simplewebauthn/server@14'
 import {

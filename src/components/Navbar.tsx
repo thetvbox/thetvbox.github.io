@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
-import { EASE_OUT_EXPO, scrollBehavior } from '../lib/motion'
+import { ICON_SWAP_TRANSITION, MOBILE_TAB_INDICATOR_SPRING, NAV_FADE_IN_TRANSITION, scrollBehavior } from '../lib/motion'
+import { useOutsideClick } from '../hooks/useOutsideClick'
 import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
 import ReportBugButton from './ReportBugButton'
@@ -139,7 +140,7 @@ function ThemeToggle() {
           initial={{ opacity: 0, rotate: -80, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
           exit={{ opacity: 0, rotate: 80, scale: 0.5 }}
-          transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+          transition={ICON_SWAP_TRANSITION}
           className="flex"
         >
           {isDark ? <SunIcon /> : <MoonIcon />}
@@ -162,7 +163,7 @@ type UtilityPanel = 'bug' | 'notifications'
 export default function Navbar() {
   const location = useLocation()
   const [openPanel, setOpenPanel] = useState<UtilityPanel | null>(null)
-  const utilityRef = useRef<HTMLDivElement>(null)
+  const utilityRef = useOutsideClick<HTMLDivElement>(openPanel === 'notifications', () => setOpenPanel(null))
 
   /** Scrolls to top when tapping the tab you're already on. */
   function handleNavClick(to: string) {
@@ -170,17 +171,6 @@ export default function Navbar() {
       window.scrollTo({ top: 0, left: 0, behavior: scrollBehavior() })
     }
   }
-
-  useEffect(() => {
-    if (openPanel !== 'notifications') return
-    function handlePointerDown(e: PointerEvent) {
-      if (utilityRef.current && !utilityRef.current.contains(e.target as Node)) {
-        setOpenPanel(null)
-      }
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [openPanel])
 
   return (
     <>
@@ -241,7 +231,7 @@ export default function Navbar() {
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+        transition={NAV_FADE_IN_TRANSITION}
         className="glass-surface-strong fixed inset-x-0 bottom-0 z-40 flex transform-gpu border-t border-hairline pb-[env(safe-area-inset-bottom)] will-change-transform md:hidden"
       >
         {NAV_ITEMS.map(({ to, label, Icon }) => (
@@ -261,7 +251,7 @@ export default function Navbar() {
                   <motion.span
                     layoutId="mobile-tab-dot"
                     className="absolute top-0.5 h-1 w-1 rounded-full bg-accent-400"
-                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                    transition={MOBILE_TAB_INDICATOR_SPRING}
                   />
                 )}
                 <Icon active={isActive} />

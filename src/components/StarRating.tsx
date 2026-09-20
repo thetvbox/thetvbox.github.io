@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
+import { STAR_TAP_SPRING } from '../lib/motion'
 import HapticOverlay from './HapticOverlay'
 
 const STAR_INDEXES = Array.from({ length: MAX_RATING }, (_, i) => i + 1)
@@ -138,7 +139,7 @@ export default function StarRating({
             className="relative"
             whileHover={interactive ? { scale: 1.18 } : undefined}
             whileTap={interactive ? { scale: 0.92 } : undefined}
-            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+            transition={STAR_TAP_SPRING}
           >
             <Star fill={fillForStar} px={px} />
             {interactive && (

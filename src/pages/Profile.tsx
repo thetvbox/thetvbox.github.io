@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useOutsideClick } from '../hooks/useOutsideClick'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
@@ -21,29 +22,14 @@ export default function Profile() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [pushOpen, setPushOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
   useCloseOnNavigate(() => setMenuOpen(false))
 
-  /** Opens a menu-triggered sheet on its own tick, after the "More" menu's own close has
-   * committed -- closing the menu and mounting a new AnimatePresence sheet in the same
-   * commit can leave the menu's exit animation stuck forever (never unmounted, just
-   * invisible at opacity 0). Same underlying framer-motion/React 19 concurrent-rendering
-   * issue as the route-transition fix in App.tsx, triggered here by two sibling
-   * AnimatePresence trees updating together instead of nested Suspense. */
+  /** Opens a menu-triggered sheet on its own tick, after the menu's own close has committed. */
   function openAfterMenuCloses(setOpen: (value: boolean) => void) {
     setTimeout(() => setOpen(true), 0)
   }
 
-  useEffect(() => {
-    if (!menuOpen) return
-    function handlePointerDown(e: PointerEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [menuOpen])
+  const menuRef = useOutsideClick<HTMLDivElement>(menuOpen, () => setMenuOpen(false))
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">

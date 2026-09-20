@@ -14,7 +14,7 @@ import {
 import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watchlist'
 import { dropShow, fetchDroppedForUser, undropShow } from '../lib/showDropped'
 import { createList, fetchListsForUser } from '../lib/lists'
-import { dayKey, formatDiaryHeading } from '../lib/date'
+import { groupByDay } from '../lib/date'
 import { ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
 import { useAuth } from '../contexts/AuthContext'
 import HistorySection from './HistorySection'
@@ -216,20 +216,10 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     [undatedSummaries],
   )
 
-  const diaryGroups = useMemo<DiaryDayGroup[]>(() => {
-    const groups: DiaryDayGroup[] = []
-    let currentKey = ''
-    for (const entry of diaryEntries) {
-      const key = dayKey(entry.at)
-      if (key !== currentKey) {
-        groups.push({ heading: formatDiaryHeading(entry.at), entries: [entry] })
-        currentKey = key
-      } else {
-        groups[groups.length - 1].entries.push(entry)
-      }
-    }
-    return groups
-  }, [diaryEntries])
+  const diaryGroups = useMemo<DiaryDayGroup[]>(
+    () => groupByDay(diaryEntries, (entry) => entry.at).map((g) => ({ heading: g.heading, entries: g.items })),
+    [diaryEntries],
+  )
 
   const history = useMemo(() => watchHistory(activity), [activity])
 

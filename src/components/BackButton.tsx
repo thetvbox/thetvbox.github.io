@@ -1,15 +1,9 @@
 import { Link } from 'react-router-dom'
 
 interface BackButtonProps {
-  /** Navigates back programmatically (e.g. real browser history via useGoBack). Mutually exclusive with `to`. */
   onClick?: () => void
-  /** Navigates to a fixed route instead of back through history. Mutually exclusive with `onClick`. */
   to?: string
-  /** Visible label for the `inline` variant, or the accessible name for the icon-only `floating` variant. */
   label?: string
-  /** `inline` (default): a small chevron + text link, for the top of a page's content column.
-   *  `floating`: an icon-only glass FAB, for overlaying non-text hero imagery (e.g. ShowDetail's backdrop),
-   *  where a plain text link wouldn't stay legible against changing photo content underneath. */
   variant?: 'inline' | 'floating'
   className?: string
 }
