@@ -15,7 +15,7 @@ function snapshotBulkTargets(
   for (const ep of episodes) {
     const existing = watched[watchedKey(ep.seasonNumber, ep.episodeNumber)]
     if (existing) previousRows.push(existing)
-    else addedKeys.push(ep)
+    else addedKeys.push({ seasonNumber: ep.seasonNumber, episodeNumber: ep.episodeNumber })
   }
   return { previousRows, addedKeys }
 }
