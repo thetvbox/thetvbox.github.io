@@ -57,8 +57,8 @@
   /* Liquid-Glass-style translucent surface tint, for chrome that should
      read as glass (nav bars, modals, dropdowns, sheets) rather than a flat
      solid panel -- paired with the .glass-surface utility below. */
-  --color-glass: rgba(13, 13, 18, 0.6);
-  --color-glass-strong: rgba(13, 13, 18, 0.85);
+  --color-glass: rgba(13, 13, 18, 0.46);
+  --color-glass-strong: rgba(13, 13, 18, 0.68);
 
   --animate-fade-in: fade-in 0.35s ease-out both;
   --animate-rise: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -114,8 +114,8 @@
   --color-hover: rgba(15, 23, 42, 0.045);
   --color-hover-strong: rgba(15, 23, 42, 0.075);
 
-  --color-glass: rgba(255, 255, 255, 0.6);
-  --color-glass-strong: rgba(255, 255, 255, 0.85);
+  --color-glass: rgba(255, 255, 255, 0.46);
+  --color-glass-strong: rgba(255, 255, 255, 0.68);
 
   --glow: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.07), transparent);
 }
@@ -130,8 +130,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Guard against any stray subpixel/negative-margin overflow causing a
-     phantom horizontal scrollbar, especially on mobile. */
-  overflow-x: hidden;
+     phantom horizontal scrollbar, especially on mobile. overflow-x: clip, not
+     hidden -- hidden forces the paired overflow-y to compute as auto per spec,
+     which breaks position: sticky for the header/notifications bell (they'd
+     scroll away with the page instead of staying pinned). clip guards the
+     same horizontal overflow without that side effect. */
+  overflow-x: clip;
 }
 
 /* Smooth, cheap cross-fade when the theme flips. Utility classes with their
@@ -199,8 +203,8 @@ button {
      from the production bundle -- leaving Chrome/Firefox with no blur
      at all (glass-surface renders as a plain tinted panel with content
      showing through unblurred). */
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
 }
 
 .glass-surface-strong {
@@ -239,6 +243,15 @@ button {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* Fades the bottom edge of a capped-height scrollable list/panel (filter chip lists,
+   dropdown menus) so it's visually obvious there's more to scroll, without needing JS
+   to detect actual overflow -- the same edge-fade cue iOS/tvOS lists use. Harmless on a
+   list short enough to not scroll at all; the fade just sits unused past the content. */
+.scroll-fade-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent);
 }
 
 /* Glass transparency is a 3-way setting (Profile > Appearance): "System" (no override

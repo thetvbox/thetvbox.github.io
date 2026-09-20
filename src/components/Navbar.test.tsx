@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
+vi.mock('../contexts/ThemeContext', () => ({ useTheme: vi.fn() }))
 vi.mock('./NotificationsBell', () => ({
   default: ({
     open,
@@ -20,6 +21,7 @@ vi.mock('./NotificationsBell', () => ({
   ),
 }))
 
+import { useTheme } from '../contexts/ThemeContext'
 import Navbar from './Navbar'
 
 function renderNavbar(path = '/home') {
@@ -29,6 +31,16 @@ function renderNavbar(path = '/home') {
     </MemoryRouter>,
   )
 }
+
+beforeEach(() => {
+  vi.mocked(useTheme).mockReturnValue({
+    theme: 'dark',
+    toggleTheme: vi.fn(),
+    setTheme: vi.fn(),
+    transparency: 'system',
+    setTransparency: vi.fn(),
+  })
+})
 
 describe('Navbar', () => {
   it('applies the glass surface treatment to the desktop header and to the mobile tab bar', () => {
@@ -44,9 +56,10 @@ describe('Navbar', () => {
     expect(bottomNav).toHaveClass('inset-x-4')
   })
 
-  it('gives the notifications icon a floating glass backing, suppressed on desktop', () => {
+  it('gives the notifications and theme icons a floating glass backing, suppressed on desktop', () => {
     renderNavbar()
     expect(screen.getByText('notifications-closed')).toHaveClass('icon-float')
+    expect(screen.getByLabelText('Switch to light mode')).toHaveClass('icon-float')
   })
 
   it('renders the nav items, each appearing twice (desktop + mobile)', () => {
@@ -62,9 +75,18 @@ describe('Navbar', () => {
     expect(links[1]).toHaveClass('text-accent-400')
   })
 
-  it('does not render a theme toggle or bug-report trigger -- those live in Profile now', () => {
+  it('renders a theme toggle that calls toggleTheme, but no bug-report trigger -- that stays in Profile', () => {
+    const toggleTheme = vi.fn()
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'dark',
+      toggleTheme,
+      setTheme: vi.fn(),
+      transparency: 'system',
+      setTransparency: vi.fn(),
+    })
     renderNavbar()
-    expect(screen.queryByLabelText(/switch to (light|dark) mode/i)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('Switch to light mode'))
+    expect(toggleTheme).toHaveBeenCalledTimes(1)
     expect(screen.queryByLabelText('Report a bug')).not.toBeInTheDocument()
   })
 

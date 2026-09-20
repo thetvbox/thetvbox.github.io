@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { MOBILE_TAB_INDICATOR_SPRING, NAV_FADE_IN_TRANSITION, scrollBehavior } from '../lib/motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useTheme } from '../contexts/ThemeContext'
+import {
+  ICON_SWAP_TRANSITION,
+  MOBILE_TAB_INDICATOR_SPRING,
+  NAV_FADE_IN_TRANSITION,
+  scrollBehavior,
+} from '../lib/motion'
 import { useOutsideClick } from '../hooks/useOutsideClick'
 import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
@@ -102,6 +108,52 @@ function UserIcon({ active }: { active: boolean }) {
   )
 }
 
+function SunIcon() {
+  return (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="4.5" />
+      <path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a.6.6 0 0 0-.76-.76A9.7 9.7 0 1 0 21.26 15.26a.6.6 0 0 0-.76-.76Z" />
+    </svg>
+  )
+}
+
+/** Sun/moon icon button that toggles theme instantly, floating top bar's fast-access twin to Profile > Appearance's fuller Theme/Transparency controls. */
+function ThemeToggle({ className = '' }: { className?: string }) {
+  const { theme, toggleTheme } = useTheme()
+  const isDark = theme === 'dark'
+
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90 ${className}`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={theme}
+          initial={{ opacity: 0, rotate: -80, scale: 0.5 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 80, scale: 0.5 }}
+          transition={ICON_SWAP_TRANSITION}
+          className="flex"
+        >
+          {isDark ? <SunIcon /> : <MoonIcon />}
+        </motion.span>
+      </AnimatePresence>
+    </button>
+  )
+}
+
 const NAV_ITEMS = [
   { to: ROUTES.home, label: 'Home', Icon: HomeIcon },
   { to: ROUTES.activity, label: 'Activity', Icon: ActivityIcon },
@@ -110,7 +162,7 @@ const NAV_ITEMS = [
   { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
-/** Minimal iOS-Apple-TV-style chrome: a transparent top bar (just a floating notifications icon; each page supplies its own large title) and a floating glass bottom tab bar on mobile -- theme and bug-report live in Profile, not here. */
+/** Minimal iOS-Apple-TV-style chrome: a transparent top bar with floating theme/notifications icons (each page supplies its own large title) and a floating glass bottom tab bar on mobile with a sliding pill behind the active tab -- bug-report still lives in Profile's More menu, and Theme/Transparency also have a fuller home in Profile > Appearance. */
 export default function Navbar() {
   const location = useLocation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -164,7 +216,8 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div ref={utilityRef} className="relative ml-auto flex items-center">
+          <div ref={utilityRef} className="relative ml-auto flex items-center gap-1">
+            <ThemeToggle className="icon-float" />
             <NotificationsBell
               className="icon-float"
               open={notificationsOpen}
@@ -193,15 +246,17 @@ export default function Navbar() {
             {({ isActive }) => (
               <>
                 <HapticOverlay />
-                {isActive && (
-                  <motion.span
-                    layoutId="mobile-tab-dot"
-                    className="absolute top-1 h-1 w-1 rounded-full bg-accent-400"
-                    transition={MOBILE_TAB_INDICATOR_SPRING}
-                  />
-                )}
-                <Icon active={isActive} />
-                {label}
+                <span className="relative flex flex-col items-center gap-0.5 rounded-full px-4 py-1.5">
+                  {isActive && (
+                    <motion.span
+                      layoutId="mobile-tab-pill"
+                      className="absolute inset-0 rounded-full bg-accent-500/15 ring-1 ring-accent-500/40"
+                      transition={MOBILE_TAB_INDICATOR_SPRING}
+                    />
+                  )}
+                  <span className="relative"><Icon active={isActive} /></span>
+                  <span className="relative">{label}</span>
+                </span>
               </>
             )}
           </NavLink>
