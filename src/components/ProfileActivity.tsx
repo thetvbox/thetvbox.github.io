@@ -236,7 +236,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         <RatingDistribution ratings={ratings} className="mt-4" />
       </div>
 
-      <div className="no-scrollbar -mx-4 mb-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="-mx-4 mb-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <TabButton active={tab === 'diary'} onClick={() => setTab('diary')}>
           Diary
         </TabButton>

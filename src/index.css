@@ -146,21 +146,16 @@ body {
   }
 }
 
+/* No visible scrollbars anywhere, matching how native iOS/tvOS apps (and
+   the Apple TV app in particular) never show persistent scrollbar chrome --
+   scrolling itself is unaffected: touch, trackpad, wheel, and keyboard
+   scrolling all still work, only the track/thumb are hidden. */
 * {
-  scrollbar-color: var(--color-base-600) transparent;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background-color: var(--color-base-600);
-  border-radius: 999px;
+*::-webkit-scrollbar {
+  display: none;
 }
 
 input,
@@ -185,14 +180,6 @@ button {
   outline: 2px solid var(--color-accent-400);
   outline-offset: 2px;
   border-radius: 4px;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* Liquid-Glass-inspired translucent surface for app chrome -- backdrop blur
@@ -235,17 +222,55 @@ button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 40%);
 }
 
+/* Subtle glass backing for a chrome icon (the mobile top bar's notifications bell) that
+   floats directly over page content with no surrounding bar -- keeps it legible over
+   bright or busy imagery the same way the reference iOS app's top-right icons stay
+   legible, without needing a full persistent header. Not needed on desktop, where the
+   icon already sits inside the header's own glass bar. */
+.icon-float {
+  background-color: var(--color-glass);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+
+@media (min-width: 768px) {
+  .icon-float {
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Glass transparency is a 3-way setting (Profile > Appearance): "System" (no override
+   class) just leaves the OS's own prefers-reduced-transparency media query below in
+   charge; "Reduced" and "Full" are explicit choices that override it either way, so a
+   person can ask for solid chrome even when their OS allows transparency, or for glass
+   chrome even when their OS asks apps to avoid it. */
 @media (prefers-reduced-transparency: reduce) {
-  .glass-surface,
-  .glass-surface-strong {
+  :root:not(.transparency-full) .glass-surface,
+  :root:not(.transparency-full) .glass-surface-strong,
+  :root:not(.transparency-full) .icon-float {
     background-color: var(--color-base-900);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-  .glass-surface::before,
-  .glass-surface-strong::before {
+  :root:not(.transparency-full) .glass-surface::before,
+  :root:not(.transparency-full) .glass-surface-strong::before {
     display: none;
   }
+}
+
+.transparency-reduced .glass-surface,
+.transparency-reduced .glass-surface-strong,
+.transparency-reduced .icon-float {
+  background-color: var(--color-base-900);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.transparency-reduced .glass-surface::before,
+.transparency-reduced .glass-surface-strong::before {
+  display: none;
 }
 
 /* Collapsing large title, iOS Mail/Messages-style -- shrinks slightly as the
@@ -263,11 +288,12 @@ button {
 
   @keyframes large-title-collapse {
     from {
-      transform: scale(1);
+      transform: scale(1) translateY(0);
+      opacity: 1;
     }
     to {
-      transform: scale(0.86);
-      opacity: 0.85;
+      transform: scale(0.9) translateY(-8px);
+      opacity: 0;
     }
   }
 
