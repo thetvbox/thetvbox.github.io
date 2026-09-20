@@ -199,6 +199,7 @@ export async function restoreWatched(rows: EpisodeWatched[]): Promise<EpisodeWat
     episode_name: r.episode_name,
     watched_at: r.watched_at,
     watched_at_unknown: r.watched_at_unknown,
+    runtime_minutes: r.runtime_minutes,
   }))
   const { data, error } = await supabase
     .from(TABLE_EPISODE_WATCHED)

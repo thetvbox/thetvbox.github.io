@@ -18,13 +18,13 @@ describe('useToast', () => {
   it('showError sets an error toast with no action', () => {
     const { result } = renderHook(() => useToast())
     act(() => result.current.showError('Something failed'))
-    expect(result.current.toast).toEqual({ message: 'Something failed', tone: 'error' })
+    expect(result.current.toast).toEqual({ id: expect.any(Number), message: 'Something failed', tone: 'error' })
   })
 
   it('showInfo sets an info toast with no action', () => {
     const { result } = renderHook(() => useToast())
     act(() => result.current.showInfo('Link copied'))
-    expect(result.current.toast).toEqual({ message: 'Link copied', tone: 'info' })
+    expect(result.current.toast).toEqual({ id: expect.any(Number), message: 'Link copied', tone: 'info' })
   })
 
   it('dismiss clears the current toast', () => {

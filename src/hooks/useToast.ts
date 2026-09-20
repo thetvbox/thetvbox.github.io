@@ -2,10 +2,13 @@ import { useCallback, useState } from 'react'
 import type { ToastAction } from '../components/Toast'
 
 export interface ToastState {
+  id: number
   message: string
   tone: 'info' | 'error'
   action?: ToastAction
 }
+
+let nextToastId = 0
 
 /** One toast slot per page; a new toast replaces the last un-actioned one rather than stacking. */
 export function useToast() {
@@ -13,6 +16,7 @@ export function useToast() {
 
   const showUndo = useCallback((message: string, onUndo: () => void) => {
     setToast({
+      id: ++nextToastId,
       message,
       tone: 'info',
       action: {
@@ -26,11 +30,11 @@ export function useToast() {
   }, [])
 
   const showError = useCallback((message: string) => {
-    setToast({ message, tone: 'error' })
+    setToast({ id: ++nextToastId, message, tone: 'error' })
   }, [])
 
   const showInfo = useCallback((message: string) => {
-    setToast({ message, tone: 'info' })
+    setToast({ id: ++nextToastId, message, tone: 'info' })
   }, [])
 
   const dismiss = useCallback(() => setToast(null), [])

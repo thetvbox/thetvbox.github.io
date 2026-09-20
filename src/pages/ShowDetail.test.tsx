@@ -195,7 +195,7 @@ describe('ShowDetail', () => {
 
   it('renders an active toast message', () => {
     vi.mocked(useShowDetail).mockReturnValue(
-      baseState({ show: show(), toast: { message: 'Saved!', tone: 'info' } }),
+      baseState({ show: show(), toast: { id: 1, message: 'Saved!', tone: 'info' } }),
     )
     renderShowDetail()
     expect(screen.getByText('Toast: Saved!')).toBeInTheDocument()

@@ -10,8 +10,12 @@ import {
   fetchNotifications,
   fetchUnseenNotificationCount,
   markNotificationsSeenAndPrune,
+  restoreNotifications,
 } from '../lib/notifications'
 import { formatShortDate } from '../lib/date'
+import { pluralSuffix } from '../lib/format'
+import { useToast } from '../hooks/useToast'
+import Toast from './Toast'
 import { NOTIFICATIONS_POLL_MS, SKELETON_ROWS_COMPACT } from '../lib/constants'
 import { profileRoute, showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
@@ -114,9 +118,6 @@ function BellGlyph() {
 /** Small per-type badge shown at the corner of the actor's avatar. */
 function TypeBadge({ type, isFollowing }: { type: Notification['type']; isFollowing: boolean }) {
   if (type === 'follow') {
-    // Only surface the "+" badge for someone you don't already follow back -- showing it
-    // unconditionally (the previous behavior) misleadingly suggested you still needed to
-    // follow people you're already mutual with.
     if (isFollowing) return null
     return (
       <span
@@ -193,6 +194,7 @@ function NotificationsPanel({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [clearing, setClearing] = useState(false)
+  const { toast, showUndo, dismiss } = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -219,10 +221,18 @@ function NotificationsPanel({
   }, [userId])
 
   async function handleClearAll() {
+    const snapshot = notifications
     setClearing(true)
     try {
       await clearAllNotifications(userId)
       setNotifications([])
+      showUndo(`Cleared ${snapshot.length} notification${pluralSuffix(snapshot.length)}`, async () => {
+        try {
+          setNotifications(await restoreNotifications(snapshot))
+        } catch {
+          setError('Failed to undo. Try again.')
+        }
+      })
     } catch (err) {
       setError(errorMessage(err, 'Failed to clear notifications.'))
     } finally {
@@ -294,6 +304,7 @@ function NotificationsPanel({
           </ul>
         )}
       </div>
+      <Toast toast={toast} onDismiss={dismiss} />
     </DropdownPanel>
   )
 }

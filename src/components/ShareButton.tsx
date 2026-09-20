@@ -31,7 +31,7 @@ export default function ShareButton({ title, text, url, onResult, className = ''
       disabled={sharing}
       aria-label="Share"
       title="Share"
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline-strong text-base-400 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400 disabled:opacity-60 ${className}`}
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-hairline-strong text-base-400 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400 disabled:opacity-60 ${className}`}
     >
       <ShareGlyph />
     </button>

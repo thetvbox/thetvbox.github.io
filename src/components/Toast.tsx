@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TOAST_SECONDS } from '../lib/constants'
-import { EASE_OUT_EXPO } from '../lib/motion'
+import { TOAST_MOTION } from '../lib/motion'
 import type { ToastState } from '../hooks/useToast'
 
 export interface ToastAction {
@@ -15,11 +15,8 @@ export default function Toast({ toast, onDismiss }: { toast: ToastState | null; 
     <AnimatePresence>
       {toast && (
         <motion.div
-          key={toast.message}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+          key={toast.id}
+          {...TOAST_MOTION}
           className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4 md:bottom-6"
         >
           <ToastBody toast={toast} onDismiss={onDismiss} />

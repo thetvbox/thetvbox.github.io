@@ -53,3 +53,11 @@ export async function clearAllNotifications(userId: string): Promise<void> {
   const { error } = await supabase.from(TABLE_NOTIFICATIONS).delete().eq('user_id', userId)
   if (error) throw error
 }
+
+/** Re-inserts previously-deleted notification rows verbatim, to undo clearAllNotifications. */
+export async function restoreNotifications(rows: Notification[]): Promise<Notification[]> {
+  if (rows.length === 0) return []
+  const { data, error } = await supabase.from(TABLE_NOTIFICATIONS).upsert(rows, { onConflict: 'id' }).select()
+  if (error) throw error
+  return (data ?? []) as Notification[]
+}
