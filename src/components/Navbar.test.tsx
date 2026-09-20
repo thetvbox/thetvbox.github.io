@@ -62,6 +62,13 @@ describe('Navbar', () => {
     expect(screen.getByLabelText('Switch to light mode')).toHaveClass('icon-float')
   })
 
+  it('shows the TV Box wordmark on mobile too, with the same floating glass backing as the icons', () => {
+    renderNavbar()
+    const wordmark = screen.getByText('TV Box').closest('a')
+    expect(wordmark).not.toHaveClass('hidden')
+    expect(wordmark).toHaveClass('icon-float')
+  })
+
   it('renders the nav items, each appearing twice (desktop + mobile)', () => {
     renderNavbar()
     expect(screen.getAllByText('Home')).toHaveLength(2)

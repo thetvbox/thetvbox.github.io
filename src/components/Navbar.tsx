@@ -162,7 +162,7 @@ const NAV_ITEMS = [
   { to: ROUTES.profile, label: 'Profile', Icon: UserIcon },
 ] as const
 
-/** Minimal iOS-Apple-TV-style chrome: a transparent top bar with floating theme/notifications icons (each page supplies its own large title) and a floating glass bottom tab bar on mobile with a sliding pill behind the active tab -- bug-report still lives in Profile's More menu, and Theme/Transparency also have a fuller home in Profile > Appearance. */
+/** Minimal iOS-Apple-TV-style chrome: a transparent top bar with a floating "TV Box" wordmark on the left (icon added back in at the md breakpoint) balancing the floating theme/notifications icons on the right (each page supplies its own large title), and a floating glass bottom tab bar on mobile with a sliding pill behind the active tab -- bug-report still lives in Profile's More menu, and Theme/Transparency also have a fuller home in Profile > Appearance. */
 export default function Navbar() {
   const location = useLocation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -183,10 +183,10 @@ export default function Navbar() {
             to={ROUTES.home}
             onClick={() => handleNavClick(ROUTES.home)}
             viewTransition
-            className="hidden min-h-11 items-center gap-2 md:flex"
+            className="icon-float flex min-h-11 items-center gap-2 rounded-full px-3.5 md:px-0"
           >
-            <AppLogo size={24} />
-            <span className="font-display text-lg font-semibold tracking-tight text-base-100">
+            <AppLogo size={24} className="hidden md:block" />
+            <span className="font-display text-base font-semibold tracking-tight text-base-100 md:text-lg">
               TV Box
             </span>
           </NavLink>
