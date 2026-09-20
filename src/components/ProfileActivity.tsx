@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchRecentDatedWatched } from '../lib/watched'
@@ -17,6 +16,7 @@ import { createList, fetchListsForUser } from '../lib/lists'
 import { groupByDay } from '../lib/date'
 import { ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
 import { useAuth } from '../contexts/AuthContext'
+import Chip from './Chip'
 import HistorySection from './HistorySection'
 import RatingDistribution from './RatingDistribution'
 import Toast from './Toast'
@@ -237,21 +237,21 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
       </div>
 
       <div className="-mx-4 mb-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <TabButton active={tab === 'diary'} onClick={() => setTab('diary')}>
+        <Chip active={tab === 'diary'} onClick={() => setTab('diary')}>
           Diary
-        </TabButton>
-        <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
+        </Chip>
+        <Chip active={tab === 'history'} onClick={() => setTab('history')}>
           History
-        </TabButton>
-        <TabButton active={tab === 'watchlist'} onClick={() => setTab('watchlist')}>
+        </Chip>
+        <Chip active={tab === 'watchlist'} onClick={() => setTab('watchlist')}>
           Watchlist{watchlist.length > 0 ? ` · ${watchlist.length}` : ''}
-        </TabButton>
-        <TabButton active={tab === 'dropped'} onClick={() => setTab('dropped')}>
+        </Chip>
+        <Chip active={tab === 'dropped'} onClick={() => setTab('dropped')}>
           Dropped{dropped.length > 0 ? ` · ${dropped.length}` : ''}
-        </TabButton>
-        <TabButton active={tab === 'lists'} onClick={() => setTab('lists')}>
+        </Chip>
+        <Chip active={tab === 'lists'} onClick={() => setTab('lists')}>
           Lists{lists.length > 0 ? ` · ${lists.length}` : ''}
-        </TabButton>
+        </Chip>
       </div>
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
@@ -291,28 +291,5 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
       <Toast toast={toast} onDismiss={dismiss} />
     </div>
-  )
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`relative shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
-        active ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40' : 'text-base-400 hover:text-base-200'
-      }`}
-    >
-      {children}
-    </button>
   )
 }
