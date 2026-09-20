@@ -109,7 +109,7 @@ describe('Compare', () => {
     vi.mocked(fetchUserByUsername).mockResolvedValue(bob)
     renderCompare()
     await waitFor(() => expect(screen.getByText('You vs @bob')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByText('MembersPage')).toBeInTheDocument()
   })
 })

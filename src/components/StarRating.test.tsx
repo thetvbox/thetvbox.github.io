@@ -4,9 +4,6 @@ import * as framerMotionMock from '../test/framerMotionMock'
 
 vi.mock('framer-motion', () => framerMotionMock)
 
-const { triggerHaptic } = vi.hoisted(() => ({ triggerHaptic: vi.fn() }))
-vi.mock('../lib/haptics', () => ({ triggerHaptic }))
-
 import StarRating from './StarRating'
 
 function stubContainerRect(container: HTMLElement) {
@@ -38,12 +35,10 @@ describe('StarRating', () => {
     expect(screen.queryByLabelText('5 stars')).not.toBeInTheDocument()
   })
 
-  it('fires a haptic tick when a tap commits a rating', () => {
-    triggerHaptic.mockClear()
-    const onChange = vi.fn()
-    render(<StarRating value={0} onChange={onChange} />)
-    fireEvent.click(screen.getByLabelText('3 stars'))
-    expect(triggerHaptic).toHaveBeenCalledTimes(1)
+  it('gives each star tap-target its own haptic switch overlay, for iOS Safari\'s native tap feedback', () => {
+    const { container } = render(<StarRating value={0} onChange={vi.fn()} />)
+    // 5 stars, half + full-star tap targets each -- 10 overlays total.
+    expect(container.querySelectorAll('input[type="checkbox"][aria-hidden="true"]')).toHaveLength(10)
   })
 
   it('clicking a full-star half commits that value', () => {

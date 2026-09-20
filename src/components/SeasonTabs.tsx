@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CheckGlyph } from './ShowDetailGlyphs'
+import HapticOverlay from './HapticOverlay'
 import type { SeasonSegment } from '../lib/seasonProgress'
 import type { TmdbSeasonSummary } from '../types'
 
@@ -38,6 +39,7 @@ export default function SeasonTabs({ seasons, active, onSelect, segments = [] }:
             title={segment ? `${label} · ${segment.watched}/${segment.total} watched` : undefined}
             className="relative shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors duration-200"
           >
+            <HapticOverlay />
             {isActive && (
               <motion.span
                 layoutId="season-pill"

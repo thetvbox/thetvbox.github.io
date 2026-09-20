@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import type { KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { GLASS_SPRING_SNAPPY } from '../lib/motion'
+import HapticOverlay from './HapticOverlay'
 
 interface SegmentedOption<T extends string> {
   value: T
@@ -84,6 +85,7 @@ export default function SegmentedControl<T extends string>({
               active ? 'text-accent-300' : 'text-base-400 hover:text-base-200'
             }`}
           >
+            <HapticOverlay />
             {active && (
               <motion.span
                 layoutId={`segmented-${label}`}

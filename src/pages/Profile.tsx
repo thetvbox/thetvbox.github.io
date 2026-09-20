@@ -24,6 +24,16 @@ export default function Profile() {
   const menuRef = useRef<HTMLDivElement>(null)
   useCloseOnNavigate(() => setMenuOpen(false))
 
+  /** Opens a menu-triggered sheet on its own tick, after the "More" menu's own close has
+   * committed -- closing the menu and mounting a new AnimatePresence sheet in the same
+   * commit can leave the menu's exit animation stuck forever (never unmounted, just
+   * invisible at opacity 0). Same underlying framer-motion/React 19 concurrent-rendering
+   * issue as the route-transition fix in App.tsx, triggered here by two sibling
+   * AnimatePresence trees updating together instead of nested Suspense. */
+  function openAfterMenuCloses(setOpen: (value: boolean) => void) {
+    setTimeout(() => setOpen(true), 0)
+  }
+
   useEffect(() => {
     if (!menuOpen) return
     function handlePointerDown(e: PointerEvent) {
@@ -71,8 +81,8 @@ export default function Profile() {
                 username={user?.username ?? ''}
                 onSignOut={signOut}
                 onClose={() => setMenuOpen(false)}
-                onOpenShortcuts={() => setShortcutsOpen(true)}
-                onOpenPush={() => setPushOpen(true)}
+                onOpenShortcuts={() => openAfterMenuCloses(setShortcutsOpen)}
+                onOpenPush={() => openAfterMenuCloses(setPushOpen)}
               />
             )}
           </AnimatePresence>

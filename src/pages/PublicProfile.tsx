@@ -12,6 +12,7 @@ import Toast from '../components/Toast'
 import { useToast } from '../hooks/useToast'
 import { ROUTES, compareRoute } from '../lib/routes'
 import { useGoBack } from '../hooks/useGoBack'
+import BackButton from '../components/BackButton'
 import { errorMessage } from '../lib/format'
 import type { AppUser } from '../types'
 
@@ -52,13 +53,7 @@ export default function PublicProfile() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <button
-        type="button"
-        onClick={goBack}
-        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
-      >
-        &larr; Back
-      </button>
+      <BackButton onClick={goBack} className="mb-4" />
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <Avatar username={profile === undefined ? '' : profile.username} size="lg" />

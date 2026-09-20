@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import BottomSheet from './BottomSheet'
 import PanelHeader from './PanelHeader'
+import HapticOverlay from './HapticOverlay'
 import Toast from './Toast'
 import { isPushSubscribed, isPushSupported, subscribeToPush, unsubscribeFromPush } from '../lib/pushNotifications'
 import { useToast } from '../hooks/useToast'
@@ -69,28 +70,28 @@ export default function PushNotificationsPanel({ userId, onClose }: PushNotifica
   }
 
   return (
-    <BottomSheet onClose={onClose} label="Push Notifications" className="p-4">
-      <PanelHeader title="Push Notifications" onClose={onClose} />
+    <BottomSheet onClose={onClose} label="Push Notifications" className="p-5 sm:p-6">
+      <PanelHeader title="Push Notifications" onClose={onClose} icon={<BellIcon />} />
 
       {status === 'loading' && <div className="h-14 animate-pulse rounded-xl bg-base-850/70" />}
 
       {status === 'unsupported' && (
-        <p className="text-xs leading-relaxed text-base-500">
+        <p className="text-sm leading-relaxed text-base-400">
           This browser doesn&apos;t support push notifications. Try a recent version of Chrome, Safari, or
           Edge, or install TV Box to your home screen first.
         </p>
       )}
 
       {status === 'denied' && (
-        <p className="text-xs leading-relaxed text-base-500">
+        <p className="text-sm leading-relaxed text-base-400">
           Notifications are blocked for TV Box in this browser. Allow them in your browser or system
           settings, then reopen this panel.
         </p>
       )}
 
       {status === 'unsubscribed' && (
-        <>
-          <p className="mb-4 text-xs leading-relaxed text-base-500">
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-base-400">
             Get a notification on this device when someone follows you, rates a show you follow, or
             finishes one.
           </p>
@@ -98,30 +99,41 @@ export default function PushNotificationsPanel({ userId, onClose }: PushNotifica
             type="button"
             onClick={handleEnable}
             disabled={busy}
-            className="w-full min-h-11 rounded-lg bg-accent-500 py-2.5 text-sm font-semibold text-white shadow-sm shadow-accent-500/30 transition-colors duration-200 hover:bg-accent-600 disabled:opacity-50"
+            className="relative w-full min-h-11 rounded-xl bg-accent-500 py-2.5 text-sm font-semibold text-white shadow-sm shadow-accent-500/30 transition-colors duration-200 hover:bg-accent-600 disabled:opacity-50"
           >
+            <HapticOverlay />
             {busy ? 'Enabling…' : 'Enable push notifications'}
           </button>
-        </>
+        </div>
       )}
 
       {status === 'subscribed' && (
-        <>
-          <p className="mb-4 text-xs leading-relaxed text-base-500">
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-base-400">
             Push notifications are on for this device.
           </p>
           <button
             type="button"
             onClick={handleDisable}
             disabled={busy}
-            className="w-full min-h-11 rounded-lg border border-hairline-strong py-2.5 text-sm font-medium text-base-300 transition-colors duration-200 hover:border-danger/40 hover:text-danger disabled:opacity-50"
+            className="relative w-full min-h-11 rounded-xl border border-hairline-strong py-2.5 text-sm font-medium text-base-300 transition-colors duration-200 hover:border-danger/40 hover:text-danger disabled:opacity-50"
           >
+            <HapticOverlay />
             {busy ? 'Disabling…' : 'Disable on this device'}
           </button>
-        </>
+        </div>
       )}
 
       <Toast toast={toast} onDismiss={dismiss} />
     </BottomSheet>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </svg>
   )
 }

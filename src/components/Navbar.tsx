@@ -7,6 +7,7 @@ import { ROUTES } from '../lib/routes'
 import AppLogo from './AppLogo'
 import ReportBugButton from './ReportBugButton'
 import NotificationsBell from './NotificationsBell'
+import HapticOverlay from './HapticOverlay'
 
 const linkBase =
   'relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-200 md:flex-row md:gap-1.5 md:text-sm md:px-3.5 md:py-1.5 md:rounded-full'
@@ -129,8 +130,9 @@ function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
+      className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
     >
+      <HapticOverlay />
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={theme}
@@ -254,6 +256,7 @@ export default function Navbar() {
           >
             {({ isActive }) => (
               <>
+                <HapticOverlay />
                 {isActive && (
                   <motion.span
                     layoutId="mobile-tab-dot"

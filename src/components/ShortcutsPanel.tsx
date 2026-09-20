@@ -90,10 +90,10 @@ export default function ShortcutsPanel({ userId, onClose }: ShortcutsPanelProps)
   }
 
   return (
-    <BottomSheet onClose={onClose} label="Shortcuts & Siri" className="max-h-[85vh] overflow-y-auto p-4">
-      <PanelHeader title="Shortcuts & Siri" onClose={onClose} />
+    <BottomSheet onClose={onClose} label="Shortcuts & Siri" className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">
+      <PanelHeader title="Shortcuts & Siri" onClose={onClose} icon={<ShortcutIcon />} />
 
-      <p className="mb-4 text-xs leading-relaxed text-base-500">
+      <p className="mb-4 text-sm leading-relaxed text-base-400">
         Create a token to log episodes from an iOS Shortcut (and Siri) without opening the app.
       </p>
 
@@ -234,5 +234,13 @@ export default function ShortcutsPanel({ userId, onClose }: ShortcutsPanelProps)
 
       <Toast toast={toast} onDismiss={dismiss} />
     </BottomSheet>
+  )
+}
+
+function ShortcutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z" />
+    </svg>
   )
 }

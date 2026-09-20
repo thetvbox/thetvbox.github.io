@@ -118,7 +118,7 @@ describe('Recap', () => {
   it('goes back to your profile when this is the only screen in history', async () => {
     renderRecap()
     await waitFor(() => expect(screen.getByText(/Nothing tracked yet/)).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByText('ProfilePage')).toBeInTheDocument()
   })
 })

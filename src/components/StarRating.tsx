@@ -2,7 +2,7 @@ import { useId, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import { MAX_RATING, RATING_STEP } from '../lib/constants'
-import { triggerHaptic } from '../lib/haptics'
+import HapticOverlay from './HapticOverlay'
 
 const STAR_INDEXES = Array.from({ length: MAX_RATING }, (_, i) => i + 1)
 
@@ -82,7 +82,6 @@ export default function StarRating({
   function handlePick(starIndex: number, half: boolean) {
     if (!interactive || !onChange) return
     const picked = half ? starIndex - RATING_STEP : starIndex
-    triggerHaptic()
     onChange(picked === value ? 0 : picked)
   }
 
@@ -108,7 +107,6 @@ export default function StarRating({
     dragRef.current = null
     if (!interactive || !drag || drag.pointerId !== e.pointerId || !drag.dragging || !onChange) return
     const picked = valueFromClientX(e.clientX)
-    triggerHaptic()
     onChange(picked === value ? 0 : picked)
     setHoverValue(null)
   }
@@ -150,21 +148,25 @@ export default function StarRating({
                   role="radio"
                   aria-checked={value === starIndex - RATING_STEP}
                   aria-label={`${starIndex - RATING_STEP} stars`}
-                  className="h-full w-1/2 cursor-pointer"
+                  className="relative h-full w-1/2 cursor-pointer"
                   onMouseEnter={() => setHoverValue(starIndex - RATING_STEP)}
                   onFocus={() => setHoverValue(starIndex - RATING_STEP)}
                   onClick={() => handlePick(starIndex, true)}
-                />
+                >
+                  <HapticOverlay />
+                </button>
                 <button
                   type="button"
                   role="radio"
                   aria-checked={value === starIndex}
                   aria-label={`${starIndex} stars`}
-                  className="h-full w-1/2 cursor-pointer"
+                  className="relative h-full w-1/2 cursor-pointer"
                   onMouseEnter={() => setHoverValue(starIndex)}
                   onFocus={() => setHoverValue(starIndex)}
                   onClick={() => handlePick(starIndex, false)}
-                />
+                >
+                  <HapticOverlay />
+                </button>
               </span>
             )}
           </motion.div>

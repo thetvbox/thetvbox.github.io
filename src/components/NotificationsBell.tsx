@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchFollowingIds } from '../lib/follows'
 import { useCloseOnNavigate } from '../hooks/useCloseOnNavigate'
 import { useAppBadge } from '../hooks/useAppBadge'
 import {
@@ -111,10 +112,17 @@ function BellGlyph() {
 }
 
 /** Small per-type badge shown at the corner of the actor's avatar. */
-function TypeBadge({ type }: { type: Notification['type'] }) {
+function TypeBadge({ type, isFollowing }: { type: Notification['type']; isFollowing: boolean }) {
   if (type === 'follow') {
+    // Only surface the "+" badge for someone you don't already follow back -- showing it
+    // unconditionally (the previous behavior) misleadingly suggested you still needed to
+    // follow people you're already mutual with.
+    if (isFollowing) return null
     return (
-      <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-500 text-base-950 ring-2 ring-base-900">
+      <span
+        aria-label="Not following back"
+        className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-500 text-base-950 ring-2 ring-base-900"
+      >
         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
@@ -143,14 +151,14 @@ function TypeBadge({ type }: { type: Notification['type'] }) {
 function NotificationText({ n }: { n: Notification }) {
   if (n.type === 'follow') {
     return (
-      <p className="min-w-0 flex-1 truncate text-xs text-base-200">
+      <p className="min-w-0 flex-1 text-xs leading-relaxed text-base-200 line-clamp-2">
         <span className="font-medium text-base-100">@{n.actor_username}</span> started following you
       </p>
     )
   }
   if (n.type === 'show_rated') {
     return (
-      <p className="min-w-0 flex-1 truncate text-xs text-base-200">
+      <p className="min-w-0 flex-1 text-xs leading-relaxed text-base-200 line-clamp-2">
         <span className="font-medium text-base-100">@{n.actor_username}</span> rated{' '}
         <span className="font-medium">{n.show_name}</span>
         {n.rating !== null && <span className="text-base-400"> · {n.rating.toFixed(1)}★</span>}
@@ -158,7 +166,7 @@ function NotificationText({ n }: { n: Notification }) {
     )
   }
   return (
-    <p className="min-w-0 flex-1 truncate text-xs text-base-200">
+    <p className="min-w-0 flex-1 text-xs leading-relaxed text-base-200 line-clamp-2">
       <span className="font-medium text-base-100">@{n.actor_username}</span> finished{' '}
       <span className="font-medium">{n.show_name}</span>
       {n.episode_count ? <span className="text-base-400"> · {n.episode_count} episodes</span> : null}
@@ -181,15 +189,19 @@ function NotificationsPanel({
   onClose: () => void
 }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    fetchNotifications(userId)
-      .then((rows) => {
-        if (!cancelled) setNotifications(rows)
+    Promise.all([fetchNotifications(userId), fetchFollowingIds(userId)])
+      .then(([rows, following]) => {
+        if (!cancelled) {
+          setNotifications(rows)
+          setFollowingIds(following)
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(errorMessage(err, 'Failed to load notifications.'))
@@ -219,7 +231,7 @@ function NotificationsPanel({
   }
 
   return (
-    <DropdownPanel onClose={onClose} label="Notifications" className="w-80 p-4">
+    <DropdownPanel onClose={onClose} label="Notifications" className="w-96 p-4">
       <PanelHeader
         title="Notifications"
         onClose={onClose}
@@ -239,7 +251,7 @@ function NotificationsPanel({
 
       {error && <ErrorText className="mb-2 text-xs">{error}</ErrorText>}
 
-      <div className="h-64 overflow-y-auto">
+      <div className="max-h-[26rem] overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
@@ -247,7 +259,7 @@ function NotificationsPanel({
             ))}
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+          <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-base-850/70 text-base-500">
               <BellGlyph />
             </span>
@@ -262,17 +274,17 @@ function NotificationsPanel({
                 <Link
                   to={notificationHref(n)}
                   onClick={onClose}
-                  className={`flex items-center gap-2.5 rounded-xl p-2 transition-colors duration-200 hover:bg-hover ${
+                  className={`flex items-start gap-2.5 rounded-xl p-2.5 transition-colors duration-200 hover:bg-hover ${
                     n.seen_at ? '' : 'bg-accent-500/5'
                   }`}
                 >
                   <span className="relative shrink-0">
                     <Avatar username={n.actor_username} size="xs" />
-                    <TypeBadge type={n.type} />
+                    <TypeBadge type={n.type} isFollowing={followingIds.has(n.actor_id)} />
                   </span>
                   {n.type !== 'follow' && <PosterThumb posterPath={n.show_poster_path} size="sm" />}
                   <NotificationText n={n} />
-                  <div className="flex shrink-0 flex-col items-end gap-1">
+                  <div className="flex shrink-0 flex-col items-end gap-1 pt-0.5">
                     {!n.seen_at && <span className="h-1.5 w-1.5 rounded-full bg-accent-400" aria-hidden="true" />}
                     <span className="text-[10px] text-base-500">{formatShortDate(n.created_at)}</span>
                   </div>

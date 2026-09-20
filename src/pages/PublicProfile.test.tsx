@@ -81,7 +81,7 @@ describe('PublicProfile', () => {
     vi.mocked(fetchUserByUsername).mockResolvedValue(bob)
     renderProfile('bob')
     await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '\u2190 Back' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByText('MembersPage')).toBeInTheDocument()
   })
 })

@@ -12,6 +12,7 @@ import { formatShortDate } from '../lib/date'
 import { staggerRowMotion } from '../lib/motion'
 import { offscreenSkipStyle } from '../lib/layout'
 import { profileRoute, showRoute } from '../lib/routes'
+import BackButton from '../components/BackButton'
 import CenteredMessage from '../components/CenteredMessage'
 import StarGlyph from '../components/StarGlyph'
 import { errorMessage } from '../lib/format'
@@ -77,12 +78,7 @@ export default function ShowDiary() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <Link
-        to={profileRoute(username ?? '')}
-        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
-      >
-        &larr; {isMe ? 'Your' : `@${username}'s`} shows
-      </Link>
+      <BackButton to={profileRoute(username ?? '')} label={`${isMe ? 'Your' : `@${username}'s`} shows`} className="mb-4" />
 
       {loading ? (
         <div className="animate-pulse space-y-4">

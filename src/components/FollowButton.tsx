@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import HapticOverlay from './HapticOverlay'
 
 interface FollowButtonProps {
   isFollowing: boolean
@@ -34,7 +35,7 @@ export default function FollowButton({
       onClick={() => (isFollowing ? onUnfollow() : onFollow())}
       onMouseEnter={() => supportsHover && setHovering(true)}
       onMouseLeave={() => supportsHover && setHovering(false)}
-      className={`shrink-0 rounded-full font-medium transition-colors duration-200 disabled:opacity-50 ${sizeClasses} ${
+      className={`relative shrink-0 rounded-full font-medium transition-colors duration-200 disabled:opacity-50 ${sizeClasses} ${
         isFollowing
           ? hovering
             ? 'bg-danger/10 text-danger ring-1 ring-danger/40'
@@ -42,6 +43,7 @@ export default function FollowButton({
           : 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40 hover:bg-accent-500/25'
       }`}
     >
+      <HapticOverlay />
       {saving ? '…' : label}
     </button>
   )

@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -35,11 +34,6 @@ function PageLoader() {
       <Spinner />
     </div>
   )
-}
-
-/** Wraps a lazy page in its own Suspense boundary inside Routes. */
-function Page({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
 }
 
 function AppShell() {
@@ -79,127 +73,107 @@ function AppShell() {
   return (
     <div className="relative min-h-dvh bg-base-950">
       {showNav && <Navbar />}
-      <AnimatePresence mode="popLayout">
-        <motion.div key={location.pathname} {...ROUTE_TRANSITION_MOTION}>
-          <ErrorBoundary>
-            <Routes location={location}>
-              <Route path={ROUTES.login} element={<Login />} />
-              <Route
-                path={ROUTES.home}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+      <Suspense fallback={<PageLoader />}>
+        <AnimatePresence mode="popLayout">
+          <motion.div key={location.pathname} {...ROUTE_TRANSITION_MOTION}>
+            <ErrorBoundary>
+              <Routes location={location}>
+                <Route path={ROUTES.login} element={<Login />} />
+                <Route
+                  path={ROUTES.home}
+                  element={
+                    <ProtectedRoute>
                       <Home />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.activity}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.activity}
+                  element={
+                    <ProtectedRoute>
                       <Activity />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.search}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.search}
+                  element={
+                    <ProtectedRoute>
                       <Search />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.show}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.show}
+                  element={
+                    <ProtectedRoute>
                       <ShowDetail />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.profile}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.profile}
+                  element={
+                    <ProtectedRoute>
                       <Profile />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.members}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.members}
+                  element={
+                    <ProtectedRoute>
                       <Members />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.publicProfile}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.publicProfile}
+                  element={
+                    <ProtectedRoute>
                       <PublicProfile />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.showDiary}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.showDiary}
+                  element={
+                    <ProtectedRoute>
                       <ShowDiary />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.compare}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.compare}
+                  element={
+                    <ProtectedRoute>
                       <Compare />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.listDetail}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.listDetail}
+                  element={
+                    <ProtectedRoute>
                       <ListDetail />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.recap}
-                element={
-                  <ProtectedRoute>
-                    <Page>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path={ROUTES.recap}
+                  element={
+                    <ProtectedRoute>
                       <Recap />
-                    </Page>
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
-              <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
-            </Routes>
-          </ErrorBoundary>
-        </motion.div>
-      </AnimatePresence>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
+                <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
+              </Routes>
+            </ErrorBoundary>
+          </motion.div>
+        </AnimatePresence>
+      </Suspense>
       <AnimatePresence>
         {showPushOnboarding && user && (
           <PushNotificationsPanel

@@ -12,6 +12,7 @@ import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { LARGE_ACTIVITY_FETCH_LIMIT, SKELETON_ROWS_WIDE } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
 import { useGoBack } from '../hooks/useGoBack'
+import BackButton from '../components/BackButton'
 import EmptyState from '../components/EmptyState'
 import PosterThumb from '../components/PosterThumb'
 import StarGlyph from '../components/StarGlyph'
@@ -72,13 +73,7 @@ export default function Recap() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <button
-        type="button"
-        onClick={goBack}
-        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
-      >
-        &larr; Back
-      </button>
+      <BackButton onClick={goBack} className="mb-4" />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <motion.h1 {...PAGE_HEADER_MOTION} className="font-display text-xl font-semibold text-base-100 sm:text-2xl">
           Your year in TV

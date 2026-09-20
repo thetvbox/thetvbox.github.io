@@ -28,8 +28,8 @@ import ActivityRow from '../components/ActivityRow'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
-import Chip from '../components/Chip'
 import DropdownPanel from '../components/DropdownPanel'
+import { CheckGlyph } from '../components/ShowDetailGlyphs'
 import SegmentedControl from '../components/SegmentedControl'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
@@ -528,24 +528,44 @@ function GenreFilterPanel({
   onClose: () => void
 }) {
   return (
-    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-64 p-3">
+    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-60 p-2">
       {selected.size > 0 && (
         <button
           type="button"
           onClick={onClear}
-          className="mb-2 text-xs font-medium text-accent-400 hover:underline"
+          className="mb-1 block px-1.5 pt-0.5 text-xs font-medium text-accent-400 hover:underline"
         >
           Clear
         </button>
       )}
-      <div className="flex flex-wrap gap-1.5">
+      <ul className="max-h-64 space-y-1 overflow-y-auto">
         {genres.map((genre) => (
-          <Chip key={genre} active={selected.has(genre)} onClick={() => onToggle(genre)}>
-            {genre}
-          </Chip>
+          <li key={genre}>
+            <GenreRow active={selected.has(genre)} onClick={() => onToggle(genre)}>
+              {genre}
+            </GenreRow>
+          </li>
         ))}
-      </div>
+      </ul>
     </DropdownPanel>
+  )
+}
+
+/** One row in the genre list -- the same visual pattern as PersonRow below, so "Filter by genre"
+ * reads as the same kind of dropdown as "Filter by person" instead of a wrapped chip cloud. */
+function GenreRow({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm font-medium transition-colors duration-200 ${
+        active ? 'bg-accent-500/15 text-accent-300' : 'text-base-200 hover:bg-hover'
+      }`}
+    >
+      <CheckGlyph filled={active} size={15} />
+      <span className="truncate">{children}</span>
+    </button>
   )
 }
 

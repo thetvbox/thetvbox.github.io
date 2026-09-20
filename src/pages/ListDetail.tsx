@@ -6,6 +6,7 @@ import { fetchUserByUsername } from '../lib/users'
 import { addShowToList, deleteList, fetchList, fetchListItems, removeShowFromList } from '../lib/lists'
 import Toast from '../components/Toast'
 import ShareButton from '../components/ShareButton'
+import BackButton from '../components/BackButton'
 import CenteredMessage from '../components/CenteredMessage'
 import EmptyState from '../components/EmptyState'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
@@ -112,12 +113,11 @@ export default function ListDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-      <Link
+      <BackButton
         to={`${profileRoute(username ?? '')}?${PROFILE_LISTS_TAB_QUERY}`}
-        className="mb-4 inline-block text-xs text-base-500 hover:text-base-300"
-      >
-        &larr; {isMine ? 'Your' : `@${username}'s`} lists
-      </Link>
+        label={`${isMine ? 'Your' : `@${username}'s`} lists`}
+        className="mb-4"
+      />
 
       {loading ? (
         <div className="animate-pulse space-y-2">

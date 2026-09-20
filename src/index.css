@@ -17,11 +17,15 @@
   --color-base-800: #191921;
   --color-base-750: #1e1e27;
   --color-base-700: #26262f;
-  --color-base-600: #3a3a46;
-  --color-base-500: #55555f;
-  --color-base-400: #858593;
-  --color-base-300: #a3a3ae;
-  --color-base-200: #cfcfd8;
+  --color-base-600: #454550;
+  /* base-500 through base-200 nudged brighter than a strict tonal ramp would give, on
+     purpose -- text at these steps sits on translucent glass panels over busy, changing
+     content, where nominal contrast against a flat background understates how hard it
+     actually is to read. */
+  --color-base-500: #6b6b78;
+  --color-base-400: #9797a6;
+  --color-base-300: #b4b4be;
+  --color-base-200: #d8d8e0;
   --color-base-100: #ececf1;
 
   /* Accent (violet) */
@@ -53,8 +57,8 @@
   /* Liquid-Glass-style translucent surface tint, for chrome that should
      read as glass (nav bars, modals, dropdowns, sheets) rather than a flat
      solid panel -- paired with the .glass-surface utility below. */
-  --color-glass: rgba(13, 13, 18, 0.55);
-  --color-glass-strong: rgba(13, 13, 18, 0.78);
+  --color-glass: rgba(13, 13, 18, 0.6);
+  --color-glass-strong: rgba(13, 13, 18, 0.85);
 
   --animate-fade-in: fade-in 0.35s ease-out both;
   --animate-rise: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -86,8 +90,8 @@
   --color-base-800: #f1f5f9;
   --color-base-750: #e7ebf1;
   --color-base-700: #cbd5e1;
-  --color-base-600: #94a3b8;
-  --color-base-500: #64748b;
+  --color-base-600: #82909f;
+  --color-base-500: #56637a;
   --color-base-400: #475569;
   --color-base-300: #334155;
   --color-base-200: #1e293b;
@@ -110,8 +114,8 @@
   --color-hover: rgba(15, 23, 42, 0.045);
   --color-hover-strong: rgba(15, 23, 42, 0.075);
 
-  --color-glass: rgba(255, 255, 255, 0.55);
-  --color-glass-strong: rgba(255, 255, 255, 0.78);
+  --color-glass: rgba(255, 255, 255, 0.6);
+  --color-glass-strong: rgba(255, 255, 255, 0.85);
 
   --glow: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.07), transparent);
 }
@@ -122,6 +126,7 @@ body {
   background-attachment: fixed;
   color: var(--color-base-200);
   font-family: var(--font-sans);
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Guard against any stray subpixel/negative-margin overflow causing a
@@ -200,8 +205,15 @@ button {
 .glass-surface,
 .glass-surface-strong {
   background-color: var(--color-glass);
-  backdrop-filter: blur(20px) saturate(180%);
+  /* -webkit- prefix first, standard property last: some CSS minifiers
+     (Lightning CSS, used by Tailwind v4's build) dedupe a prefixed +
+     unprefixed pair by keeping whichever is declared last, so the
+     standard property must come after the prefix or it gets stripped
+     from the production bundle -- leaving Chrome/Firefox with no blur
+     at all (glass-surface renders as a plain tinted panel with content
+     showing through unblurred). */
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
 }
 
 .glass-surface-strong {
@@ -227,8 +239,8 @@ button {
   .glass-surface,
   .glass-surface-strong {
     background-color: var(--color-base-900);
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .glass-surface::before,
   .glass-surface-strong::before {

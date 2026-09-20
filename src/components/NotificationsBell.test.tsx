@@ -11,6 +11,7 @@ vi.mock('../lib/notifications', () => ({
   markNotificationsSeenAndPrune: vi.fn(),
   clearAllNotifications: vi.fn(),
 }))
+vi.mock('../lib/follows', () => ({ fetchFollowingIds: vi.fn() }))
 
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -19,6 +20,7 @@ import {
   fetchUnseenNotificationCount,
   markNotificationsSeenAndPrune,
 } from '../lib/notifications'
+import { fetchFollowingIds } from '../lib/follows'
 import NotificationsBell from './NotificationsBell'
 import { NOTIFICATIONS_POLL_MS } from '../lib/constants'
 import type { AppUser, Notification } from '../types'
@@ -63,6 +65,7 @@ beforeEach(() => {
   vi.mocked(fetchUnseenNotificationCount).mockReset().mockResolvedValue(0)
   vi.mocked(markNotificationsSeenAndPrune).mockReset().mockResolvedValue(undefined)
   vi.mocked(clearAllNotifications).mockReset().mockResolvedValue(undefined)
+  vi.mocked(fetchFollowingIds).mockReset().mockResolvedValue(new Set())
 })
 
 describe('NotificationsBell', () => {
@@ -115,6 +118,22 @@ describe('NotificationsBell', () => {
     await waitFor(() => expect(screen.getByText('started following you')).toBeInTheDocument())
     expect(screen.getByText('Severance')).toBeInTheDocument()
     expect(markNotificationsSeenAndPrune).toHaveBeenCalledWith('me1')
+  })
+
+  it('shows the "not following back" badge for a new follower you do not follow yet', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set())
+    vi.mocked(fetchNotifications).mockResolvedValue([notification({ actor_id: 'bob1', type: 'follow' })])
+    renderBell(true)
+    await waitFor(() => expect(screen.getByText('started following you')).toBeInTheDocument())
+    expect(screen.getByLabelText('Not following back')).toBeInTheDocument()
+  })
+
+  it('hides the "not following back" badge once you already follow that person back', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['bob1']))
+    vi.mocked(fetchNotifications).mockResolvedValue([notification({ actor_id: 'bob1', type: 'follow' })])
+    renderBell(true)
+    await waitFor(() => expect(screen.getByText('started following you')).toBeInTheDocument())
+    expect(screen.queryByLabelText('Not following back')).not.toBeInTheDocument()
   })
 
   it('clears all notifications', async () => {

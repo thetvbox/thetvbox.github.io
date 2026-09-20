@@ -1,18 +1,28 @@
 import type { ReactNode } from 'react'
 
-/** Shared header row for panels/dropdowns: a title, optional secondary actions, and an icon close button. */
+/** Shared header row for panels/dropdowns: an optional leading icon chip, a title, optional
+ * secondary actions, and an icon close button. */
 export default function PanelHeader({
   title,
   onClose,
   actions,
+  icon,
 }: {
   title: ReactNode
   onClose: () => void
   actions?: ReactNode
+  icon?: ReactNode
 }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <p className="text-sm font-semibold text-base-100">{title}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        {icon && (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/25">
+            {icon}
+          </span>
+        )}
+        <p className="truncate text-sm font-semibold text-base-100">{title}</p>
+      </div>
       <div className="flex shrink-0 items-center gap-2">
         {actions}
         <button
