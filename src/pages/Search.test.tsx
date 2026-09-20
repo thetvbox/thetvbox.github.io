@@ -179,8 +179,10 @@ describe('Search', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Genre' }))
     fireEvent.click(within(dialog).getByText('Drama'))
     fireEvent.click(within(dialog).getByText('Comedy'))
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Platform' }))
     fireEvent.click(within(dialog).getByText('Netflix'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Filters · 2' })).toBeInTheDocument())
@@ -197,7 +199,9 @@ describe('Search', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     let dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Genre' }))
     fireEvent.click(within(dialog).getByText('Drama'))
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Platform' }))
     fireEvent.click(within(dialog).getByText('Hulu'))
 
     await waitFor(() => expect(screen.getByText('No trending shows match the selected filters.')).toBeInTheDocument())

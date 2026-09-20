@@ -262,7 +262,7 @@ function NotificationsPanel({
 
       {error && <ErrorText className="mb-2 text-xs">{error}</ErrorText>}
 
-      <div className="max-h-[26rem] overflow-y-auto">
+      <div className="scroll-fade-bottom max-h-[26rem] overflow-y-auto pb-1">
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (

@@ -17,7 +17,7 @@ function facets(overrides: Partial<SearchFilterFacets> = {}): SearchFilterFacets
 }
 
 describe('SearchFiltersPanel', () => {
-  it('renders a chip for each platform and genre facet', () => {
+  it('renders a chip for each facet in the active category, switching via the segmented control', () => {
     render(
       <SearchFiltersPanel
         facets={facets({ platforms: ['Netflix', 'Hulu'], genres: ['Drama', 'Comedy'] })}
@@ -28,8 +28,11 @@ describe('SearchFiltersPanel', () => {
     )
     expect(screen.getByText('Netflix')).toBeInTheDocument()
     expect(screen.getByText('Hulu')).toBeInTheDocument()
+    expect(screen.queryByText('Drama')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     expect(screen.getByText('Drama')).toBeInTheDocument()
     expect(screen.getByText('Comedy')).toBeInTheDocument()
+    expect(screen.queryByText('Netflix')).not.toBeInTheDocument()
   })
 
   it('reflects the active filters via aria-pressed on each chip', () => {
@@ -47,6 +50,7 @@ describe('SearchFiltersPanel', () => {
     )
     expect(screen.getByText('Netflix')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('Hulu')).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     expect(screen.getByText('Drama')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('Comedy')).toHaveAttribute('aria-pressed', 'false')
   })
@@ -86,6 +90,7 @@ describe('SearchFiltersPanel', () => {
         onClose={vi.fn()}
       />,
     )
+    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     fireEvent.click(screen.getByText('Drama'))
     expect(onChange).toHaveBeenCalledWith({
       genres: new Set(['Drama']),

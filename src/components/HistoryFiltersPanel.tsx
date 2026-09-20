@@ -62,7 +62,7 @@ export default function HistoryFiltersPanel({
   }
 
   return (
-    <InlinePanel className="max-h-[70vh] overflow-y-auto p-3.5" label="Filters">
+    <InlinePanel className="scroll-fade-bottom max-h-[70vh] overflow-y-auto p-3.5" label="Filters">
       <PanelHeader
         title="Filters"
         onClose={onClose}

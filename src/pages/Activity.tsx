@@ -30,9 +30,8 @@ import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import DropdownPanel from '../components/DropdownPanel'
-import { CheckGlyph } from '../components/ShowDetailGlyphs'
 import SegmentedControl from '../components/SegmentedControl'
-import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
+import Chip, { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -492,43 +491,26 @@ function GenreFilterPanel({
   onClose: () => void
 }) {
   return (
-    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-60 p-2">
+    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-64 p-3">
       {selected.size > 0 && (
         <button
           type="button"
           onClick={onClear}
-          className="mb-1 block px-1.5 pt-0.5 text-xs font-medium text-accent-400 hover:underline"
+          className="mb-2 block text-xs font-medium text-accent-400 hover:underline"
         >
           Clear
         </button>
       )}
-      <ul className="max-h-64 space-y-1 overflow-y-auto">
-        {genres.map((genre) => (
-          <li key={genre}>
-            <GenreRow active={selected.has(genre)} onClick={() => onToggle(genre)}>
+      <div className="scroll-fade-bottom max-h-64 overflow-y-auto pb-1">
+        <div className="flex flex-wrap gap-1.5">
+          {genres.map((genre) => (
+            <Chip key={genre} active={selected.has(genre)} onClick={() => onToggle(genre)}>
               {genre}
-            </GenreRow>
-          </li>
-        ))}
-      </ul>
+            </Chip>
+          ))}
+        </div>
+      </div>
     </DropdownPanel>
-  )
-}
-
-/** One row in the genre list, styled the same as PersonRow below so both filter dropdowns read as one pattern. */
-function GenreRow({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm font-medium transition-colors duration-200 ${
-        active ? 'bg-accent-500/15 text-accent-300' : 'text-base-200 hover:bg-hover'
-      }`}
-    >
-      <CheckGlyph filled={active} size={15} />
-      <span className="truncate">{children}</span>
-    </button>
   )
 }
 
@@ -548,7 +530,7 @@ function PersonFilterPanel({
 }) {
   return (
     <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-2">
-      <ul className="max-h-64 space-y-1 overflow-y-auto">
+      <ul className="scroll-fade-bottom max-h-64 space-y-1 overflow-y-auto pb-1">
         {members.map((u) => (
           <li key={u.id}>
             <PersonRow
