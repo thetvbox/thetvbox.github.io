@@ -32,6 +32,7 @@ import Avatar from '../components/Avatar'
 import DropdownPanel from '../components/DropdownPanel'
 import { CheckGlyph } from '../components/ShowDetailGlyphs'
 import SegmentedControl from '../components/SegmentedControl'
+import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES } from '../components/Chip'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -308,10 +309,8 @@ export default function Activity() {
               onClick={() => setPersonFilterOpen((v) => !v)}
               aria-expanded={personFilterOpen}
               aria-haspopup="true"
-              className={`flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3 text-xs font-medium transition-colors duration-200 ${
-                personFilterOpen || filterUsername
-                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-                  : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+              className={`flex items-center gap-2 rounded-full py-2 pl-2 pr-4 text-sm font-medium transition-colors duration-200 ${
+                personFilterOpen || filterUsername ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
               }`}
             >
               {filterUsername ? (
@@ -355,10 +354,8 @@ export default function Activity() {
                 onClick={() => setGenreFilterOpen((v) => !v)}
                 aria-expanded={genreFilterOpen}
                 aria-haspopup="true"
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
-                  genreFilterOpen || selectedGenres.size > 0
-                    ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-                    : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                  genreFilterOpen || selectedGenres.size > 0 ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
                 }`}
               >
                 Filter by genre{selectedGenres.size > 0 ? ` · ${selectedGenres.size}` : ''}

@@ -22,6 +22,7 @@ import {
   isSearchResultPending,
   pruneSearchFilters,
 } from '../lib/searchFilters'
+import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES } from '../components/Chip'
 import type { SearchFilters } from '../lib/searchFilters'
 import type { TmdbShowSummary } from '../types'
 
@@ -179,10 +180,8 @@ export default function Search() {
               onClick={() => setFiltersOpen((v) => !v)}
               aria-expanded={filtersOpen}
               aria-haspopup="true"
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
-                filtersOpen || isSearchFiltersActive(filters)
-                  ? 'bg-accent-500/15 text-accent-300 ring-1 ring-accent-500/40'
-                  : 'bg-base-850/60 text-base-400 ring-1 ring-hairline hover:text-base-200'
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                filtersOpen || isSearchFiltersActive(filters) ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
               }`}
             >
               Filters{isSearchFiltersActive(filters) ? ` · ${countActiveSearchFilters(filters)}` : ''}

@@ -65,7 +65,7 @@ export default function SegmentedControl<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`glass-surface inline-flex items-center gap-0.5 rounded-full p-1 ${className}`}
+      className={`glass-surface inline-flex items-center gap-0.5 rounded-full p-1.5 ${className}`}
     >
       {options.map((option, index) => {
         const active = option.value === value
@@ -81,7 +81,7 @@ export default function SegmentedControl<T extends string>({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`relative rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+            className={`relative rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
               active ? 'text-accent-300' : 'text-base-400 hover:text-base-200'
             }`}
           >
