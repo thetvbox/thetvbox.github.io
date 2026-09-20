@@ -159,6 +159,23 @@ All notable changes to TV Box are documented here. Format loosely follows
   "X/Y watched this season" -- both were easy to confuse with the
   similarly-worded "Up next" episode badge and the whole-show watched
   count elsewhere on the page.
+- App-wide contrast pass: base text and UI colors are brighter against the
+  app's glass panels now that their blur is actually rendering (see the
+  backdrop-filter fix below), and body text is a shade bolder throughout.
+- Activity's "Filter by genre" dropdown is now a vertical checkable list
+  matching "Filter by person" exactly, instead of a wrapped row of chips.
+- The notifications panel is wider -- a longer description no longer feels
+  cramped -- and its scroll area is now capped instead of a fixed height,
+  so a short list sits at its natural size instead of an oversized empty
+  box.
+- The Push Notifications and Shortcuts & Siri panels now have more
+  generous padding and a leading icon next to their title, instead of a
+  bare heading cramped in the corner.
+- Back navigation -- previously four different patterns across the app (a
+  text arrow link, an icon-only circular button, a plain link, an
+  underlined link) -- is now one consistent chevron-and-label control
+  everywhere, with a floating icon-only variant for Show Detail's photo
+  backdrop where a text link wouldn't stay legible.
 
 ### Fixed
 
@@ -249,6 +266,40 @@ All notable changes to TV Box are documented here. Format loosely follows
   notifications check no longer keeps polling every minute while the app
   is in the background -- it skips the request while hidden and catches
   up immediately as soon as you come back.
+- Every frosted-glass panel in the app -- the header, bottom nav,
+  dropdowns, sheets, and modals -- was rendering with no blur at all in
+  the deployed app; a CSS-minification quirk stripped it during the
+  production build only, so it looked fine locally and broken for
+  everyone actually using it. They're glass again.
+- Profile's "More" menu could get stuck fading out but never actually
+  closing, if you opened one of its sub-panels (like Push Notifications)
+  in the same tap that opened the menu.
+- Haptic feedback (the light tap on iOS Safari) never actually fired
+  anywhere it was wired up -- star ratings, season tabs, the bottom nav,
+  Follow buttons, toggles, the theme switch -- because of how the
+  underlying trick was built. It now fires correctly everywhere it's
+  used.
+- The notifications panel's follow "+" badge showed up on a "started
+  following you" notification even when you already followed that
+  person back, and descriptions in the panel could get cut off
+  mid-sentence instead of wrapping onto a second line.
+- Toggling one episode watched on a long season could visibly lag --
+  every row in the season was quietly re-rendering along with the one
+  you tapped. Only the row you actually toggle updates now.
+- Undoing a bulk "mark all/season watched" that had overwritten some
+  already-logged episodes with a different runtime could leave the
+  wrong runtime in place even after the undo, quietly skewing your
+  "hours watched" stat -- Undo now restores the original runtime along
+  with everything else.
+- Clearing all notifications was the one destructive action in the app
+  with no way to undo it -- it now offers the same Undo toast as every
+  other bulk/destructive action.
+- Two toasts with identical text shown back-to-back (e.g. clearing
+  notifications twice in a row) could share one timer, so the second
+  one's auto-dismiss never actually restarted.
+- The episode watched-toggle button didn't announce its state to screen
+  readers, and Show Detail's share button was a touch under the app's
+  usual minimum tap-target size.
 
 ## [1.2.0] - 2026-09-07
 

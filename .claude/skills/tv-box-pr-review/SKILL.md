@@ -18,7 +18,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 
 ## 2. DRY, SRP, and private methods
 
-- New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, etc.) should reuse or extend it, not hand-roll a near-duplicate.
+- New UI that closely resembles an existing shared component (`PosterThumb`, `PrimaryButton`, `InlineConfirmCancel`, `CenteredMessage`, `EmptyState`, `Avatar`, `StatCard`, `StarGlyph`, `BackButton`, `HapticOverlay`, etc.) should reuse or extend it, not hand-roll a near-duplicate. Same for logic, not just UI: a `pointerdown`-outside-closes-panel effect is `useOutsideClick`, and bucketing a list into day-grouped sections is `groupByDay` (`lib/date.ts`) -- both were extracted after being copy-pasted across multiple files.
 - A component or hook taking on more than one clear responsibility (e.g. a page component that also owns unrelated data-fetching logic that could be its own hook) is a split candidate -- `src/hooks/showDetail/` (one hook per concern, composed by `useShowDetail.ts`) and `ProfileActivity.tsx`'s tab split are the precedent for what "already split appropriately" looks like here.
 - Flag copy-pasted logic across two or more files that isn't already using a shared helper in `src/lib/`.
 - This codebase is almost entirely functional (hooks/components), not classes, so "no private methods unless absolutely needed" mostly shows up as: don't bury multi-step logic in a deeply nested inline closure inside a component when it could be a named, testable top-level function in `src/lib/` or its own hook. In the rare class case (currently just `ErrorBoundary`), avoid adding private instance methods unless the logic genuinely needs instance state -- prefer a plain exported function otherwise.
@@ -42,6 +42,8 @@ Work through the checklist against the actual changed files, not the whole repo 
 ## 6. Animation, UX, and UI polish
 
 - New framer-motion usage should reuse a named export from `src/lib/motion.ts` (durations, easings, enter/exit variants) rather than inlining a new one-off `transition`/`initial`/`animate` object, unless the new pattern is genuinely novel enough to warrant its own named constant (in which case, add it to `motion.ts` rather than leaving it local to one component).
+- New haptic-feedback wiring should use the shared `HapticOverlay` component, not a hand-rolled trigger -- flag anything that toggles a hidden singleton element via a programmatic `.click()` instead of rendering an overlay inside the real tap target (Safari won't fire the haptic for the former).
+- Any change to `index.css`'s `.glass-surface*` classes: confirm `backdrop-filter` is still declared *after* `-webkit-backdrop-filter`, not before -- the production minifier silently strips the standard property when the order is reversed, a bug invisible in `npm run dev`.
 - `scrollBehavior()` (not a hardcoded `'smooth'`/`'auto'`) for any direct `window.scrollTo` call, so reduced-motion users are respected.
 - Beyond animation timing specifically, judge new UI against the "buttery smooth and modern" bar this repo has been held to: no abrupt state swaps where a transition would read as intentional (use `InlinePanel`/`TRIGGER_SWAP_MOTION` for trigger-vs-open-panel swaps), no layout jump on load (skeletons from `Skeletons.tsx` for anything with a network round-trip), no obviously dated patterns (native `confirm()`/`alert()`, unstyled default form controls, jarring instant show/hide with no transition at all).
 - Flag anything that looks visually inconsistent with the rest of the page it's on (spacing, radius, color usage) even if it isn't a hard rule violation -- this is one of the few sections where "does this feel like the rest of the app" is itself the standard.
@@ -51,6 +53,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 - A mutation that updates local state optimistically must roll back on failure and surface the failure via `useToast`'s `showError`, not swallow it.
 - A bulk action that can silently overwrite existing data (like a bulk mark-watched) should offer an "Undo" toast (`showUndo`) backed by a pre-mutation snapshot, following the pattern in `useEpisodeWatchHandlers.ts`'s `handleMarkAllWatched`/`undoBulkMark`.
 - No `window.confirm()` -- destructive/bulk confirmation is the inline expand-to-confirm pattern (`DateMarkControl`, `InlineConfirmCancel`).
+- Any new toast must go through `useToast`'s existing `id`-based `ToastState`, and any component rendering a list of ephemeral, remountable items keyed by content (like `Toast.tsx` keying on `toast.id`, not `toast.message`) should key on a unique id, not display text -- two consecutive items with identical text need to actually remount.
 - Never fabricate a plausible-looking value (a guessed date, a made-up name) to paper over a display bug in a real user's data -- use the app's actual "unknown" representation.
 
 ## 8. Performance
@@ -58,6 +61,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 - Any new query against a table that can grow past 1000 rows per user (`episode_watched` in particular) should go through `fetchPaginated` rather than a bare `.select()`, or hit one of the existing summary views if the need is aggregate stats rather than raw rows.
 - New TMDB/TVmaze calls that will be repeated for the same id within a session should follow the existing module-level cache pattern (see `tmdb.ts`, `seasonProgress.ts`, `tvmaze.ts`) rather than re-fetching.
 - Watch for new client-side loops over paginated data that could instead be pushed into a Postgres view or aggregate query.
+- A callback prop passed into a `React.memo`-wrapped list-row component must have a stable identity across the state changes it itself triggers, or the memoization does nothing and every row re-renders on every item's update -- look for `useCallback` reading current state through a ref (updated in `useLayoutEffect`, never assigned during render) rather than closing over the state value directly; see `useEpisodeWatchHandlers.ts` for the pattern. A `.map()`-derived list or object passed as a prop down the same tree needs a matching `useMemo` or it reintroduces the same problem one level up.
 
 ## 9. Correctness and bug-hunting
 
