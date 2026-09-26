@@ -91,6 +91,26 @@ describe('omdb (VITE_OMDB_API_KEY configured)', () => {
     expect(await getExternalRatings('tt-server-error')).toBeNull()
   })
 
+  it('retries after a network failure instead of permanently caching null', async () => {
+    vi.mocked(fetch)
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(jsonResponse({ Response: 'True', imdbRating: '7.5', Ratings: [] }))
+    const { getExternalRatings } = await import('./omdb')
+
+    expect(await getExternalRatings('tt-retry-network')).toBeNull()
+    expect(await getExternalRatings('tt-retry-network')).toEqual({ imdbRating: 7.5, rottenTomatoesScore: null })
+  })
+
+  it('retries after a non-ok HTTP response instead of permanently caching null', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse(null, false, 503))
+      .mockResolvedValueOnce(jsonResponse({ Response: 'True', imdbRating: '6.0', Ratings: [] }))
+    const { getExternalRatings } = await import('./omdb')
+
+    expect(await getExternalRatings('tt-retry-503')).toBeNull()
+    expect(await getExternalRatings('tt-retry-503')).toEqual({ imdbRating: 6, rottenTomatoesScore: null })
+  })
+
   it('caches the result so a second call with the same IMDb id skips the fetch', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ Response: 'True', imdbRating: '9.0', Ratings: [] }))
     const { getExternalRatings } = await import('./omdb')

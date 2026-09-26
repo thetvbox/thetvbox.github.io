@@ -171,6 +171,23 @@ describe('resolveShowPlatforms', () => {
     await resolveShowPlatforms([106], 'US')
     expect(vi.mocked(getWatchProviders).mock.calls.length).toBeGreaterThan(callsAfterFirst)
   })
+
+  it('does not permanently cache a result when resolution throws unexpectedly, so a later call retries', async () => {
+    vi.mocked(getWatchProviders).mockImplementationOnce(() => {
+      throw new Error('unexpected crash')
+    })
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    const first = await resolveShowPlatforms([401], 'US')
+    expect(first.get(401)).toBeNull()
+
+    vi.mocked(getWatchProviders).mockResolvedValue({
+      id: 401,
+      results: { US: { link: '', flatrate: [provider({ provider_name: 'Netflix' })] } },
+    } as TmdbWatchProviders)
+    const second = await resolveShowPlatforms([401], 'US')
+    expect(second.get(401)).toEqual({ provider_name: 'Netflix', logo_path: '/netflix.png' })
+  })
 })
 
 describe('resolveShowPlatformNames', () => {

@@ -45,18 +45,17 @@ export async function getExternalRatings(imdbId: string | null | undefined): Pro
     url.searchParams.set('apikey', API_KEY)
     url.searchParams.set('i', imdbId)
     const res = await fetch(url.toString())
-    if (res.ok) {
-      const data = (await res.json()) as OmdbResponse
-      if (data.Response === 'True') {
-        const imdbRating = parseImdbRating(data.imdbRating)
-        const rottenTomatoesScore = parseRottenTomatoes(data.Ratings)
-        if (imdbRating !== null || rottenTomatoesScore !== null) {
-          result = { imdbRating, rottenTomatoesScore }
-        }
+    if (!res.ok) return null
+    const data = (await res.json()) as OmdbResponse
+    if (data.Response === 'True') {
+      const imdbRating = parseImdbRating(data.imdbRating)
+      const rottenTomatoesScore = parseRottenTomatoes(data.Ratings)
+      if (imdbRating !== null || rottenTomatoesScore !== null) {
+        result = { imdbRating, rottenTomatoesScore }
       }
     }
   } catch {
-    result = null
+    return null
   }
   ratingsByImdbId.set(imdbId, result)
   return result

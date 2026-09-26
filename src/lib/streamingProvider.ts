@@ -104,11 +104,10 @@ async function ensureResolved(showIds: number[], region: string): Promise<void> 
 
   await Promise.all(
     uncached.map(async (id) => {
-      const result = await resolveShowProviders(id, region, overrides.get(id)).catch(() => ({
-        best: null,
-        names: new Set<string>(),
-      }))
-      platformCache.set(cacheKey(id, region), result)
+      try {
+        const result = await resolveShowProviders(id, region, overrides.get(id))
+        platformCache.set(cacheKey(id, region), result)
+      } catch {}
     }),
   )
 }

@@ -32,12 +32,12 @@ const airDatesByTvmazeShowId = new Map<number, Map<string, string>>()
 async function findTvmazeShowId(imdbId: string): Promise<number | null> {
   const cached = showIdByImdbId.get(imdbId)
   if (cached !== undefined) return cached
-  let result: number | null = null
+  let result: number | null
   try {
     const show = await tvmazeFetch<TvmazeShow>(`/lookup/shows?imdb=${encodeURIComponent(imdbId)}`)
     result = show?.id ?? null
   } catch {
-    result = null
+    return null
   }
   showIdByImdbId.set(imdbId, result)
   return result
@@ -53,7 +53,9 @@ async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, st
     for (const ep of episodes ?? []) {
       if (ep.airdate) map.set(tvmazeEpisodeKey(ep.season, ep.number), ep.airdate)
     }
-  } catch {}
+  } catch {
+    return map
+  }
   airDatesByTvmazeShowId.set(tvmazeShowId, map)
   return map
 }

@@ -85,6 +85,36 @@ describe('getCorrectedAirDates', () => {
     expect(result).toEqual(new Map())
   })
 
+  it('retries the show-id lookup on a later call after a network failure, instead of permanently caching the miss', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(jsonResponse({ id: 999 }))
+      .mockResolvedValueOnce(jsonResponse([{ season: 1, number: 1, airdate: '2021-01-01' }]))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const first = await getCorrectedAirDates('tt-retry-after-lookup-failure')
+    expect(first).toEqual(new Map())
+
+    const second = await getCorrectedAirDates('tt-retry-after-lookup-failure')
+    expect(second.get(tvmazeEpisodeKey(1, 1))).toBe('2021-01-01')
+  })
+
+  it('retries fetching episode air dates after a failure, instead of permanently caching empty', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ id: 1234 }))
+      .mockRejectedValueOnce(new Error('episodes fetch failed'))
+      .mockResolvedValueOnce(jsonResponse([{ season: 1, number: 1, airdate: '2022-03-01' }]))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const first = await getCorrectedAirDates('tt-retry-after-episodes-failure')
+    expect(first).toEqual(new Map())
+
+    const second = await getCorrectedAirDates('tt-retry-after-episodes-failure')
+    expect(second.get(tvmazeEpisodeKey(1, 1))).toBe('2022-03-01')
+  })
+
   it('throws for a non-404 non-ok response', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(null, 500))
     vi.stubGlobal('fetch', fetchMock)
