@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getSeasonDetail, getShowDetail } from '../lib/tmdb'
 import { fetchAllShowRatings } from '../lib/showRatings'
 import { fetchAllSeasonRatingsForShow } from '../lib/seasonRatings'
@@ -44,12 +44,16 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const ratings = useShowRatingsState(user, show, activeSeason, season, showError)
   const rewatchState = useRewatchState(user, show, showError, showUndo)
 
+  const onProgressRef = useRef<() => void>(() => {})
+  useLayoutEffect(() => {
+    onProgressRef.current = () => {
+      nowWatching.clearDismissed()
+      nowWatching.clearDropped()
+      watchlist.clearWatchlist()
+    }
+  })
   /** Runs after any action that adds real progress: resumes a dismissed/dropped/watchlisted show. */
-  function onProgress() {
-    nowWatching.clearDismissed()
-    nowWatching.clearDropped()
-    watchlist.clearWatchlist()
-  }
+  const onProgress = useCallback(() => onProgressRef.current(), [])
 
   const episodeWatch = useEpisodeWatchHandlers(
     watched,
