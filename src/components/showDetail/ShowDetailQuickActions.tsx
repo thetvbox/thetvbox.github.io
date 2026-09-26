@@ -2,6 +2,7 @@ import { AnimatePresence } from 'framer-motion'
 import AddToListPicker from '../AddToListPicker'
 import { ListGlyph, PlayGlyph, BookmarkGlyph, DropGlyph } from '../ShowDetailGlyphs'
 import { pluralSuffix } from '../../lib/format'
+import { ICON_PILL_ACTIVE_CLASSES, ICON_PILL_BASE_CLASSES, ICON_PILL_INACTIVE_CLASSES } from '../../lib/iconPill'
 import type { AppUser, ShowDropped, ShowWatchingDismissed, TmdbShowDetail, WatchlistItem } from '../../types'
 
 interface ShowDetailQuickActionsProps {
@@ -25,10 +26,6 @@ interface ShowDetailQuickActionsProps {
   onToggleListPicker: () => void
   onCloseListPicker: () => void
 }
-
-const pillBase = 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200'
-const pillActive = 'border-accent-500/40 bg-accent-500/15 text-accent-300'
-const pillInactive = 'border-hairline-strong text-base-400 hover:border-accent-500/40 hover:text-base-200'
 
 /** Now Watching / watchlist / list toggles, independent of each other, plus the list picker panel. */
 export default function ShowDetailQuickActions({
@@ -61,7 +58,7 @@ export default function ShowDetailQuickActions({
             onClick={onToggleNowWatching}
             disabled={savingNowWatching}
             aria-pressed={inNowWatching}
-            className={`${pillBase} disabled:opacity-60 ${inNowWatching ? pillActive : pillInactive}`}
+            className={`${ICON_PILL_BASE_CLASSES} disabled:opacity-60 ${inNowWatching ? ICON_PILL_ACTIVE_CLASSES : ICON_PILL_INACTIVE_CLASSES}`}
           >
             <PlayGlyph filled={inNowWatching} />
             {inNowWatching ? 'Remove from Now Watching' : dismissedItem ? 'Add to Now Watching' : 'Start watching'}
@@ -74,7 +71,7 @@ export default function ShowDetailQuickActions({
             onClick={onToggleDropped}
             disabled={savingDropped}
             aria-pressed={Boolean(droppedItem)}
-            className={`${pillBase} disabled:opacity-60 ${droppedItem ? pillActive : pillInactive}`}
+            className={`${ICON_PILL_BASE_CLASSES} disabled:opacity-60 ${droppedItem ? ICON_PILL_ACTIVE_CLASSES : ICON_PILL_INACTIVE_CLASSES}`}
           >
             <DropGlyph filled={Boolean(droppedItem)} />
             {droppedItem ? 'Resume watching' : 'Drop this show'}
@@ -86,7 +83,7 @@ export default function ShowDetailQuickActions({
           onClick={onToggleWatchlist}
           disabled={savingWatchlist}
           aria-pressed={Boolean(watchlistItem)}
-          className={`${pillBase} disabled:opacity-60 ${watchlistItem ? pillActive : pillInactive}`}
+          className={`${ICON_PILL_BASE_CLASSES} disabled:opacity-60 ${watchlistItem ? ICON_PILL_ACTIVE_CLASSES : ICON_PILL_INACTIVE_CLASSES}`}
         >
           <BookmarkGlyph filled={Boolean(watchlistItem)} />
           {watchlistItem ? 'On your watchlist' : 'Add to watchlist'}
@@ -96,7 +93,7 @@ export default function ShowDetailQuickActions({
           type="button"
           onClick={onToggleListPicker}
           aria-pressed={listMembership.size > 0}
-          className={`${pillBase} ${listMembership.size > 0 ? pillActive : pillInactive}`}
+          className={`${ICON_PILL_BASE_CLASSES} ${listMembership.size > 0 ? ICON_PILL_ACTIVE_CLASSES : ICON_PILL_INACTIVE_CLASSES}`}
         >
           <ListGlyph />
           {listMembership.size > 0 ? `On ${listMembership.size} list${pluralSuffix(listMembership.size)}` : 'Add to a list'}

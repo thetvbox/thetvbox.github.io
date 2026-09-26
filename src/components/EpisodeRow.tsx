@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../lib/motion'
 import { stillUrl } from '../lib/tmdb'
 import { formatShortDate, isFutureDate } from '../lib/date'
+import { ICON_PILL_ACTIVE_CLASSES, ICON_PILL_BASE_CLASSES, ICON_PILL_INACTIVE_CLASSES } from '../lib/iconPill'
 import DateMarkControl from './DateMarkControl'
 import Spinner from './Spinner'
 import { CheckGlyph } from './ShowDetailGlyphs'
@@ -138,10 +139,8 @@ function EpisodeRow({
                   onClick={handleToggle}
                   disabled={saving}
                   aria-pressed={watched}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 disabled:opacity-60 ${
-                    watched
-                      ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
-                      : 'border-hairline-strong text-base-400 hover:border-accent-500/40 hover:text-base-200'
+                  className={`${ICON_PILL_BASE_CLASSES} disabled:opacity-60 ${
+                    watched ? ICON_PILL_ACTIVE_CLASSES : ICON_PILL_INACTIVE_CLASSES
                   }`}
                 >
                   <CheckGlyph filled={watched} />
