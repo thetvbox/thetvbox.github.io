@@ -151,6 +151,13 @@ describe('FollowListPanel', () => {
     expect(document.querySelector('.max-h-64')).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the people list to hint there is more to scroll', async () => {
+    vi.mocked(fetchFollowersWithUsers).mockResolvedValue([bob])
+    renderPanel('followers')
+    await waitFor(() => expect(screen.getByText('@bob')).toBeInTheDocument())
+    expect(document.querySelector('.max-h-64')).toHaveClass('scroll-fade-bottom')
+  })
+
   it('sizes the loading skeleton to the already-known follower count', () => {
     vi.mocked(fetchFollowersWithUsers).mockReturnValue(new Promise(() => {}))
     renderPanel('followers', vi.fn(), undefined, 2)

@@ -32,6 +32,12 @@ describe('ProviderPicker', () => {
     expect(screen.getByText('Loading platforms…')).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the scrollable list to hint there is more to scroll', () => {
+    vi.mocked(getAllTvProviders).mockReturnValue(new Promise(() => {}))
+    const { container } = render(<ProviderPicker region="US" onPick={vi.fn()} onClose={vi.fn()} />)
+    expect(container.querySelector('.scroll-fade-bottom')).toBeInTheDocument()
+  })
+
   it('lists matching providers once loaded', async () => {
     vi.mocked(getAllTvProviders).mockResolvedValue([provider(), provider({ provider_id: 2, provider_name: 'Hulu' })])
     render(<ProviderPicker region="US" onPick={vi.fn()} onClose={vi.fn()} />)

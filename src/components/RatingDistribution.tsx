@@ -92,7 +92,7 @@ export default function RatingDistribution({
             onClose={() => setSelected(null)}
             label={`Shows rated ${selected.toFixed(1)} stars`}
             maxWidth="max-w-sm"
-            className="max-h-[70vh] overflow-y-auto p-3"
+            className="scroll-fade-bottom max-h-[70vh] overflow-y-auto p-3"
           >
             <PanelHeader
               title={

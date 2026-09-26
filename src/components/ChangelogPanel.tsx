@@ -7,7 +7,7 @@ import PanelHeader from './PanelHeader'
 /** Read-only "What's new" overlay. */
 export default function ChangelogPanel({ onClose }: { onClose: () => void }) {
   return (
-    <Modal onClose={onClose} label="What's new" maxWidth="max-w-md" className="max-h-[80vh] overflow-y-auto p-4">
+    <Modal onClose={onClose} label="What's new" maxWidth="max-w-md" className="scroll-fade-bottom max-h-[80vh] overflow-y-auto p-4">
       <PanelHeader title="What's new" onClose={onClose} />
 
       {changelogReleases.length === 0 ? (

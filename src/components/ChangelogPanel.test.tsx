@@ -25,6 +25,11 @@ describe('ChangelogPanel', () => {
     expect(screen.getByRole('dialog', { name: "What's new" })).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the scrollable panel to hint there is more to scroll', () => {
+    render(<ChangelogPanel onClose={vi.fn()} />)
+    expect(screen.getByRole('dialog', { name: "What's new" })).toHaveClass('scroll-fade-bottom')
+  })
+
   it('renders the release version, date, and block content', () => {
     render(<ChangelogPanel onClose={vi.fn()} />)
     expect(screen.getByText('v1.2.0')).toBeInTheDocument()

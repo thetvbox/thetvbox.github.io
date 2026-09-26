@@ -48,6 +48,13 @@ describe('ShortcutsPanel', () => {
     expect(await screen.findByText('No tokens yet.')).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the panel to hint there is more to scroll', async () => {
+    vi.mocked(fetchPersonalAccessTokens).mockResolvedValue([])
+    render(<ShortcutsPanel userId="u1" onClose={vi.fn()} />)
+    await screen.findByText('No tokens yet.')
+    expect(screen.getByRole('dialog')).toHaveClass('scroll-fade-bottom')
+  })
+
   it('lists existing tokens with their created/last-used dates', async () => {
     vi.mocked(fetchPersonalAccessTokens).mockResolvedValue([
       token({ last_used_at: '2026-09-10T00:00:00Z' }),

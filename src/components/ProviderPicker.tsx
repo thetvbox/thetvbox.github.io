@@ -84,7 +84,7 @@ export default function ProviderPicker({
         placeholder="Search platforms (Netflix, Hulu, Max...)"
         className="w-full rounded-lg border border-hairline-strong bg-base-950 px-2.5 py-1.5 text-xs text-base-200 placeholder:text-base-600"
       />
-      <div className="mt-2 max-h-56 overflow-y-auto">
+      <div className="scroll-fade-bottom mt-2 max-h-56 overflow-y-auto">
         {loading ? (
           <p className="px-1 py-2 text-xs text-base-500">Loading platforms…</p>
         ) : matches.length === 0 ? (

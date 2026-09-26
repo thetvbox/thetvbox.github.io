@@ -90,7 +90,7 @@ export default function ShortcutsPanel({ userId, onClose }: ShortcutsPanelProps)
   }
 
   return (
-    <BottomSheet onClose={onClose} label="Shortcuts & Siri" className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">
+    <BottomSheet onClose={onClose} label="Shortcuts & Siri" className="scroll-fade-bottom max-h-[85vh] overflow-y-auto p-5 sm:p-6">
       <PanelHeader title="Shortcuts & Siri" onClose={onClose} icon={<ShortcutIcon />} />
 
       <p className="mb-4 text-sm leading-relaxed text-base-400">

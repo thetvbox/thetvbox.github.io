@@ -79,6 +79,12 @@ describe('RatingDistribution', () => {
     expect(screen.getByText('Show One')).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the overlay to hint there is more to scroll', () => {
+    renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
+    fireEvent.click(screen.getByRole('button', { name: /1 show rated 4\.0/ }))
+    expect(screen.getByRole('dialog', { name: 'Shows rated 4.0 stars' })).toHaveClass('scroll-fade-bottom')
+  })
+
   it('clicking the same bucket again closes the overlay', () => {
     renderWithRouter([rating({ rating: 4, show_name: 'Show One' })])
     const bucket = screen.getByRole('button', { name: /1 show rated 4\.0/ })

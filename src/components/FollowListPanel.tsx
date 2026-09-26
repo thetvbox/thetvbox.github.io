@@ -111,7 +111,7 @@ export default function FollowListPanel({
 
       {error && <ErrorText className="mb-3 text-xs">{error}</ErrorText>}
 
-      <div className="max-h-64 overflow-y-auto">
+      <div className="scroll-fade-bottom max-h-64 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: Math.min(Math.max(expectedCount, 1), MAX_SKELETON_ROWS) }).map((_, i) => (

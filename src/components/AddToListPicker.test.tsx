@@ -57,6 +57,12 @@ describe('AddToListPicker', () => {
     expect(screen.getByText('Loading your lists…')).toBeInTheDocument()
   })
 
+  it('fades the bottom edge of the scrollable list to hint there is more to scroll', () => {
+    vi.mocked(fetchListsForUser).mockReturnValue(new Promise(() => {}))
+    const { container } = renderPicker()
+    expect(container.querySelector('.scroll-fade-bottom')).toBeInTheDocument()
+  })
+
   it('shows a load-error message when the fetch fails', async () => {
     vi.mocked(fetchListsForUser).mockRejectedValue(new Error('boom'))
     renderPicker()

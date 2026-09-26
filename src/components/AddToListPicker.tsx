@@ -128,7 +128,7 @@ export default function AddToListPicker({
       <InlinePanel className="p-3.5" label="Add to a list">
         <PanelHeader title="Add to a list" onClose={onClose} />
 
-        <div className="max-h-56 overflow-y-auto">
+        <div className="scroll-fade-bottom max-h-56 overflow-y-auto">
           {lists === null ? (
             <p className="px-1 py-2 text-xs text-base-500">
               {loadError ? "Couldn't load your lists. Try closing and reopening this panel." : 'Loading your lists…'}
