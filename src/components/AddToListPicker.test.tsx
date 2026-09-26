@@ -153,4 +153,20 @@ describe('AddToListPicker', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(2)
   })
+
+  it('Escape closes only the open new-list form, not the whole panel', async () => {
+    vi.mocked(fetchListsForUser).mockResolvedValue([])
+    const onClose = vi.fn()
+    renderPicker(new Set(), vi.fn(), onClose)
+    await waitFor(() => expect(screen.getByText(/No lists yet/)).toBeInTheDocument())
+    fireEvent.click(screen.getByText('+ New list'))
+    expect(screen.getByPlaceholderText('List name')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.queryByPlaceholderText('List name')).not.toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })

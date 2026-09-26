@@ -32,8 +32,7 @@ export default function AddToListPicker({
   const [savingId, setSavingId] = useState<string | null>(null)
   const { toast, showUndo, showError, dismiss } = useToast()
 
-  useEscapeAndFocusReturn(true, onClose)
-  useEscapeAndFocusReturn(creating, () => setCreating(false))
+  useEscapeAndFocusReturn(true, () => (creating ? setCreating(false) : onClose()))
 
   useEffect(() => {
     let cancelled = false
