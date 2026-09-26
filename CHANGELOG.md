@@ -237,6 +237,28 @@ All notable changes to TV Box are documented here. Format loosely follows
 - `PasscodeGate`'s `busy` state was set and immediately unset within the
   same synchronous passcode check, so it could never actually produce a
   visible busy/disabled render -- removed.
+- Activity and Search's filter controls -- floating dropdowns anchored to
+  their trigger button -- are now both a single "Filters" button that
+  opens a scrollable bottom-sheet overlay, the same pattern already used
+  for Shortcuts & Siri and Push Notifications. Activity's separate
+  "Filter by person" and "Filter by genre" dropdowns are now one sheet
+  with a Person section (shown only when there's more than one person to
+  filter by) and a Genre section (shown only when Now Watching actually
+  has more than one genre), both visible at once instead of needing two
+  separate triggers. Search's "Filters" dropdown used to make you switch
+  between "Platform" and "Genre" with a segmented control, showing one
+  facet's chips at a time -- both facets are now always visible as their
+  own labeled section in the same scrollable sheet, so there's no control
+  to switch and nothing hidden. Neither sheet auto-closes when you pick a
+  person or a chip, so several filters can be adjusted in one visit;
+  both close on Escape and via a "Clear all" action in the header once
+  anything's selected. The "Filters" trigger on both pages now reflects
+  open/closed state with `aria-pressed` (matching History's existing
+  Filters button) instead of the old dropdown's `aria-expanded`/
+  `aria-haspopup`. The shared "uppercase label + wrapping chip row"
+  pattern behind all of this now lives in one place (`FilterSection`/
+  `ChipGroup` in `src/components/FilterSection.tsx`) instead of being
+  duplicated per panel.
 
 ### Fixed
 
