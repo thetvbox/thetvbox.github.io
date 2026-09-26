@@ -154,36 +154,40 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
   })
 
-  it('does not show the Filter by person trigger when at most one member has activity', async () => {
+  it('does not show the Filters trigger when at most one member has activity and Now Watching has no genre facet', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([ratingFor(friend)])
     renderActivity()
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
-    expect(screen.queryByText('Filter by person')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Filters' })).not.toBeInTheDocument()
   })
 
-  it('opens the person-filter dropdown from the trigger and filters by clicking someone', async () => {
+  it('opens the Filters sheet from the trigger and filters by clicking someone in the Person section', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    expect(screen.queryByText('@friend')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByText('Filter by person'))
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
-    fireEvent.click(screen.getByText('@friend'))
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    expect(within(dialog).getByText('Person')).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByText('@friend'))
 
+    // Selecting a person keeps the sheet open, so a genre can be picked in the same visit.
+    expect(screen.getByRole('dialog', { name: 'Filters' })).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(screen.getByText('@friend')).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeInTheDocument()
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
     expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument()
     expect(screen.getByText('What @friend has been up to.')).toBeInTheDocument()
   })
 
-  it('clears the person filter (and closes the dropdown) if switching scope drops them from the pool', async () => {
+  it('clears the person filter if switching scope drops them from the pool', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
@@ -192,15 +196,19 @@ describe('Activity', () => {
     renderActivity()
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Everyone'))
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Filter by person'))
-    await waitFor(() => expect(screen.getByText('@stranger')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('@stranger'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByText('@stranger'))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
 
+    // Switching back to Following drops @stranger from the filterable pool -- with only @friend
+    // left active, the Filters trigger (and its person filter) disappears entirely.
     fireEvent.click(screen.getByText('Following'))
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
-    expect(screen.queryByText('@stranger')).not.toBeInTheDocument()
+    expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Filters' })).not.toBeInTheDocument()
   })
 
   it('clicking the already-selected person again clears the filter (no "All" option)', async () => {
@@ -210,73 +218,34 @@ describe('Activity', () => {
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Filter by person'))
-    await waitFor(() => expect(screen.getByText('@friend')).toBeInTheDocument())
-    expect(screen.queryByText('All')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    let dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    expect(within(dialog).queryByText('All')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('@friend'))
+    fireEvent.click(within(dialog).getByText('@friend'))
     await waitFor(() => expect(screen.queryByText('Rated Show Two')).not.toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: /@friend/ }))
-    const dialog = await screen.findByRole('dialog', { name: 'Filter by person' })
+    fireEvent.click(screen.getByRole('button', { name: 'Filters · 1' }))
+    dialog = await screen.findByRole('dialog', { name: 'Filters' })
     fireEvent.click(within(dialog).getByText('@friend'))
     await waitFor(() => expect(screen.getByText('Rated Show Two')).toBeInTheDocument())
     expect(screen.getByText('Rated Show One')).toBeInTheDocument()
-    expect(screen.getByText('Filter by person')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument()
   })
 
-  it('renders the person-filter dropdown as a floating overlay, not an inline block', async () => {
+  it('closes the Filters sheet on Escape', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
       ratingFor(friend, { id: 'r-friend' }),
       ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
     ])
     renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Filter by person'))
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
-    expect(screen.getByRole('dialog', { name: 'Filter by person' })).toHaveClass('absolute')
-  })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filters' })).toBeInTheDocument())
 
-  it('right-aligns the person-filter dropdown to its trigger, so it never overflows the viewport', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
-    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
-      ratingFor(friend, { id: 'r-friend' }),
-      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
-    ])
-    renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Filter by person'))
-    const dialog = await screen.findByRole('dialog', { name: 'Filter by person' })
-    expect(dialog).toHaveClass('right-0')
-    expect(dialog).not.toHaveClass('inset-x-0', 'mx-auto')
-  })
-
-  it('pins the person-filter trigger to the row\'s right edge even if the row wraps to two lines, so the right-0 dropdown anchor above never drifts off-screen', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
-    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
-      ratingFor(friend, { id: 'r-friend' }),
-      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
-    ])
-    renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    const trigger = screen.getByText('Filter by person').closest('button')
-    expect(trigger?.parentElement).toHaveClass('ml-auto')
-  })
-
-  it('closes the person-filter dropdown on an outside pointerdown', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
-    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
-      ratingFor(friend, { id: 'r-friend' }),
-      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
-    ])
-    renderActivity()
-    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Filter by person'))
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by person' })).toBeInTheDocument())
-
-    fireEvent.pointerDown(document.body)
+    fireEvent.keyDown(document, { key: 'Escape' })
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
@@ -323,7 +292,7 @@ describe('Activity', () => {
     )
   })
 
-  it('offers a genre filter once show details resolve, and filters Now Watching by the selected genre', async () => {
+  it('offers a genre section once show details resolve, and filters Now Watching (only) by the selected genre', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([
       startedFor(friend),
@@ -337,45 +306,28 @@ describe('Activity', () => {
     )
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    expect(within(dialog).getByText('Genre · Now Watching')).toBeInTheDocument()
     fireEvent.click(within(dialog).getByText('Drama'))
 
     await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
     expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Filter by genre · 1' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters · 1' })).toBeInTheDocument())
   })
 
-  it('pins the genre-filter trigger to the row\'s right edge too, for the same reason as the person filter above', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
-    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
-      startedFor(friend),
-      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
-    ])
-    vi.mocked(getShowDetailsBulk).mockResolvedValue(
-      new Map([
-        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
-        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
-      ]),
-    )
-    renderActivity()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
-    const trigger = screen.getByRole('button', { name: 'Filter by genre' }).parentElement
-    expect(trigger).toHaveClass('ml-auto')
-  })
-
-  it('does not show a genre filter when everything in Now Watching shares one genre', async () => {
+  it('does not show a genre section when everything in Now Watching shares one genre', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([startedFor(friend)])
     vi.mocked(getShowDetailsBulk).mockResolvedValue(new Map([[1, showDetail()]]))
     renderActivity()
     await waitFor(() => expect(screen.getAllByText('Show One').length).toBeGreaterThan(0))
-    expect(screen.queryByRole('button', { name: /filter by genre/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Filters' })).not.toBeInTheDocument()
   })
 
-  it('Clear resets the genre selection, and re-clicking the trigger closes the dropdown', async () => {
+  it('Clear all resets the genre selection', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([
       startedFor(friend),
@@ -388,58 +340,16 @@ describe('Activity', () => {
       ]),
     )
     renderActivity()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
     fireEvent.click(within(dialog).getByText('Drama'))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre · 1' })).toBeInTheDocument())
+    await waitFor(() => expect(within(dialog).getByText('Clear all')).toBeInTheDocument())
 
-    fireEvent.click(within(dialog).getByText('Clear'))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
-
-    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Filter by genre' })).not.toBeInTheDocument())
-  })
-
-  it('renders the genre-filter dropdown as a floating overlay, not an inline block', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
-    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
-      startedFor(friend),
-      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
-    ])
-    vi.mocked(getShowDetailsBulk).mockResolvedValue(
-      new Map([
-        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
-        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
-      ]),
-    )
-    renderActivity()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Filter by genre' })
-    expect(dialog).toHaveClass('absolute')
-  })
-
-  it('closes the genre-filter dropdown on an outside pointerdown', async () => {
-    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
-    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
-      startedFor(friend),
-      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
-    ])
-    vi.mocked(getShowDetailsBulk).mockResolvedValue(
-      new Map([
-        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
-        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
-      ]),
-    )
-    renderActivity()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: 'Filter by genre' }))
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Filter by genre' })).toBeInTheDocument())
-
-    fireEvent.pointerDown(document.body)
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    fireEvent.click(within(dialog).getByText('Clear all'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /Filters ·/ })).not.toBeInTheDocument()
   })
 
   it('caps Now Watching to a preview, and Show all / Show less reveals or collapses the rest', async () => {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
@@ -24,14 +23,13 @@ import {
 } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useOutsideClick } from '../hooks/useOutsideClick'
 import ActivityRow from '../components/ActivityRow'
+import ActivityFiltersPanel from '../components/ActivityFiltersPanel'
 import FollowActivityRow from '../components/FollowActivityRow'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
-import DropdownPanel from '../components/DropdownPanel'
 import SegmentedControl from '../components/SegmentedControl'
-import Chip, { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
+import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
@@ -66,13 +64,12 @@ export default function Activity() {
   const [watching, setWatching] = useState<FriendWatchingEntry[]>([])
   const [showDetails, setShowDetails] = useState<Map<number, TmdbShowDetail>>(new Map())
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set())
-  const [genreFilterOpen, setGenreFilterOpen] = useState(false)
   const [showAllWatching, setShowAllWatching] = useState(false)
   const [members, setMembers] = useState<AppUser[]>([])
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [scope, setScope] = useState<Scope>('following')
   const [filterUsername, setFilterUsername] = useState<string | null>(null)
-  const [personFilterOpen, setPersonFilterOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const scopeTouched = useRef(false)
@@ -231,26 +228,19 @@ export default function Activity() {
   }, [watchingGenres])
 
   useEffect(() => {
-    if (genreFilterOpen && watchingGenres.length <= 1) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setGenreFilterOpen(false)
-    }
-  }, [genreFilterOpen, watchingGenres])
-
-  useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
     setShowAllWatching(false)
   }, [scope, filterUsername, selectedGenresKey])
 
-  useEffect(() => {
-    if (personFilterOpen && filterableMembers.length <= 1) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setPersonFilterOpen(false)
-    }
-  }, [personFilterOpen, filterableMembers])
+  const filtersAvailable = filterableMembers.length > 1 || watchingGenres.length > 1
+  const activeFilterCount = (filterUsername ? 1 : 0) + (selectedGenres.size > 0 ? 1 : 0)
 
-  const personFilterRef = useOutsideClick<HTMLDivElement>(personFilterOpen, () => setPersonFilterOpen(false))
-  const genreFilterRef = useOutsideClick<HTMLDivElement>(genreFilterOpen, () => setGenreFilterOpen(false))
+  useEffect(() => {
+    if (filtersOpen && !filtersAvailable) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setFiltersOpen(false)
+    }
+  }, [filtersOpen, filtersAvailable])
 
   const filtered = useMemo(
     () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
@@ -301,80 +291,44 @@ export default function Activity() {
           label="Activity scope"
         />
 
-        {filterableMembers.length > 1 && (
-          <div ref={personFilterRef} className="relative ml-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => setPersonFilterOpen((v) => !v)}
-              aria-expanded={personFilterOpen}
-              aria-haspopup="true"
-              className={`flex items-center gap-2 rounded-full py-2 pl-2 pr-4 text-sm font-medium transition-colors duration-200 ${
-                personFilterOpen || filterUsername ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
-              }`}
-            >
-              {filterUsername ? (
-                <>
-                  <Avatar username={filterUsername} size="xs" />
-                  <span>@{filterUsername}</span>
-                </>
-              ) : (
-                'Filter by person'
-              )}
-            </button>
-
-            <AnimatePresence>
-              {personFilterOpen && (
-                <PersonFilterPanel
-                  key="person-filter"
-                  members={filterableMembers}
-                  me={me}
-                  active={filterUsername}
-                  onSelect={(username) => {
-                    setFilterUsername(username)
-                    setPersonFilterOpen(false)
-                  }}
-                  onClose={() => setPersonFilterOpen(false)}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+        {filtersAvailable && (
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            aria-pressed={filtersOpen}
+            className={`ml-auto shrink-0 ${PILL_SIZE_CLASSES} ${
+              filtersOpen || activeFilterCount > 0 ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
+            }`}
+          >
+            Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
+          </button>
         )}
       </div>
+
+      <AnimatePresence>
+        {filtersOpen && (
+          <ActivityFiltersPanel
+            key="activity-filters"
+            members={filterableMembers}
+            me={me}
+            activeUsername={filterUsername}
+            onSelectUsername={setFilterUsername}
+            genres={watchingGenres}
+            selectedGenres={selectedGenres}
+            onToggleGenre={toggleGenre}
+            onClear={() => {
+              setFilterUsername(null)
+              setSelectedGenres(new Set())
+            }}
+            onClose={() => setFiltersOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       <div className="mb-10">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
-          {watchingGenres.length > 1 && (
-            <div ref={genreFilterRef} className="relative ml-auto shrink-0">
-              <button
-                type="button"
-                onClick={() => setGenreFilterOpen((v) => !v)}
-                aria-expanded={genreFilterOpen}
-                aria-haspopup="true"
-                className={`${PILL_SIZE_CLASSES} ${
-                  genreFilterOpen || selectedGenres.size > 0 ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
-                }`}
-              >
-                Filter by genre{selectedGenres.size > 0 ? ` · ${selectedGenres.size}` : ''}
-              </button>
-
-              <AnimatePresence>
-                {genreFilterOpen && (
-                  <GenreFilterPanel
-                    key="genre-filter"
-                    genres={watchingGenres}
-                    selected={selectedGenres}
-                    onToggle={toggleGenre}
-                    onClear={() => setSelectedGenres(new Set())}
-                    onClose={() => setGenreFilterOpen(false)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
+        <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
         <p className="mt-1 text-sm text-base-500">
           {filterUsername
             ? `What @${filterUsername} is watching right now.`
@@ -473,91 +427,5 @@ function FriendWatchingTile({ entry, index }: { entry: FriendWatchingEntry; inde
         </div>
       </Link>
     </motion.div>
-  )
-}
-
-/** The genre facet for Now Watching, floated behind the "Filter by genre" trigger button. */
-function GenreFilterPanel({
-  genres,
-  selected,
-  onToggle,
-  onClear,
-  onClose,
-}: {
-  genres: string[]
-  selected: Set<string>
-  onToggle: (genre: string) => void
-  onClear: () => void
-  onClose: () => void
-}) {
-  return (
-    <DropdownPanel onClose={onClose} label="Filter by genre" className="w-64 p-3">
-      {selected.size > 0 && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="mb-2 block text-xs font-medium text-accent-400 hover:underline"
-        >
-          Clear
-        </button>
-      )}
-      <div className="scroll-fade-bottom max-h-64 overflow-y-auto pb-1">
-        <div className="flex flex-wrap gap-1.5">
-          {genres.map((genre) => (
-            <Chip key={genre} active={selected.has(genre)} onClick={() => onToggle(genre)}>
-              {genre}
-            </Chip>
-          ))}
-        </div>
-      </div>
-    </DropdownPanel>
-  )
-}
-
-/** The "who" drill-down for the feed, floated behind the "Filter by person" trigger button. */
-function PersonFilterPanel({
-  members,
-  me,
-  active,
-  onSelect,
-  onClose,
-}: {
-  members: AppUser[]
-  me: AppUser | null
-  active: string | null
-  onSelect: (username: string | null) => void
-  onClose: () => void
-}) {
-  return (
-    <DropdownPanel onClose={onClose} label="Filter by person" className="w-60 p-2">
-      <ul className="scroll-fade-bottom max-h-64 space-y-1 overflow-y-auto pb-1">
-        {members.map((u) => (
-          <li key={u.id}>
-            <PersonRow
-              active={active === u.username}
-              onClick={() => onSelect(active === u.username ? null : u.username)}
-            >
-              <Avatar username={u.username} size="xs" />
-              <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
-            </PersonRow>
-          </li>
-        ))}
-      </ul>
-    </DropdownPanel>
-  )
-}
-
-function PersonRow({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm font-medium transition-colors duration-200 ${
-        active ? 'bg-accent-500/15 text-accent-300' : 'text-base-200 hover:bg-hover'
-      }`}
-    >
-      {children}
-    </button>
   )
 }
