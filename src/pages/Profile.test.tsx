@@ -75,6 +75,12 @@ describe('Profile', () => {
     expect(screen.getByText('Public view')).toHaveAttribute('href', '/u/bob')
   })
 
+  it('pins the More trigger to the header row\'s right edge even if the row wraps to two lines', () => {
+    renderProfile()
+    const trigger = screen.getByText('More').closest('button')
+    expect(trigger?.parentElement).toHaveClass('ml-auto')
+  })
+
   it('renders the More menu as a floating overlay, not an inline block', () => {
     renderProfile()
     fireEvent.click(screen.getByText('More'))
