@@ -113,7 +113,7 @@ beforeEach(() => {
   vi.mocked(fetchListsForUser).mockReset().mockResolvedValue([])
   vi.mocked(fetchSeasonBreakdowns).mockReset().mockResolvedValue(new Map())
   vi.mocked(fetchNextEpisode).mockReset().mockResolvedValue(null)
-  vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), loading: false })
+  vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), platformNames: new Map(), loading: false })
   vi.mocked(useAuth).mockReturnValue({
     user: me,
     loading: false,

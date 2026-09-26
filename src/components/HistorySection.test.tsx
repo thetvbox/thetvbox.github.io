@@ -44,7 +44,7 @@ function renderSection(activity: ShowActivity[], props: Partial<Parameters<typeo
 }
 
 beforeEach(() => {
-  vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), loading: false })
+  vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), platformNames: new Map(), loading: false })
   vi.mocked(useShowDetails).mockReturnValue({ details: new Map(), loading: false })
 })
 
@@ -102,6 +102,7 @@ describe('HistorySection', () => {
   it('groups shows by platform when the Platform sort is selected', () => {
     vi.mocked(useStreamingPlatforms).mockReturnValue({
       platforms: new Map([[1, { provider_name: 'Netflix', logo_path: null }]]),
+      platformNames: new Map([[1, new Set(['Netflix'])]]),
       loading: false,
     })
     renderSection([show({ showId: 1 })])
