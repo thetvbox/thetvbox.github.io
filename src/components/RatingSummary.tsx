@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { INLINE_PANEL_ANIMATE, INLINE_PANEL_INITIAL, INLINE_PANEL_TRANSITION } from '../lib/motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { INLINE_PANEL_ANIMATE, INLINE_PANEL_EXIT, INLINE_PANEL_INITIAL, INLINE_PANEL_TRANSITION } from '../lib/motion'
 import StarRating from './StarRating'
 import StarGlyph from './StarGlyph'
 import Spinner from './Spinner'
 import { profileRoute } from '../lib/routes'
+import { pluralSuffix } from '../lib/format'
 
 interface RatingEntry {
   id: string
@@ -67,7 +68,7 @@ export default function RatingSummary({
                 <StarGlyph size={14} />
                 {othersAvg.toFixed(1)}
                 <span className="text-base-500">
-                  ({others.length} {others.length === 1 ? 'other rating' : 'other ratings'})
+                  ({others.length} other rating{pluralSuffix(others.length)})
                 </span>
               </>
             ) : (
@@ -77,33 +78,36 @@ export default function RatingSummary({
         )}
       </div>
 
-      {open && ratings.length > 0 && (
-        <motion.ul
-          initial={INLINE_PANEL_INITIAL}
-          animate={INLINE_PANEL_ANIMATE}
-          transition={INLINE_PANEL_TRANSITION}
-          className="mt-2.5 max-w-xs space-y-1.5 border-t border-hairline pt-2.5"
-        >
-          {ratings
-            .slice()
-            .sort((a, b) => b.rating - a.rating)
-            .map((r) => (
-              <li key={r.id} className="flex items-center justify-between text-xs">
-                {r.user_id === currentUserId ? (
-                  <span className="text-base-300">You</span>
-                ) : (
-                  <Link to={profileRoute(r.users?.username ?? '')} className="text-base-300 hover:text-accent-400">
-                    @{r.users?.username ?? 'unknown'}
-                  </Link>
-                )}
-                <span className="flex items-center gap-1 text-star">
-                  {r.rating.toFixed(1)}
-                  <StarGlyph size={14} />
-                </span>
-              </li>
-            ))}
-        </motion.ul>
-      )}
+      <AnimatePresence>
+        {open && ratings.length > 0 && (
+          <motion.ul
+            initial={INLINE_PANEL_INITIAL}
+            animate={INLINE_PANEL_ANIMATE}
+            exit={INLINE_PANEL_EXIT}
+            transition={INLINE_PANEL_TRANSITION}
+            className="mt-2.5 max-w-xs space-y-1.5 border-t border-hairline pt-2.5"
+          >
+            {ratings
+              .slice()
+              .sort((a, b) => b.rating - a.rating)
+              .map((r) => (
+                <li key={r.id} className="flex items-center justify-between text-xs">
+                  {r.user_id === currentUserId ? (
+                    <span className="text-base-300">You</span>
+                  ) : (
+                    <Link to={profileRoute(r.users?.username ?? '')} className="text-base-300 hover:text-accent-400">
+                      @{r.users?.username ?? 'unknown'}
+                    </Link>
+                  )}
+                  <span className="flex items-center gap-1 text-star">
+                    {r.rating.toFixed(1)}
+                    <StarGlyph size={14} />
+                  </span>
+                </li>
+              ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
