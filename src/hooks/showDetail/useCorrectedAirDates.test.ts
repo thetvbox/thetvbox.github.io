@@ -37,7 +37,7 @@ function episode(overrides: Partial<TmdbEpisode> = {}): TmdbEpisode {
 }
 
 function season(episodes: TmdbEpisode[]): TmdbSeasonDetail {
-  return { id: 1, season_number: 1, name: 'Season 1', episodes }
+  return { id: 1, season_number: 1, name: 'Season 1', air_date: null, episodes }
 }
 
 beforeEach(() => {

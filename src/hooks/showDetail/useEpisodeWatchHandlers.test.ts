@@ -57,7 +57,7 @@ function watchedRow(overrides: Partial<EpisodeWatched> = {}): EpisodeWatched {
 }
 
 function season(episodes: TmdbSeasonDetail['episodes'] = []): TmdbSeasonDetail {
-  return { id: 1, season_number: 1, name: 'Season 1', episodes }
+  return { id: 1, season_number: 1, name: 'Season 1', air_date: null, episodes }
 }
 
 function useHarness(

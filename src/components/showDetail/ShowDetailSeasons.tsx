@@ -39,7 +39,7 @@ interface ShowDetailSeasonsProps {
   jumpToProgress?: boolean
 }
 
-/** Season tabs, the "next episode airs" banner, the per-season rating, and the episode list. */
+/** Season tabs, the "next episode airs" banner, the per-season rating (replaced by an "Airs <date>" badge while the season itself hasn't started airing yet), and the episode list. */
 export default function ShowDetailSeasons({
   show,
   activeSeason,
@@ -66,6 +66,8 @@ export default function ShowDetailSeasons({
   const nextUpEpisode = season?.episodes.find(
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
+  const seasonAirDate = season?.air_date ?? null
+  const seasonUpcoming = Boolean(seasonAirDate && isFutureDate(seasonAirDate))
 
   const seasonSegments = useMemo(
     () => computeSeasonProgress(show.seasons, countWatchedBySeason(Object.values(watched)))?.segments ?? [],
@@ -131,16 +133,22 @@ export default function ShowDetailSeasons({
       </div>
 
       <div className="mb-5">
-        <RatingSummary
-          ratings={seasonRatings}
-          myRating={myRating}
-          onChange={onRateSeason}
-          saving={savingSeasonRating}
-          currentUserId={currentUserId}
-          size="md"
-          emptyLabel="You're the first to rate this season"
-          ratingLabel={`Rate Season ${activeSeason}`}
-        />
+        {seasonUpcoming ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline-strong px-3 py-1.5 text-xs font-medium text-base-500">
+            Airs {formatShortDate(seasonAirDate!)}
+          </span>
+        ) : (
+          <RatingSummary
+            ratings={seasonRatings}
+            myRating={myRating}
+            onChange={onRateSeason}
+            saving={savingSeasonRating}
+            currentUserId={currentUserId}
+            size="md"
+            emptyLabel="You're the first to rate this season"
+            ratingLabel={`Rate Season ${activeSeason}`}
+          />
+        )}
       </div>
 
       <div className="space-y-3">

@@ -58,6 +58,7 @@ export interface TmdbSeasonDetail {
   id: number
   season_number: number
   name: string
+  air_date: string | null
   episodes: TmdbEpisode[]
 }
 

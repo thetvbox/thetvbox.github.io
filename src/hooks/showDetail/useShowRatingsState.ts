@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { deleteShowRating, upsertShowRating } from '../../lib/showRatings'
 import { deleteSeasonRating, upsertSeasonRating } from '../../lib/seasonRatings'
+import { isFutureDate } from '../../lib/date'
 import type { AppUser, SeasonRatingWithUser, ShowRatingWithUser, TmdbSeasonDetail, TmdbShowDetail } from '../../types'
 
 /** Show-level and active-season-level rating state, each independently editable by the current user. */
@@ -72,9 +73,13 @@ export function useShowRatingsState(
     }
   }
 
-  /** Same shape as handleRateShow, but scoped to whichever season tab is active. */
+  /** Same shape as handleRateShow, but scoped to whichever season tab is active; refuses to rate a season that hasn't started airing yet. */
   async function handleRateSeason(value: number) {
     if (!user || !show || activeSeason === null) return
+    if (value !== 0 && season?.air_date && isFutureDate(season.air_date)) {
+      showError("You can't rate a season that hasn't aired yet.")
+      return
+    }
     setSavingSeasonRating(true)
     try {
       if (value === 0) {

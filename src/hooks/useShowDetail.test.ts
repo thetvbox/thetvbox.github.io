@@ -137,6 +137,7 @@ beforeEach(() => {
     id: 1,
     season_number: 1,
     name: 'Season 1',
+    air_date: '2020-01-01',
     episodes: [{ id: 1, season_number: 1, episode_number: 1, name: 'Pilot', overview: '', air_date: '2020-01-01', runtime: 30, still_path: null }],
   })
   vi.mocked(fetchWatchedForShow).mockResolvedValue({})

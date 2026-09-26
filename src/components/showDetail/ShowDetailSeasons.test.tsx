@@ -65,6 +65,7 @@ function season(overrides: Partial<TmdbSeasonDetail> = {}): TmdbSeasonDetail {
     id: 1,
     season_number: 1,
     name: 'Season 1',
+    air_date: null,
     episodes: [episode(), episode({ id: 2, episode_number: 2, name: 'Episode Two' })],
     ...overrides,
   }
@@ -173,5 +174,11 @@ describe('ShowDetailSeasons', () => {
   it('renders the season rating summary with the right label', () => {
     renderSeasons({ activeSeason: 3 })
     expect(screen.getByRole('radiogroup', { name: 'Rate Season 3' })).toBeInTheDocument()
+  })
+
+  it('shows an "Airs" badge instead of the rating control for a season that has not started airing yet', () => {
+    renderSeasons({ activeSeason: 3, season: season({ air_date: '2099-06-15' }) })
+    expect(screen.getByText(/Airs/)).toBeInTheDocument()
+    expect(screen.queryByRole('radiogroup', { name: 'Rate Season 3' })).not.toBeInTheDocument()
   })
 })

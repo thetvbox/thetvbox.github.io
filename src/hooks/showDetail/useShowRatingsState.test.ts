@@ -40,7 +40,7 @@ const show: TmdbShowDetail = {
 }
 
 function season(overrides: Partial<TmdbSeasonDetail> = {}): TmdbSeasonDetail {
-  return { id: 1, season_number: 1, name: 'Season 1', episodes: [], ...overrides }
+  return { id: 1, season_number: 1, name: 'Season 1', air_date: null, episodes: [], ...overrides }
 }
 
 function showRating(overrides: Partial<ShowRatingWithUser> = {}): ShowRatingWithUser {
@@ -362,6 +362,34 @@ describe('useShowRatingsState', () => {
       await act(() => result.current.handleRateSeason(8))
 
       expect(upsertSeasonRating).not.toHaveBeenCalled()
+      expect(result.current.seasonRatings).toEqual([])
+    })
+
+    it('refuses to rate a season that has not aired yet, and leaves seasonRatings untouched', async () => {
+      const farFuture = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString().slice(0, 10)
+      const showError = vi.fn()
+      const { result } = renderHook(() =>
+        useHarness({ activeSeason: 1, season: season({ season_number: 1, air_date: farFuture }), showError }),
+      )
+
+      await act(() => result.current.handleRateSeason(8))
+
+      expect(upsertSeasonRating).not.toHaveBeenCalled()
+      expect(result.current.seasonRatings).toEqual([])
+      expect(showError).toHaveBeenCalledWith("You can't rate a season that hasn't aired yet.")
+    })
+
+    it('still allows clearing (value 0) a season rating even if the season air date has since moved to the future', async () => {
+      const farFuture = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString().slice(0, 10)
+      const mine = seasonRating({ id: 'mine', user_id: 'u1', season_number: 1, rating: 7 })
+      const { result } = renderHook(() =>
+        useHarness({ activeSeason: 1, season: season({ season_number: 1, air_date: farFuture }) }),
+      )
+      act(() => result.current.setSeasonRatings([mine]))
+
+      await act(() => result.current.handleRateSeason(0))
+
+      expect(deleteSeasonRating).toHaveBeenCalledWith('u1', 100, 1)
       expect(result.current.seasonRatings).toEqual([])
     })
 
