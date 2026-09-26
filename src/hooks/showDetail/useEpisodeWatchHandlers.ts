@@ -136,19 +136,24 @@ export function useEpisodeWatchHandlers(
       realSeasons.map((s) => getSeasonDetail(show.id, s.season_number).catch(() => null)),
     )
     const runtimeByKey = new Map<string, number | null>()
+    const nameByKey = new Map<string, string | null>()
     for (const detail of seasonDetails) {
       if (!detail) continue
       for (const ep of detail.episodes) {
-        runtimeByKey.set(watchedKey(ep.season_number, ep.episode_number), ep.runtime ?? null)
+        const key = watchedKey(ep.season_number, ep.episode_number)
+        runtimeByKey.set(key, ep.runtime ?? null)
+        nameByKey.set(key, ep.name ?? null)
       }
     }
     const episodes = realSeasons.flatMap((s) =>
       Array.from({ length: s.episode_count }, (_, i) => {
         const episodeNumber = i + 1
+        const key = watchedKey(s.season_number, episodeNumber)
         return {
           seasonNumber: s.season_number,
           episodeNumber,
-          runtimeMinutes: runtimeByKey.get(watchedKey(s.season_number, episodeNumber)) ?? null,
+          episodeName: nameByKey.get(key) ?? null,
+          runtimeMinutes: runtimeByKey.get(key) ?? null,
         }
       }),
     )

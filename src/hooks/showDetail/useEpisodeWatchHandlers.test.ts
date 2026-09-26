@@ -16,6 +16,7 @@ vi.mock('../../lib/watched', async () => {
 })
 
 import { bulkMarkWatched, bulkUnmarkWatched, markWatched, restoreWatched, unmarkWatched } from '../../lib/watched'
+import { getSeasonDetail } from '../../lib/tmdb'
 import { useEpisodeWatchHandlers } from './useEpisodeWatchHandlers'
 import type { AppUser, EpisodeWatched, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
@@ -93,6 +94,7 @@ beforeEach(() => {
   vi.mocked(bulkMarkWatched).mockReset()
   vi.mocked(bulkUnmarkWatched).mockReset().mockResolvedValue(undefined)
   vi.mocked(restoreWatched).mockReset().mockResolvedValue([])
+  vi.mocked(getSeasonDetail).mockReset()
 })
 
 describe('useEpisodeWatchHandlers', () => {
@@ -210,6 +212,27 @@ describe('useEpisodeWatchHandlers', () => {
 
     expect(bulkUnmarkWatched).toHaveBeenCalledWith('u1', 100, [{ seasonNumber: 1, episodeNumber: 1 }])
     expect(result.current.watched['1-1']).toBeUndefined()
+  })
+
+  it('handleMarkAllWatched saves each episode\'s real name, not null', async () => {
+    const detail = season([
+      { id: 1, episode_number: 1, season_number: 1, name: 'Pilot', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 },
+      { id: 2, episode_number: 2, season_number: 1, name: 'Second Episode', overview: '', still_path: null, air_date: '2020-01-08', runtime: 45 },
+    ])
+    vi.mocked(getSeasonDetail).mockResolvedValue(detail)
+    vi.mocked(bulkMarkWatched).mockResolvedValue([])
+    const { result } = renderHook(() => useHarness({}))
+
+    await act(() => result.current.handleMarkAllWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+
+    expect(bulkMarkWatched).toHaveBeenCalledWith(
+      expect.objectContaining({
+        episodes: [
+          { seasonNumber: 1, episodeNumber: 1, episodeName: 'Pilot', runtimeMinutes: 42 },
+          { seasonNumber: 1, episodeNumber: 2, episodeName: 'Second Episode', runtimeMinutes: 45 },
+        ],
+      }),
+    )
   })
 
   it('seasonWatchedCount counts only the active season episodes present in watched', () => {
