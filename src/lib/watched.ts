@@ -14,18 +14,21 @@ export const UNKNOWN_WATCHED_AT = new Date(0).toISOString()
 export async function fetchWatchedForUserAndShow(
   userId: string,
   showId: number,
+  limit = ACTIVITY_FETCH_LIMIT,
 ): Promise<EpisodeWatched[]> {
-  const { data, error } = await supabase
-    .from(TABLE_EPISODE_WATCHED)
-    .select('*')
-    .eq('user_id', userId)
-    .eq('show_id', showId)
-    .order('watched_at', { ascending: false })
-    .order('season_number', { ascending: false })
-    .order('episode_number', { ascending: false })
-
-  if (error) throw error
-  return (data ?? []) as EpisodeWatched[]
+  return fetchPaginated<EpisodeWatched>(
+    (from, to) =>
+      supabase
+        .from(TABLE_EPISODE_WATCHED)
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('show_id', showId)
+        .order('watched_at', { ascending: false })
+        .order('season_number', { ascending: false })
+        .order('episode_number', { ascending: false })
+        .range(from, to),
+    limit,
+  )
 }
 
 /** Same rows as fetchWatchedForUserAndShow, keyed by season/episode for quick lookup. */

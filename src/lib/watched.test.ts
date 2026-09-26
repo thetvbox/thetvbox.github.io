@@ -78,6 +78,12 @@ describe('fetchWatchedForUserAndShow', () => {
     mockFrom({ data: null, error: { message: 'db down' } })
     await expect(fetchWatchedForUserAndShow('u1', 1)).rejects.toEqual({ message: 'db down' })
   })
+
+  it('pages through .range() instead of a bare unranged select, so a show past 1000 episodes is not truncated', async () => {
+    const builder = mockFrom({ data: [row()], error: null, count: 1 })
+    await fetchWatchedForUserAndShow('u1', 1)
+    expect(builder.range).toHaveBeenCalledWith(0, 999)
+  })
 })
 
 describe('fetchWatchedForShow', () => {

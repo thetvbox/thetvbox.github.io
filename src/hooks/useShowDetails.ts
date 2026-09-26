@@ -13,6 +13,8 @@ export function useShowDetails(
 
   useEffect(() => {
     if (!enabled || !key) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setLoading(false)
       return
     }
     let cancelled = false

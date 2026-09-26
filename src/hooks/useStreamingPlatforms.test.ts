@@ -49,4 +49,16 @@ describe('useStreamingPlatforms', () => {
     expect(result.current.platforms).toEqual(new Map())
     expect(result.current.platformNames).toEqual(new Map())
   })
+
+  it('stops loading instead of hanging forever if showIds becomes empty while a fetch is still in flight', () => {
+    vi.mocked(resolveShowPlatforms).mockReturnValue(new Promise(() => {}))
+    const { result, rerender } = renderHook(({ ids }) => useStreamingPlatforms(ids), {
+      initialProps: { ids: [1] },
+    })
+    expect(result.current.loading).toBe(true)
+
+    rerender({ ids: [] })
+
+    expect(result.current.loading).toBe(false)
+  })
 })

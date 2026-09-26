@@ -40,6 +40,18 @@ describe('useShowDetails', () => {
     expect(result.current.details).toEqual(new Map())
   })
 
+  it('stops loading instead of hanging forever if disabled while a fetch is still in flight', () => {
+    vi.mocked(getShowDetailsBulk).mockReturnValue(new Promise(() => {}))
+    const { result, rerender } = renderHook(({ ids, enabled }) => useShowDetails(ids, enabled), {
+      initialProps: { ids: [1], enabled: true },
+    })
+    expect(result.current.loading).toBe(true)
+
+    rerender({ ids: [1], enabled: false })
+
+    expect(result.current.loading).toBe(false)
+  })
+
   it('refetches when the id list changes', async () => {
     vi.mocked(getShowDetailsBulk).mockResolvedValue(new Map())
     const { rerender } = renderHook(({ ids }) => useShowDetails(ids, true), {

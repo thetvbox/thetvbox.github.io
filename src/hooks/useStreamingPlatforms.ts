@@ -20,6 +20,8 @@ export function useStreamingPlatforms(showIds: number[]): {
       setPlatforms(new Map())
       // oxlint-disable-next-line react/set-state-in-effect
       setPlatformNames(new Map())
+      // oxlint-disable-next-line react/set-state-in-effect
+      setLoading(false)
       return
     }
     let cancelled = false
@@ -30,7 +32,6 @@ export function useStreamingPlatforms(showIds: number[]): {
     resolveShowPlatforms(ids, region)
       .then((map) => {
         if (!cancelled) setPlatforms(map)
-        // Runs after the above resolves, so it reads from an already-warm cache instead of double-fetching.
         return resolveShowPlatformNames(ids, region)
       })
       .then((map) => {
