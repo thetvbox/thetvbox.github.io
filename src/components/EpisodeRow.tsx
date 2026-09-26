@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import type { Ref } from 'react'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../lib/motion'
@@ -43,10 +43,19 @@ function EpisodeRow({
   const overviewRef = useRef<HTMLParagraphElement>(null)
   const still = stillUrl(episode.still_path)
 
-  useEffect(() => {
+  /** Measures before paint and re-measures on resize, since line-clamp truncation depends on width too. */
+  useLayoutEffect(() => {
     const el = overviewRef.current
     if (!el) return
-    setIsTruncated(el.scrollHeight > el.clientHeight + 1)
+    function measure() {
+      if (!el) return
+      // oxlint-disable-next-line react/set-state-in-effect
+      setIsTruncated(el.scrollHeight > el.clientHeight + 1)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [episode.overview])
   const isUpcoming = Boolean(episode.air_date && isFutureDate(episode.air_date))
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import EpisodeRow from './EpisodeRow'
 import type { TmdbEpisode } from '../types'
@@ -203,5 +203,44 @@ describe('EpisodeRow', () => {
       />,
     )
     expect(screen.queryByText(/m$/)).not.toBeInTheDocument()
+  })
+
+  it('re-measures truncation when the row is resized, not just when the overview text changes', () => {
+    let resizeCallback: ResizeObserverCallback = () => {}
+    const observe = vi.fn()
+    const disconnect = vi.fn()
+    vi.stubGlobal(
+      'ResizeObserver',
+      vi.fn().mockImplementation(function FakeResizeObserver(cb: ResizeObserverCallback) {
+        resizeCallback = cb
+        return { observe, unobserve: vi.fn(), disconnect }
+      }),
+    )
+    try {
+      render(
+        <EpisodeRow
+          episode={episode()}
+          watched={false}
+          watchedAt={null}
+          watchedAtUnknown={false}
+          onToggleWatched={vi.fn()}
+          onMarkWatchedWithDate={vi.fn()}
+        />,
+      )
+      const el = screen.getByText('A show begins.')
+      expect(observe).toHaveBeenCalledWith(el)
+      expect(screen.queryByText('Show more')).not.toBeInTheDocument()
+
+      // The row narrowed (e.g. the window resized), so the same two-line clamp now overflows.
+      Object.defineProperty(el, 'scrollHeight', { configurable: true, value: 40 })
+      Object.defineProperty(el, 'clientHeight', { configurable: true, value: 20 })
+      act(() => {
+        resizeCallback([], {} as ResizeObserver)
+      })
+
+      expect(screen.getByText('Show more')).toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })
