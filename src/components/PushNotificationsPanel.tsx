@@ -12,33 +12,40 @@ interface PushNotificationsPanelProps {
   onClose: () => void
 }
 
-type Status = 'loading' | 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed'
+type Status = 'loading' | 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'error'
 
 /** Enable/disable sheet for Web Push notifications on this device. */
 export default function PushNotificationsPanel({ userId, onClose }: PushNotificationsPanelProps) {
   const [status, setStatus] = useState<Status>('loading')
   const [busy, setBusy] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const { toast, showError, dismiss } = useToast()
 
   useEffect(() => {
     let cancelled = false
     async function load() {
-      if (!isPushSupported()) {
-        if (!cancelled) setStatus('unsupported')
-        return
+      // oxlint-disable-next-line react/set-state-in-effect
+      setStatus('loading')
+      try {
+        if (!isPushSupported()) {
+          if (!cancelled) setStatus('unsupported')
+          return
+        }
+        if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+          if (!cancelled) setStatus('denied')
+          return
+        }
+        const subscribed = await isPushSubscribed()
+        if (!cancelled) setStatus(subscribed ? 'subscribed' : 'unsubscribed')
+      } catch {
+        if (!cancelled) setStatus('error')
       }
-      if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
-        if (!cancelled) setStatus('denied')
-        return
-      }
-      const subscribed = await isPushSubscribed()
-      if (!cancelled) setStatus(subscribed ? 'subscribed' : 'unsubscribed')
     }
     load()
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadKey])
 
   async function handleEnable() {
     setBusy(true)
@@ -87,6 +94,21 @@ export default function PushNotificationsPanel({ userId, onClose }: PushNotifica
           Notifications are blocked for TV Box in this browser. Allow them in your browser or system
           settings, then reopen this panel.
         </p>
+      )}
+
+      {status === 'error' && (
+        <div className="space-y-3">
+          <p className="text-sm leading-relaxed text-base-400">
+            Couldn&apos;t check your push notification status.
+          </p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="text-xs text-accent-400 hover:underline"
+          >
+            Try again
+          </button>
+        </div>
       )}
 
       {status === 'unsubscribed' && (

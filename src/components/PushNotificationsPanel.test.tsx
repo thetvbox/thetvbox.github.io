@@ -105,6 +105,18 @@ describe('PushNotificationsPanel', () => {
     expect(await screen.findByRole('button', { name: 'Enable push notifications' })).toBeInTheDocument()
   })
 
+  it('shows an error state with a retry option instead of hanging on "loading" when the status check fails', async () => {
+    vi.mocked(isPushSubscribed).mockRejectedValue(new Error('boom'))
+    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+
+    expect(await screen.findByText(/Couldn.t check your push notification status/)).toBeInTheDocument()
+
+    vi.mocked(isPushSubscribed).mockResolvedValue(true)
+    fireEvent.click(screen.getByText('Try again'))
+
+    expect(await screen.findByText('Push notifications are on for this device.')).toBeInTheDocument()
+  })
+
   it('calls onClose when the panel header close button is clicked', async () => {
     const onClose = vi.fn()
     render(<PushNotificationsPanel userId="u1" onClose={onClose} />)
