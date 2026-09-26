@@ -13,7 +13,7 @@ import PanelHeader from './PanelHeader'
 
 type Status = 'idle' | 'saving' | 'success' | 'error'
 
-/** Centered bug-report modal form, opened from Profile's More menu instead of a persistent top-bar icon. */
+/** Centered bug-report modal form, opened from the persistent top-bar icon in Navbar. */
 export default function ReportBugPanel({ onClose }: { onClose: () => void }) {
   const { user } = useAuth()
   const location = useLocation()
