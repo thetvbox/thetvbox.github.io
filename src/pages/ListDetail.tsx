@@ -99,7 +99,7 @@ export default function ListDetail() {
     setDeleting(true)
     try {
       await deleteList(listId)
-      navigate(profileRoute(username))
+      navigate(`${profileRoute(username)}?${PROFILE_LISTS_TAB_QUERY}`)
     } catch {
       setDeleting(false)
       setConfirmingDelete(false)

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
@@ -46,12 +46,17 @@ function item(overrides: Partial<ShowListItem> = {}): ShowListItem {
   }
 }
 
+function ProfilePageStub() {
+  const location = useLocation()
+  return <p>Profile page{location.search}</p>
+}
+
 function renderPage(username = 'owner', listId = 'l1') {
   return render(
     <MemoryRouter initialEntries={[`/u/${username}/lists/${listId}`]}>
       <Routes>
         <Route path="/u/:username/lists/:listId" element={<ListDetail />} />
-        <Route path="/u/:username" element={<p>Profile page</p>} />
+        <Route path="/u/:username" element={<ProfilePageStub />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -166,6 +171,17 @@ describe('ListDetail', () => {
     fireEvent.click(screen.getByText('Delete list'))
     fireEvent.click(screen.getByText('Confirm'))
     await waitFor(() => expect(deleteList).toHaveBeenCalledWith('l1'))
+  })
+
+  it('returns to the lists tab of the profile after deleting', async () => {
+    vi.mocked(fetchUserByUsername).mockResolvedValue(owner)
+    vi.mocked(fetchList).mockResolvedValue(list())
+    vi.mocked(deleteList).mockResolvedValue(undefined)
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Delete list')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Delete list'))
+    fireEvent.click(screen.getByText('Confirm'))
+    await waitFor(() => expect(screen.getByText('Profile page?tab=lists')).toBeInTheDocument())
   })
 
   it('shows an error and stays on the page if delete fails', async () => {
