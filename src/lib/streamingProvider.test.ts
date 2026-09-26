@@ -6,7 +6,14 @@ vi.mock('./streamingOverrides', () => ({ fetchStreamingOverrides: vi.fn() }))
 
 import { getWatchProviders } from './tmdb'
 import { fetchStreamingOverrides } from './streamingOverrides'
-import { dedupeProviders, invalidatePlatformCache, pickBestFreeProvider, resolveShowPlatforms } from './streamingProvider'
+import {
+  dedupeProviders,
+  invalidatePlatformCache,
+  isLowSignalProvider,
+  pickBestFreeProvider,
+  resolveShowPlatformNames,
+  resolveShowPlatforms,
+} from './streamingProvider'
 
 function provider(overrides: Partial<TmdbWatchProvider> = {}): TmdbWatchProvider {
   return { provider_id: 1, provider_name: 'Netflix', logo_path: '/netflix.png', display_priority: 1, ...overrides }
@@ -163,5 +170,77 @@ describe('resolveShowPlatforms', () => {
     invalidatePlatformCache(106)
     await resolveShowPlatforms([106], 'US')
     expect(vi.mocked(getWatchProviders).mock.calls.length).toBeGreaterThan(callsAfterFirst)
+  })
+})
+
+describe('resolveShowPlatformNames', () => {
+  it('returns every non-low-signal flatrate/free/ads provider a show streams on, not just the single badge pick', async () => {
+    vi.mocked(getWatchProviders).mockResolvedValue({
+      id: 301,
+      results: {
+        US: {
+          link: '',
+          flatrate: [provider({ provider_id: 1, provider_name: 'Netflix', display_priority: 1 })],
+          free: [provider({ provider_id: 2, provider_name: 'Tubi', display_priority: 5 })],
+        },
+      },
+    } as TmdbWatchProviders)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    const result = await resolveShowPlatformNames([301], 'US')
+    expect(result.get(301)).toEqual(new Set(['Netflix', 'Tubi']))
+  })
+
+  it('excludes low-signal reseller/live-TV/cable-app listings, same as the single-pick resolver', async () => {
+    vi.mocked(getWatchProviders).mockResolvedValue({
+      id: 302,
+      results: {
+        US: {
+          link: '',
+          flatrate: [
+            provider({ provider_id: 1, provider_name: 'Hulu', display_priority: 1 }),
+            provider({ provider_id: 2, provider_name: 'Hulu Amazon Channel', display_priority: 2 }),
+          ],
+        },
+      },
+    } as TmdbWatchProviders)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    const result = await resolveShowPlatformNames([302], 'US')
+    expect(result.get(302)).toEqual(new Set(['Hulu']))
+  })
+
+  it('returns an empty set for a show with no providers and no override', async () => {
+    vi.mocked(getWatchProviders).mockResolvedValue({ id: 303, results: {} } as TmdbWatchProviders)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    const result = await resolveShowPlatformNames([303], 'US')
+    expect(result.get(303)).toEqual(new Set())
+  })
+
+  it('shares the single-pick resolver\'s cache, so calling both for the same show/region only fetches once', async () => {
+    vi.mocked(getWatchProviders).mockResolvedValue({
+      id: 304,
+      results: { US: { link: '', flatrate: [provider({ provider_name: 'Netflix' })] } },
+    } as TmdbWatchProviders)
+    vi.mocked(fetchStreamingOverrides).mockResolvedValue(new Map())
+
+    await resolveShowPlatforms([304], 'US')
+    const callsAfterFirst = vi.mocked(getWatchProviders).mock.calls.length
+    const names = await resolveShowPlatformNames([304], 'US')
+    expect(vi.mocked(getWatchProviders).mock.calls.length).toBe(callsAfterFirst)
+    expect(names.get(304)).toEqual(new Set(['Netflix']))
+  })
+})
+
+describe('isLowSignalProvider', () => {
+  it('flags reseller channels, live-TV bundles, and cable-network apps', () => {
+    expect(isLowSignalProvider('Hulu Amazon Channel')).toBe(true)
+    expect(isLowSignalProvider('YouTube TV')).toBe(true)
+    expect(isLowSignalProvider('AMC')).toBe(true)
+  })
+
+  it('does not flag a direct streaming service', () => {
+    expect(isLowSignalProvider('Netflix')).toBe(false)
   })
 })

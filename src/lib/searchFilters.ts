@@ -1,4 +1,3 @@
-import type { ResolvedProvider } from './streamingProvider'
 import type { TmdbShowSummary } from '../types'
 
 export interface SearchFilters {
@@ -27,27 +26,28 @@ export interface SearchFilterFacets {
   platforms: string[]
 }
 
-/** Built from the full, unfiltered list so chips stay stable while filtering. */
+/** Built from the full, unfiltered list so chips stay stable while filtering. `platformNames` is every service each show streams on, not just its single "best guess" badge pick -- see resolveShowPlatformNames. */
 export function buildSearchFilterFacets(
   shows: TmdbShowSummary[],
   genreNames: Map<number, string>,
-  platforms: Map<number, ResolvedProvider | null>,
+  platformNames: Map<number, Set<string>>,
 ): SearchFilterFacets {
   const genres = new Set<string>()
-  const platformNames = new Set<string>()
+  const platforms = new Set<string>()
 
   for (const s of shows) {
     for (const id of s.genre_ids ?? []) {
       const name = genreNames.get(id)
       if (name) genres.add(name)
     }
-    const p = platforms.get(s.id)
-    if (p) platformNames.add(p.provider_name)
+    for (const name of platformNames.get(s.id) ?? []) {
+      platforms.add(name)
+    }
   }
 
   return {
     genres: Array.from(genres).sort(),
-    platforms: Array.from(platformNames).sort(),
+    platforms: Array.from(platforms).sort(),
   }
 }
 
@@ -55,7 +55,7 @@ export function filterShows(
   shows: TmdbShowSummary[],
   filters: SearchFilters,
   genreNames: Map<number, string>,
-  platforms: Map<number, ResolvedProvider | null>,
+  platformNames: Map<number, Set<string>>,
 ): TmdbShowSummary[] {
   if (!isSearchFiltersActive(filters)) return shows
 
@@ -68,8 +68,9 @@ export function filterShows(
       if (!matches) return false
     }
     if (filters.platforms.size > 0) {
-      const p = platforms.get(s.id)
-      if (!p || !filters.platforms.has(p.provider_name)) return false
+      const names = platformNames.get(s.id)
+      const matches = names && Array.from(filters.platforms).some((wanted) => names.has(wanted))
+      if (!matches) return false
     }
     return true
   })

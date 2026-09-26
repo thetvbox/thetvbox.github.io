@@ -31,11 +31,17 @@ function show(overrides: Partial<TmdbShowSummary> = {}): TmdbShowSummary {
   }
 }
 
-/** Makes the platforms hook resolve per-id from a fixed map, regardless of which id batch asks. */
+/** Makes the platforms hook resolve per-id from a fixed map, regardless of which id batch asks -- `platformNames` mirrors each show's single resolved provider, since none of these fixtures need more than one. */
 function mockPlatforms(entries: [number, ResolvedProvider][]) {
   const byId = new Map(entries)
   vi.mocked(useStreamingPlatforms).mockImplementation((ids: number[]) => ({
     platforms: new Map(ids.map((id) => [id, byId.get(id) ?? null])),
+    platformNames: new Map(
+      ids.map((id) => {
+        const p = byId.get(id)
+        return [id, p ? new Set([p.provider_name]) : new Set<string>()]
+      }),
+    ),
     loading: false,
   }))
 }
@@ -47,7 +53,9 @@ beforeEach(() => {
     { id: 18, name: 'Drama' },
     { id: 35, name: 'Comedy' },
   ])
-  vi.mocked(useStreamingPlatforms).mockReset().mockReturnValue({ platforms: new Map(), loading: false })
+  vi.mocked(useStreamingPlatforms)
+    .mockReset()
+    .mockReturnValue({ platforms: new Map(), platformNames: new Map(), loading: false })
 })
 
 describe('Search', () => {
@@ -167,6 +175,23 @@ describe('Search', () => {
 
     await waitFor(() => expect(screen.queryByText('Hulu Show')).not.toBeInTheDocument())
     expect(screen.getByText('Netflix Show')).toBeInTheDocument()
+  })
+
+  it('matches a show on the Netflix filter even when Netflix is not its single "where to watch" badge pick', async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 1, name: 'Multi-Platform Show', genre_ids: [18] })])
+    vi.mocked(useStreamingPlatforms).mockReturnValue({
+      platforms: new Map([[1, { provider_name: 'Hulu', logo_path: null }]]),
+      platformNames: new Map([[1, new Set(['Hulu', 'Netflix'])]]),
+      loading: false,
+    })
+    render(<Search />)
+    await waitFor(() => expect(screen.getByText('Multi-Platform Show')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByText('Netflix'))
+
+    expect(screen.getByText('Multi-Platform Show')).toBeInTheDocument()
   })
 
   it('counts genre and platform as independent facets in the Filters label, not by chip count', async () => {

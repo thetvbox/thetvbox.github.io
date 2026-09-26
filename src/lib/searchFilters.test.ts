@@ -8,7 +8,6 @@ import {
   isSearchResultPending,
   pruneSearchFilters,
 } from './searchFilters'
-import type { ResolvedProvider } from './streamingProvider'
 import type { TmdbShowSummary } from '../types'
 
 function show(overrides: Partial<TmdbShowSummary> = {}): TmdbShowSummary {
@@ -49,15 +48,24 @@ describe('buildSearchFilterFacets', () => {
       show({ id: 2, genre_ids: [35] }),
       show({ id: 3, genre_ids: [18, 35] }),
     ]
-    const platforms = new Map<number, ResolvedProvider | null>([
-      [1, { provider_name: 'Netflix', logo_path: null }],
-      [2, { provider_name: 'Hulu', logo_path: null }],
-      [3, null],
+    const platformNames = new Map<number, Set<string>>([
+      [1, new Set(['Netflix'])],
+      [2, new Set(['Hulu'])],
+      [3, new Set()],
     ])
 
-    const facets = buildSearchFilterFacets(shows, genreNames, platforms)
+    const facets = buildSearchFilterFacets(shows, genreNames, platformNames)
 
     expect(facets.genres).toEqual(['Comedy', 'Drama'])
+    expect(facets.platforms).toEqual(['Hulu', 'Netflix'])
+  })
+
+  it('collects every service a show streams on, not just one per show', () => {
+    const shows = [show({ id: 1 })]
+    const platformNames = new Map([[1, new Set(['Netflix', 'Hulu'])]])
+
+    const facets = buildSearchFilterFacets(shows, genreNames, platformNames)
+
     expect(facets.platforms).toEqual(['Hulu', 'Netflix'])
   })
 
@@ -73,17 +81,17 @@ describe('filterShows', () => {
     show({ id: 1, genre_ids: [18] }),
     show({ id: 2, genre_ids: [35] }),
   ]
-  const platforms = new Map<number, ResolvedProvider | null>([
-    [1, { provider_name: 'Netflix', logo_path: null }],
-    [2, { provider_name: 'Hulu', logo_path: null }],
+  const platformNames = new Map([
+    [1, new Set(['Netflix'])],
+    [2, new Set(['Hulu'])],
   ])
 
   it('returns the full list unchanged when no filters are active', () => {
-    expect(filterShows(shows, emptySearchFilters(), genreNames, platforms)).toEqual(shows)
+    expect(filterShows(shows, emptySearchFilters(), genreNames, platformNames)).toEqual(shows)
   })
 
   it('filters by genre', () => {
-    const result = filterShows(shows, { genres: new Set(['Comedy']), platforms: new Set() }, genreNames, platforms)
+    const result = filterShows(shows, { genres: new Set(['Comedy']), platforms: new Set() }, genreNames, platformNames)
     expect(result.map((s) => s.id)).toEqual([2])
   })
 
@@ -92,7 +100,17 @@ describe('filterShows', () => {
       shows,
       { genres: new Set(), platforms: new Set(['Netflix']) },
       genreNames,
-      new Map([[1, { provider_name: 'Netflix', logo_path: null }]]),
+      new Map([[1, new Set(['Netflix'])]]),
+    )
+    expect(result.map((s) => s.id)).toEqual([1])
+  })
+
+  it('matches a show that streams on the wanted platform alongside others, not just a show whose sole platform is it', () => {
+    const result = filterShows(
+      [show({ id: 1 })],
+      { genres: new Set(), platforms: new Set(['Netflix']) },
+      genreNames,
+      new Map([[1, new Set(['Apple TV+', 'Netflix'])]]),
     )
     expect(result.map((s) => s.id)).toEqual([1])
   })
@@ -102,7 +120,7 @@ describe('filterShows', () => {
       shows,
       { genres: new Set(['Drama']), platforms: new Set(['Hulu']) },
       genreNames,
-      platforms,
+      platformNames,
     )
     expect(result).toEqual([])
   })
@@ -112,7 +130,7 @@ describe('filterShows', () => {
       [show({ id: 1, genre_ids: undefined })],
       { genres: new Set(['Drama']), platforms: new Set() },
       genreNames,
-      platforms,
+      platformNames,
     )
     expect(result).toEqual([])
   })

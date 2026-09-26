@@ -42,23 +42,26 @@ export default function Search() {
 
   const posterResults = useMemo(() => results.filter((s) => s.poster_path), [results])
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
-  const { platforms } = useStreamingPlatforms(resultIds)
+  const { platforms, platformNames } = useStreamingPlatforms(resultIds)
 
   const trendingResults = useMemo(() => trending.filter((s) => s.poster_path), [trending])
   const trendingIds = useMemo(() => trendingResults.map((s) => s.id), [trendingResults])
-  const { platforms: trendingPlatforms } = useStreamingPlatforms(trendingIds)
+  const { platforms: trendingPlatforms, platformNames: trendingPlatformNames } = useStreamingPlatforms(trendingIds)
 
   const searching = query.trim().length > 0
   const activeShows = searching ? posterResults : trendingResults
-  const activePlatforms = searching ? platforms : trendingPlatforms
+  // Facets/filtering match against every service a show streams on, not just its single badge pick used for
+  // the ShowCard provider prop below, so a show doesn't get silently dropped from e.g. a Netflix filter just
+  // because some other service outranks Netflix for the one-line "where to watch" badge.
+  const activePlatformNames = searching ? platformNames : trendingPlatformNames
 
   const facets = useMemo(
-    () => buildSearchFilterFacets(activeShows, genreNames, activePlatforms),
-    [activeShows, genreNames, activePlatforms],
+    () => buildSearchFilterFacets(activeShows, genreNames, activePlatformNames),
+    [activeShows, genreNames, activePlatformNames],
   )
   const filteredShows = useMemo(
-    () => filterShows(activeShows, filters, genreNames, activePlatforms),
-    [activeShows, filters, genreNames, activePlatforms],
+    () => filterShows(activeShows, filters, genreNames, activePlatformNames),
+    [activeShows, filters, genreNames, activePlatformNames],
   )
   const filtersAvailable = facets.genres.length > 0 || facets.platforms.length > 0
 
