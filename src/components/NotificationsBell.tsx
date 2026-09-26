@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -35,6 +35,7 @@ interface NotificationsBellProps {
 export default function NotificationsBell({ open, onOpenChange }: NotificationsBellProps) {
   const { user: me } = useAuth()
   const [unseen, setUnseen] = useState(0)
+  const seenGenerationRef = useRef(0)
 
   useCloseOnNavigate(() => onOpenChange(false))
   useAppBadge(unseen)
@@ -44,12 +45,13 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
     const userId = me.id
     let cancelled = false
 
-    /** Fetches the unseen count, skipping the request while the app is backgrounded. */
+    /** Fetches the unseen count, skipping the request while backgrounded and discarding a response that resolves after a more recent "marked seen". */
     function refresh() {
       if (document.hidden) return
+      const generation = seenGenerationRef.current
       fetchUnseenNotificationCount(userId)
         .then((count) => {
-          if (!cancelled) setUnseen(count)
+          if (!cancelled && generation === seenGenerationRef.current) setUnseen(count)
         })
         .catch(() => {})
     }
@@ -90,7 +92,14 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
       </button>
       <AnimatePresence>
         {open && (
-          <NotificationsPanel userId={me.id} onSeen={() => setUnseen(0)} onClose={() => onOpenChange(false)} />
+          <NotificationsPanel
+            userId={me.id}
+            onSeen={() => {
+              seenGenerationRef.current += 1
+              setUnseen(0)
+            }}
+            onClose={() => onOpenChange(false)}
+          />
         )}
       </AnimatePresence>
     </>

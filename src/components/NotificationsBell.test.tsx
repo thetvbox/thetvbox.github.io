@@ -174,6 +174,42 @@ describe('NotificationsBell', () => {
     expect(onOpenChange).toHaveBeenCalledWith(true)
   })
 
+  it('does not let a poll response in flight before opening revive the badge after marking seen', async () => {
+    vi.useFakeTimers()
+    try {
+      let resolveCount!: (n: number) => void
+      vi.mocked(fetchUnseenNotificationCount).mockReturnValue(
+        new Promise((res) => {
+          resolveCount = res
+        }),
+      )
+      const { rerender } = render(
+        <MemoryRouter>
+          <NotificationsBell open={false} onOpenChange={vi.fn()} />
+        </MemoryRouter>,
+      )
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchUnseenNotificationCount).toHaveBeenCalledTimes(1)
+
+      rerender(
+        <MemoryRouter>
+          <NotificationsBell open={true} onOpenChange={vi.fn()} />
+        </MemoryRouter>,
+      )
+      await vi.advanceTimersByTimeAsync(0)
+      expect(markNotificationsSeenAndPrune).toHaveBeenCalledWith('me1')
+
+      // The stale poll (started before the panel marked everything seen) resolves last.
+      resolveCount(5)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument()
+      expect(screen.queryByText('5')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('skips polling while the document is hidden, and catches up as soon as it becomes visible', async () => {
     vi.useFakeTimers()
     Object.defineProperty(document, 'hidden', { configurable: true, value: true, writable: true })
