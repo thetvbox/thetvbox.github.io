@@ -56,17 +56,17 @@ export default function HistorySection({
   const [filters, setFilters] = useState<HistoryFilters>(emptyHistoryFilters)
 
   const showIds = useMemo(() => activity.map((s) => s.showId), [activity])
-  const { platforms, loading: loadingPlatforms } = useStreamingPlatforms(showIds)
+  const { platforms, platformNames, loading: loadingPlatforms } = useStreamingPlatforms(showIds)
   const detailsEnabled = filtersOpen || isHistoryFiltersActive(filters)
   const { details, loading: loadingDetails } = useShowDetails(showIds, detailsEnabled)
 
   const facets = useMemo(
-    () => buildHistoryFilterFacets(activity, details, platforms),
-    [activity, details, platforms],
+    () => buildHistoryFilterFacets(activity, details, platformNames),
+    [activity, details, platformNames],
   )
   const filteredActivity = useMemo(
-    () => filterHistory(activity, filters, details, platforms),
-    [activity, filters, details, platforms],
+    () => filterHistory(activity, filters, details, platformNames),
+    [activity, filters, details, platformNames],
   )
 
   const flatSorted = useMemo(

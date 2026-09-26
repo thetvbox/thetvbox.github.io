@@ -8,7 +8,6 @@ import {
 } from './historyFilters'
 import type { HistoryFilters } from './historyFilters'
 import type { ShowActivity } from './showActivity'
-import type { ResolvedProvider } from './streamingProvider'
 import type { TmdbShowDetail } from '../types'
 
 function activity(overrides: Partial<ShowActivity> = {}): ShowActivity {
@@ -92,12 +91,12 @@ describe('buildHistoryFilterFacets', () => {
       [1, detail({ id: 1, genres: [{ id: 1, name: 'Drama' }], first_air_date: '2018-01-01', origin_country: ['US'], original_language: 'en', status: 'Ended' })],
       [2, detail({ id: 2, genres: [{ id: 2, name: 'Comedy' }], first_air_date: '2022-01-01', origin_country: ['GB'], original_language: 'en', status: 'Returning Series' })],
     ])
-    const platforms = new Map<number, ResolvedProvider | null>([
-      [1, { provider_name: 'Netflix', logo_path: null }],
-      [2, null],
+    const platformNames = new Map<number, Set<string>>([
+      [1, new Set(['Netflix'])],
+      [2, new Set()],
     ])
 
-    const facets = buildHistoryFilterFacets(shows, details, platforms)
+    const facets = buildHistoryFilterFacets(shows, details, platformNames)
 
     expect(facets.genres).toEqual(['Comedy', 'Drama'])
     expect(facets.countries).toEqual(['GB', 'US'])
@@ -128,9 +127,9 @@ describe('filterHistory', () => {
     [1, detail({ id: 1, genres: [{ id: 1, name: 'Drama' }], first_air_date: '2018-06-01', origin_country: ['US'], original_language: 'en', status: 'Ended' })],
     [2, detail({ id: 2, genres: [{ id: 2, name: 'Comedy' }], first_air_date: '2022-03-01', origin_country: ['GB'], original_language: 'fr', status: 'Returning Series' })],
   ])
-  const platforms = new Map<number, ResolvedProvider | null>([
-    [1, { provider_name: 'Netflix', logo_path: null }],
-    [2, { provider_name: 'Hulu', logo_path: null }],
+  const platformNames = new Map<number, Set<string>>([
+    [1, new Set(['Netflix'])],
+    [2, new Set(['Hulu'])],
   ])
   const shows = [
     activity({ showId: 1, rating: 4.5 }),
@@ -138,24 +137,24 @@ describe('filterHistory', () => {
   ]
 
   it('returns the full list unchanged when no filters are active', () => {
-    expect(filterHistory(shows, emptyHistoryFilters(), details, platforms)).toEqual(shows)
+    expect(filterHistory(shows, emptyHistoryFilters(), details, platformNames)).toEqual(shows)
   })
 
   it('filters by rated/unrated', () => {
-    const rated = filterHistory(shows, { ...emptyHistoryFilters(), rated: 'rated' }, details, platforms)
+    const rated = filterHistory(shows, { ...emptyHistoryFilters(), rated: 'rated' }, details, platformNames)
     expect(rated.map((s) => s.showId)).toEqual([1])
 
-    const unrated = filterHistory(shows, { ...emptyHistoryFilters(), rated: 'unrated' }, details, platforms)
+    const unrated = filterHistory(shows, { ...emptyHistoryFilters(), rated: 'unrated' }, details, platformNames)
     expect(unrated.map((s) => s.showId)).toEqual([2])
   })
 
   it('filters by minRating, excluding unrated shows', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), minRating: 4 }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), minRating: 4 }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([1])
   })
 
   it('filters by genre', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), genres: new Set(['Comedy']) }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), genres: new Set(['Comedy']) }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([2])
   })
 
@@ -170,31 +169,41 @@ describe('filterHistory', () => {
   })
 
   it('filters by year range', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), yearFrom: 2020, yearTo: 2023 }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), yearFrom: 2020, yearTo: 2023 }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([2])
   })
 
   it('filters by country', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), countries: new Set(['GB']) }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), countries: new Set(['GB']) }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([2])
   })
 
   it('filters by language', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), languages: new Set(['fr']) }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), languages: new Set(['fr']) }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([2])
   })
 
   it('filters by status', () => {
-    const result = filterHistory(shows, { ...emptyHistoryFilters(), statuses: new Set(['Ended']) }, details, platforms)
+    const result = filterHistory(shows, { ...emptyHistoryFilters(), statuses: new Set(['Ended']) }, details, platformNames)
     expect(result.map((s) => s.showId)).toEqual([1])
   })
 
-  it('filters by platform, excluding shows with no resolved provider', () => {
+  it('filters by platform, excluding shows with no matching platform', () => {
     const result = filterHistory(
       shows,
       { ...emptyHistoryFilters(), platforms: new Set(['Netflix']) },
       details,
-      new Map([[1, { provider_name: 'Netflix', logo_path: null }]]),
+      new Map([[1, new Set(['Netflix'])]]),
+    )
+    expect(result.map((s) => s.showId)).toEqual([1])
+  })
+
+  it('matches a show that streams on the wanted platform alongside others, not just a show whose sole platform is it', () => {
+    const result = filterHistory(
+      shows,
+      { ...emptyHistoryFilters(), platforms: new Set(['Hulu']) },
+      details,
+      new Map([[1, new Set(['Netflix', 'Hulu'])]]),
     )
     expect(result.map((s) => s.showId)).toEqual([1])
   })
@@ -204,7 +213,7 @@ describe('filterHistory', () => {
       shows,
       { ...emptyHistoryFilters(), genres: new Set(['Drama']), countries: new Set(['GB']) },
       details,
-      platforms,
+      platformNames,
     )
     expect(result).toEqual([])
   })

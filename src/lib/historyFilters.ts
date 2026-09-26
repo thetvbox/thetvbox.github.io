@@ -1,5 +1,4 @@
 import type { ShowActivity } from './showActivity'
-import type { ResolvedProvider } from './streamingProvider'
 import type { TmdbShowDetail } from '../types'
 
 export interface HistoryFilters {
@@ -66,13 +65,13 @@ export interface HistoryFilterFacets {
 export function buildHistoryFilterFacets(
   activity: ShowActivity[],
   details: Map<number, TmdbShowDetail>,
-  platforms: Map<number, ResolvedProvider | null>,
+  platformNames: Map<number, Set<string>>,
 ): HistoryFilterFacets {
   const genres = new Set<string>()
   const years: number[] = []
   const countries = new Set<string>()
   const languages = new Set<string>()
-  const platformNames = new Set<string>()
+  const platforms = new Set<string>()
   const statuses = new Set<string>()
 
   for (const s of activity) {
@@ -85,8 +84,7 @@ export function buildHistoryFilterFacets(
       if (d.original_language) languages.add(d.original_language)
       if (d.status) statuses.add(d.status)
     }
-    const p = platforms.get(s.showId)
-    if (p) platformNames.add(p.provider_name)
+    for (const name of platformNames.get(s.showId) ?? []) platforms.add(name)
   }
 
   return {
@@ -95,7 +93,7 @@ export function buildHistoryFilterFacets(
     maxYear: years.length > 0 ? Math.max(...years) : null,
     countries: Array.from(countries).sort(),
     languages: Array.from(languages).sort(),
-    platforms: Array.from(platformNames).sort(),
+    platforms: Array.from(platforms).sort(),
     statuses: Array.from(statuses).sort(),
   }
 }
@@ -104,7 +102,7 @@ export function filterHistory(
   activity: ShowActivity[],
   filters: HistoryFilters,
   details: Map<number, TmdbShowDetail>,
-  platforms: Map<number, ResolvedProvider | null>,
+  platformNames: Map<number, Set<string>>,
 ): ShowActivity[] {
   if (!isHistoryFiltersActive(filters)) return activity
 
@@ -134,8 +132,8 @@ export function filterHistory(
       return false
     }
     if (filters.platforms.size > 0) {
-      const p = platforms.get(s.showId)
-      if (!p || !filters.platforms.has(p.provider_name)) return false
+      const names = platformNames.get(s.showId)
+      if (!names || !Array.from(filters.platforms).some((wanted) => names.has(wanted))) return false
     }
 
     return true
