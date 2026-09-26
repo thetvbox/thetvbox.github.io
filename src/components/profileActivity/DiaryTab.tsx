@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { staggerRowMotion } from '../../lib/motion'
 import { offscreenSkipStyle } from '../../lib/layout'
+import { ROW_CARD_BASE_CLASSES } from '../../lib/rowCard'
 import { DIARY_PAGE_SIZE } from '../../lib/constants'
 import type { DiaryEntry } from '../../lib/showActivity'
 import { ROUTES, showDiaryRoute, showRoute } from '../../lib/routes'
@@ -113,7 +114,7 @@ function DiaryRow({ entry, index, username }: { entry: DiaryEntry; index: number
     <motion.li
       {...staggerRowMotion(index, 8)}
       style={offscreenSkipStyle(72)}
-      className="flex items-center gap-1.5 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
+      className={`flex items-center gap-1.5 ${ROW_CARD_BASE_CLASSES}`}
     >
       <Link to={showRoute(entry.showId)} className="flex min-w-0 flex-1 items-center gap-3">
         <PosterThumb posterPath={entry.showPosterPath} />

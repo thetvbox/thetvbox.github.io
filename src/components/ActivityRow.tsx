@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
+import { ROW_CARD_BASE_CLASSES } from '../lib/rowCard'
 import type { GroupActivityEvent } from '../lib/showActivity'
 import { showDiaryRoute } from '../lib/routes'
 import Avatar from './Avatar'
@@ -11,7 +12,7 @@ export default function ActivityRow({ event }: { event: GroupActivityEvent }) {
   return (
     <Link
       to={showDiaryRoute(event.username, event.showId)}
-      className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
+      className={`flex items-center gap-3 ${ROW_CARD_BASE_CLASSES}`}
     >
       <Avatar username={event.username} size="sm" />
       <PosterThumb posterPath={event.showPosterPath} size="sm" />

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
+import { ROW_CARD_BASE_CLASSES } from '../lib/rowCard'
 import { showRoute } from '../lib/routes'
 import PosterThumb from './PosterThumb'
 
@@ -17,7 +18,7 @@ export default function UpcomingRow({ item }: { item: UpcomingItem }) {
   return (
     <Link
       to={showRoute(item.showId)}
-      className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
+      className={`flex items-center gap-3 ${ROW_CARD_BASE_CLASSES}`}
     >
       <PosterThumb posterPath={item.showPosterPath} size="sm" />
       <div className="min-w-0 flex-1">

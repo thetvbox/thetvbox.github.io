@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatShortDate } from '../lib/date'
+import { ROW_CARD_BASE_CLASSES } from '../lib/rowCard'
 import type { FollowActivityEvent } from '../lib/showActivity'
 import { profileRoute } from '../lib/routes'
 import Avatar from './Avatar'
@@ -9,7 +10,7 @@ export default function FollowActivityRow({ event }: { event: FollowActivityEven
   return (
     <Link
       to={profileRoute(event.followedUsername)}
-      className="flex items-center gap-3 rounded-xl border border-hairline bg-base-850/60 p-2.5 transition-colors duration-200 hover:bg-base-800/70"
+      className={`flex items-center gap-3 ${ROW_CARD_BASE_CLASSES}`}
     >
       <Avatar username={event.followerUsername} size="sm" />
       <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-md bg-base-800 text-accent-400">
