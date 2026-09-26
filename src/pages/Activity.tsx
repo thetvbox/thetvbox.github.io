@@ -302,7 +302,7 @@ export default function Activity() {
         />
 
         {filterableMembers.length > 1 && (
-          <div ref={personFilterRef} className="relative shrink-0">
+          <div ref={personFilterRef} className="relative ml-auto shrink-0">
             <button
               type="button"
               onClick={() => setPersonFilterOpen((v) => !v)}
@@ -347,7 +347,7 @@ export default function Activity() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-semibold text-base-100">Now Watching</h2>
           {watchingGenres.length > 1 && (
-            <div ref={genreFilterRef} className="relative shrink-0">
+            <div ref={genreFilterRef} className="relative ml-auto shrink-0">
               <button
                 type="button"
                 onClick={() => setGenreFilterOpen((v) => !v)}

@@ -254,6 +254,18 @@ describe('Activity', () => {
     expect(dialog).not.toHaveClass('inset-x-0', 'mx-auto')
   })
 
+  it('pins the person-filter trigger to the row\'s right edge even if the row wraps to two lines, so the right-0 dropdown anchor above never drifts off-screen', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
+      ratingFor(friend, { id: 'r-friend' }),
+      ratingFor(stranger, { id: 'r-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    renderActivity()
+    await waitFor(() => expect(screen.getByText('Filter by person')).toBeInTheDocument())
+    const trigger = screen.getByText('Filter by person').closest('button')
+    expect(trigger?.parentElement).toHaveClass('ml-auto')
+  })
+
   it('closes the person-filter dropdown on an outside pointerdown', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([
@@ -335,6 +347,24 @@ describe('Activity', () => {
     await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
     expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Filter by genre · 1' })).toBeInTheDocument()
+  })
+
+  it('pins the genre-filter trigger to the row\'s right edge too, for the same reason as the person filter above', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend),
+      startedFor(friend, { id: 's-friend-2', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter by genre' })).toBeInTheDocument())
+    const trigger = screen.getByRole('button', { name: 'Filter by genre' }).parentElement
+    expect(trigger).toHaveClass('ml-auto')
   })
 
   it('does not show a genre filter when everything in Now Watching shares one genre', async () => {
