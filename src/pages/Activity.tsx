@@ -186,11 +186,11 @@ export default function Activity() {
 
   const watchingGenres = useMemo(() => {
     const genres = new Set<string>()
-    for (const w of personFilteredWatching) {
+    for (const w of scopedWatching) {
       for (const g of showDetails.get(w.showId)?.genres ?? []) genres.add(g.name)
     }
     return Array.from(genres).sort()
-  }, [personFilteredWatching, showDetails])
+  }, [scopedWatching, showDetails])
 
   const filteredWatching = useMemo(() => {
     if (selectedGenres.size === 0) return personFilteredWatching

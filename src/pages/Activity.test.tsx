@@ -327,6 +327,37 @@ describe('Activity', () => {
     expect(screen.queryByRole('button', { name: 'Filters' })).not.toBeInTheDocument()
   })
 
+  it('keeps the Genre section (and its full option list) available after selecting a person, and combines both filters', async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend, { id: 's-friend' }),
+      startedFor(stranger, { id: 's-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    expect(within(dialog).getByText('Genre · Now Watching')).toBeInTheDocument()
+
+    // Selecting a person must not remove the other facet's options -- they aren't mutually exclusive.
+    fireEvent.click(within(dialog).getByText('@friend'))
+    expect(within(dialog).getByText('Genre · Now Watching')).toBeInTheDocument()
+    expect(within(dialog).getByText('Comedy')).toBeInTheDocument()
+
+    // The two facets combine (AND), rather than one replacing the other.
+    fireEvent.click(within(dialog).getByText('Drama'))
+    await waitFor(() => expect(screen.queryByText('Show Two')).not.toBeInTheDocument())
+    expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
+  })
+
   it('Clear all resets the genre selection', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([

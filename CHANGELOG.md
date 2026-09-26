@@ -262,6 +262,14 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- Activity's new Filters sheet computed its Genre options from the
+  *already person-filtered* Now Watching list, so selecting a person
+  would immediately shrink (often to zero) the genres available to pick
+  from -- making the two facets feel mutually exclusive instead of
+  combinable. Genre options are now computed from the full Now Watching
+  list for the current scope, independent of which person is selected,
+  so picking a person no longer changes what genres are offered, and
+  both filters can be combined (as an AND) in the same visit.
 - Profile's Diary/History/Watchlist/Dropped/Lists tab strip couldn't be
   swiped left after swiping right on a phone: each `Chip`'s invisible,
   full-coverage `HapticOverlay` checkbox has Safari's native switch-control
