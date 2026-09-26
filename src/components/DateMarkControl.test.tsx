@@ -110,6 +110,21 @@ describe('DateMarkControl', () => {
     expect(screen.getByText(/overwrite/)).toBeInTheDocument()
   })
 
+  it('resets the picked date and unknown-date checkbox when reopened after Cancel', () => {
+    render(<DateMarkControl label="Watched in the past" onConfirm={vi.fn()} />)
+    fireEvent.click(screen.getByText('Watched in the past'))
+
+    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(dateInput, { target: { value: '2020-03-01' } })
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByText('Cancel'))
+
+    fireEvent.click(screen.getByText('Watched in the past'))
+    const reopenedDateInput = document.querySelector('input[type="date"]') as HTMLInputElement
+    expect(reopenedDateInput.value).not.toBe('2020-03-01')
+    expect(screen.getByRole('checkbox')).not.toBeChecked()
+  })
+
   it('caps the date input at today', () => {
     render(<DateMarkControl label="Watched in the past" onConfirm={vi.fn()} />)
     fireEvent.click(screen.getByText('Watched in the past'))

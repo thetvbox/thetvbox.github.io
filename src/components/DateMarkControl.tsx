@@ -33,7 +33,11 @@ export default function DateMarkControl({
         <motion.button
           key="trigger"
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setDate(todayLocalDateInput())
+            setUnknownDate(false)
+            setOpen(true)
+          }}
           className={`text-xs text-accent-400 hover:underline ${className ?? ''}`}
           {...TRIGGER_SWAP_MOTION}
         >
