@@ -63,7 +63,6 @@ const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created
 function authValue(overrides: Partial<ReturnType<typeof useAuth>> = {}) {
   return {
     user: null,
-    loading: false,
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -86,13 +85,6 @@ afterEach(() => {
 })
 
 describe('App', () => {
-  it('shows a loading spinner while auth is initializing', () => {
-    vi.mocked(useAuth).mockReturnValue(authValue({ loading: true }))
-    const { container } = render(<App />)
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument()
-    expect(screen.queryByText('HomePage')).not.toBeInTheDocument()
-  })
-
   it('shows the passcode gate when configured and not yet passed', () => {
     setGateConfigured(true)
     render(<App />)

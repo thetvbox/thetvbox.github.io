@@ -116,7 +116,6 @@ beforeEach(() => {
   vi.mocked(useStreamingPlatforms).mockReturnValue({ platforms: new Map(), platformNames: new Map(), loading: false })
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    loading: false,
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
@@ -242,7 +241,6 @@ describe('Home', () => {
   it('does not fetch when there is no signed-in user', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      loading: false,
       register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),

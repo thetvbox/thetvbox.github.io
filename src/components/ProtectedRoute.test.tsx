@@ -29,22 +29,9 @@ function renderRoute() {
 }
 
 describe('ProtectedRoute', () => {
-  it('shows a loading spinner while auth is resolving', () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: true,
-      register: vi.fn(),
-      signIn: vi.fn(),
-      signOut: vi.fn(),
-    })
-    const { container } = renderRoute()
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument()
-  })
-
   it('redirects to /login when signed out', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      loading: false,
       register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
@@ -56,7 +43,6 @@ describe('ProtectedRoute', () => {
   it('renders children when signed in', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: me,
-      loading: false,
       register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),

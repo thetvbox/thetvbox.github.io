@@ -29,7 +29,6 @@ function clearStoredUser(): void {
 
 interface AuthContextValue {
   user: AppUser | null
-  loading: boolean
   register: (email: string, username: string) => Promise<AppUser>
   signIn: (user: AppUser) => void
   signOut: () => void
@@ -48,12 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
   })
-  const loading = false
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      loading,
       /** Creates the account row only; the caller must call signIn() separately once a passkey is registered (see Login.tsx). */
       async register(email: string, username: string) {
         const { data, error } = await supabase
@@ -82,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
       },
     }),
-    [user, loading],
+    [user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

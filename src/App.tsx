@@ -37,7 +37,7 @@ function PageLoader() {
 }
 
 function AppShell() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
   const location = useLocation()
   const showNav = Boolean(user) && location.pathname !== ROUTES.login
   const [gatePassed, setGatePassed] = useState(hasPassedGate)
@@ -59,14 +59,6 @@ function AppShell() {
       cancelled = true
     }
   }, [user])
-
-  if (loading) {
-    return (
-      <div className="flex h-dvh items-center justify-center bg-base-950">
-        <Spinner />
-      </div>
-    )
-  }
 
   if (!user && isGateConfigured && !gatePassed) {
     return <PasscodeGate onSuccess={() => setGatePassed(true)} />

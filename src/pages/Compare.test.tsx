@@ -46,7 +46,6 @@ beforeEach(() => {
   vi.mocked(fetchRecentShowRatings).mockReset().mockResolvedValue([])
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    loading: false,
     register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
