@@ -20,6 +20,16 @@ vi.mock('./NotificationsBell', () => ({
     </button>
   ),
 }))
+vi.mock('./ReportBugPanel', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div>
+      bug-report-panel
+      <button type="button" onClick={onClose}>
+        close-bug-report
+      </button>
+    </div>
+  ),
+}))
 
 import { useTheme } from '../contexts/ThemeContext'
 import Navbar from './Navbar'
@@ -105,6 +115,17 @@ describe('Navbar', () => {
     expect(screen.getByText('notifications-open')).toBeInTheDocument()
     fireEvent.pointerDown(document.body)
     expect(screen.getByText('notifications-closed')).toBeInTheDocument()
+  })
+
+  it('closes the notifications dropdown before opening the bug-report panel', () => {
+    renderNavbar()
+    fireEvent.click(screen.getByText('notifications-closed'))
+    expect(screen.getByText('notifications-open')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Report a bug'))
+
+    expect(screen.getByText('notifications-closed')).toBeInTheDocument()
+    expect(screen.getByText('bug-report-panel')).toBeInTheDocument()
   })
 
   it('scrolls to top when clicking the tab already active', () => {

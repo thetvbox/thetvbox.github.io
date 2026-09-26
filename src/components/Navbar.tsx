@@ -230,7 +230,10 @@ export default function Navbar() {
           <div ref={utilityRef} className="relative ml-auto flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setBugReportOpen(true)}
+              onClick={() => {
+                setNotificationsOpen(false)
+                setBugReportOpen(true)
+              }}
               aria-label="Report a bug"
               title="Report a bug"
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
