@@ -105,7 +105,7 @@ export function summarizeShowActivity(
     entry.totalEpisodes = rows.reduce<number | null>((max, r) => {
       if (r.show_total_episodes == null) return max
       return max === null ? r.show_total_episodes : Math.max(max, r.show_total_episodes)
-    }, null)
+    }, entry.totalEpisodes)
     for (const r of rows) {
       if (!entry.lastWatchedAt || r.watched_at > entry.lastWatchedAt) {
         entry.lastWatchedAt = r.watched_at

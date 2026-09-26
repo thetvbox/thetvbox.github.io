@@ -164,6 +164,16 @@ describe('summarizeShowActivity', () => {
     expect(entry.watchedCount).toBe(0)
   })
 
+  it('keeps the total episode count from a started record when watched rows never carry one', () => {
+    const rows = [
+      watched({ id: 'w1', show_total_episodes: null }),
+      watched({ id: 'w2', episode_number: 2, show_total_episodes: null }),
+    ]
+    const [entry] = summarizeShowActivity([], rows, [started({ show_total_episodes: 2 })])
+    expect(entry.totalEpisodes).toBe(2)
+    expect(entry.finished).toBe(true)
+  })
+
   it('flags a dismissed show only when a matching entry already exists', () => {
     const result = summarizeShowActivity([], [], [], [dismissed({ show_id: 99 })])
     expect(result).toHaveLength(0)
