@@ -11,19 +11,16 @@ import ErrorText from './ErrorText'
 export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setBusy(true)
     if (checkPasscode(code)) {
       markGatePassed()
       onSuccess()
     } else {
       setError('That code isn’t right.')
     }
-    setBusy(false)
   }
 
   return (
@@ -59,7 +56,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
             />
           </div>
           {error && <ErrorText className="text-xs">{error}</ErrorText>}
-          <PrimaryButton disabled={busy || code.length === 0}>Continue</PrimaryButton>
+          <PrimaryButton disabled={code.length === 0}>Continue</PrimaryButton>
         </form>
       </motion.div>
     </div>
