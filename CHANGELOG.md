@@ -219,6 +219,24 @@ All notable changes to TV Box are documented here. Format loosely follows
   underlined link) -- is now one consistent chevron-and-label control
   everywhere, with a floating icon-only variant for Show Detail's photo
   backdrop where a text link wouldn't stay legible.
+- QuickActions on Show Detail and the episode row's mark-watched button
+  each hand-rolled their own copy of the small pill-button classes
+  (border/background/text color for the active vs. inactive state) --
+  both now share `ICON_PILL_BASE_CLASSES`/`ICON_PILL_ACTIVE_CLASSES`/
+  `ICON_PILL_INACTIVE_CLASSES` from a new `src/lib/iconPill.ts`, the same
+  pattern `Chip.tsx` already uses for its own pill constants.
+- `ActivityRow`, `FollowActivityRow`, `UpcomingRow`, and the Diary/
+  Dropped/Watchlist profile tabs each hand-rolled the same row-card
+  classes (border, hover, padding) at every call site -- now share
+  `ROW_CARD_BASE_CLASSES` from a new `src/lib/rowCard.ts`.
+- `AuthContext`'s `loading` flag was always `false` in practice, now that
+  the sign-in check resolves synchronously (see the "briefly showed a
+  loading spinner" fix above) -- dropped from the context value, along
+  with the two `if (loading)` branches in `App.tsx` and `ProtectedRoute`
+  that were the last code still reading it.
+- `PasscodeGate`'s `busy` state was set and immediately unset within the
+  same synchronous passcode check, so it could never actually produce a
+  visible busy/disabled render -- removed.
 
 ### Fixed
 
@@ -427,6 +445,71 @@ All notable changes to TV Box are documented here. Format loosely follows
 - The episode watched-toggle button didn't announce its state to screen
   readers, and Show Detail's share button was a touch under the app's
   usual minimum tap-target size.
+- Opening "Report a bug" from the top bar while the notifications
+  dropdown was already open left both open at once, overlapping each
+  other -- opening one now closes the other, matching every other pair
+  of top-bar triggers.
+- Push Notifications' status check failing (e.g. a flaky permissions
+  read) left the panel stuck on its loading skeleton forever, with no
+  way to recover short of reloading the app -- it now shows an error
+  state with a Retry button, like every other panel that fetches on
+  open.
+- Canceling out of the "mark watched on a date" picker and reopening it
+  later showed the date (or "unknown date" choice) you'd picked and
+  canceled last time, instead of a clean default -- both reset on
+  reopen now.
+- `ShowCard` wasn't memoized, so any state change on a page rendering a
+  large grid of them (Search results, Home, Activity) re-rendered every
+  card in the grid instead of just the one that changed -- wrapped in
+  `React.memo`, the same treatment already applied to other
+  high-multiplicity list rows.
+- Deleting a custom list from its detail page left you on a now-404ing
+  page for a list that no longer exists -- it now returns you to the
+  Lists tab of your own profile, the same place the list was reachable
+  from.
+- A malformed `showId` in the URL (a stray character, a copy-paste
+  truncation) left Show Diary stuck on its loading skeleton forever
+  instead of failing visibly, since the guard that catches it returned
+  before ever clearing the loading flag.
+- Profile's More menu trigger had the same right-edge-anchoring bug
+  already fixed for Activity's filter triggers -- once its row wrapped
+  to two lines on a narrow phone, the trigger drifted to the left edge
+  instead of staying pinned under its own dropdown. Same `ml-auto` fix
+  applied here.
+- Six more capped-height scroll panels -- Add to List, the changelog/
+  What's New panel, the Follow list panel, the rating breakdown, the
+  provider picker, and the Shortcuts & Siri panel -- were missing the
+  `scroll-fade-bottom` hint every other capped list in the app already
+  got in an earlier pass, giving no visual cue that a list with more to
+  scroll to wasn't already showing everything.
+- The rating-breakdown histogram's bars were only clickable across
+  their visible (often very short) bar height, not the full row --
+  each bar is now a full-height button, so a 1-star bar with almost no
+  fill is just as easy to tap as a tall one.
+- Logging a rewatch closed the confirm form immediately, before waiting
+  to see whether the save actually succeeded -- a failed save now
+  leaves the form open (matching how the date-mark control already
+  handles the same case) instead of silently discarding what you'd
+  entered.
+- A show's total-episode count could get quietly wiped back to
+  "unknown" by later watched-episode rows that don't carry their own
+  count, discarding a real total a "started watching" record had
+  already established -- watched rows now keep the known total instead
+  of overwriting it with `null`.
+- The whole-show rating breakdown list disappeared the instant you
+  collapsed it, instead of animating closed like every other expandable
+  panel in the app; it's now wrapped in `AnimatePresence` so its exit
+  transition actually plays.
+- Opening the notifications bell and marking everything seen while an
+  earlier unseen-count poll was still in flight could let that stale
+  response land afterward and revive the badge count it had just
+  cleared -- a generation counter now discards any poll response that's
+  no longer current by the time it resolves.
+- An episode's synopsis truncation ("show more") was only recalculated
+  when the text itself changed, not when the row's own width changed --
+  resizing the window (or a sidebar/orientation change) could leave a
+  truncation indicator that no longer matched the actual rendered text.
+  It's now recalculated on resize too, via a `ResizeObserver`.
 
 ## [1.2.0] - 2026-09-07
 
