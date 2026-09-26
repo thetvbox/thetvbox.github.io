@@ -8,7 +8,6 @@ import SearchFiltersPanel from '../components/SearchFiltersPanel'
 import { searchShows, getTrendingShows, getTvGenres, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useOutsideClick } from '../hooks/useOutsideClick'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
@@ -104,8 +103,6 @@ export default function Search() {
     }
   }, [filtersOpen, filtersAvailable])
 
-  const filtersRef = useOutsideClick<HTMLDivElement>(filtersOpen, () => setFiltersOpen(false))
-
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
@@ -177,33 +174,30 @@ export default function Search() {
 
       {filtersAvailable && (
         <div className="mb-6 flex justify-end">
-          <div ref={filtersRef} className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((v) => !v)}
-              aria-expanded={filtersOpen}
-              aria-haspopup="true"
-              className={`${PILL_SIZE_CLASSES} ${
-                filtersOpen || isSearchFiltersActive(filters) ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
-              }`}
-            >
-              Filters{isSearchFiltersActive(filters) ? ` · ${countActiveSearchFilters(filters)}` : ''}
-            </button>
-
-            <AnimatePresence>
-              {filtersOpen && (
-                <SearchFiltersPanel
-                  key="search-filters"
-                  facets={facets}
-                  filters={filters}
-                  onChange={setFilters}
-                  onClose={() => setFiltersOpen(false)}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-pressed={filtersOpen}
+            className={`${PILL_SIZE_CLASSES} ${
+              filtersOpen || isSearchFiltersActive(filters) ? PILL_ACTIVE_CLASSES : PILL_INACTIVE_CLASSES
+            }`}
+          >
+            Filters{isSearchFiltersActive(filters) ? ` · ${countActiveSearchFilters(filters)}` : ''}
+          </button>
         </div>
       )}
+
+      <AnimatePresence>
+        {filtersOpen && (
+          <SearchFiltersPanel
+            key="search-filters"
+            facets={facets}
+            filters={filters}
+            onChange={setFilters}
+            onClose={() => setFiltersOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {!isTmdbConfigured && (
         <div className="mb-6 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">

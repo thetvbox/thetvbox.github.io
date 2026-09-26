@@ -1,18 +1,12 @@
-import { useState } from 'react'
-import Chip from './Chip'
-import DropdownPanel from './DropdownPanel'
-import SegmentedControl from './SegmentedControl'
+import BottomSheet from './BottomSheet'
+import { ChipGroup, FilterSection } from './FilterSection'
+import PanelHeader from './PanelHeader'
 import { emptySearchFilters, isSearchFiltersActive } from '../lib/searchFilters'
 import type { SearchFilterFacets, SearchFilters } from '../lib/searchFilters'
 
 type Category = 'platforms' | 'genres'
 
-const CATEGORY_OPTIONS = [
-  { value: 'platforms', label: 'Platform' },
-  { value: 'genres', label: 'Genre' },
-] as const
-
-/** The platform + genre facets for Search, floated behind the "Filters" trigger button -- one category's chip list shown at a time (picked via the segmented control) so the panel never has to grow tall enough to fight the bottom tab bar for space. */
+/** The platform + genre facets for Search, both as always-visible scrollable sections in one sheet instead of a small floating dropdown that hid one category behind the other. */
 export default function SearchFiltersPanel({
   facets,
   filters,
@@ -24,48 +18,42 @@ export default function SearchFiltersPanel({
   onChange: (filters: SearchFilters) => void
   onClose: () => void
 }) {
-  const hasBoth = facets.platforms.length > 0 && facets.genres.length > 0
-  const [category, setCategory] = useState<Category>(facets.platforms.length > 0 ? 'platforms' : 'genres')
-  const activeCategory: Category = hasBoth ? category : facets.platforms.length > 0 ? 'platforms' : 'genres'
-  const options = activeCategory === 'platforms' ? facets.platforms : facets.genres
-
-  function toggle(value: string) {
-    const next = new Set(filters[activeCategory])
+  function toggle(category: Category, value: string) {
+    const next = new Set(filters[category])
     if (next.has(value)) next.delete(value)
     else next.add(value)
-    onChange({ ...filters, [activeCategory]: next })
+    onChange({ ...filters, [category]: next })
   }
 
   return (
-    <DropdownPanel onClose={onClose} label="Filters" className="w-72 p-3">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        {hasBoth ? (
-          <SegmentedControl options={CATEGORY_OPTIONS} value={category} onChange={setCategory} label="Filter category" />
-        ) : (
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-base-600">
-            {activeCategory === 'platforms' ? 'Platform' : 'Genre'}
-          </p>
-        )}
-        {isSearchFiltersActive(filters) && (
-          <button
-            type="button"
-            onClick={() => onChange(emptySearchFilters())}
-            className="shrink-0 text-xs font-medium text-accent-400 hover:underline"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+    <BottomSheet onClose={onClose} label="Filters" className="scroll-fade-bottom max-h-[85vh] overflow-y-auto p-5 sm:p-6">
+      <PanelHeader
+        title="Filters"
+        onClose={onClose}
+        actions={
+          isSearchFiltersActive(filters) && (
+            <button
+              type="button"
+              onClick={() => onChange(emptySearchFilters())}
+              className="text-xs font-medium text-accent-400 hover:underline"
+            >
+              Clear all
+            </button>
+          )
+        }
+      />
 
-      <div className="scroll-fade-bottom max-h-64 overflow-y-auto pb-1">
-        <div className="flex flex-wrap gap-1.5">
-          {options.map((value) => (
-            <Chip key={value} active={filters[activeCategory].has(value)} onClick={() => toggle(value)}>
-              {value}
-            </Chip>
-          ))}
-        </div>
-      </div>
-    </DropdownPanel>
+      {facets.platforms.length > 0 && (
+        <FilterSection title="Platform">
+          <ChipGroup options={facets.platforms} selected={filters.platforms} onToggle={(v) => toggle('platforms', v)} />
+        </FilterSection>
+      )}
+
+      {facets.genres.length > 0 && (
+        <FilterSection title="Genre">
+          <ChipGroup options={facets.genres} selected={filters.genres} onToggle={(v) => toggle('genres', v)} />
+        </FilterSection>
+      )}
+    </BottomSheet>
   )
 }

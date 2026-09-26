@@ -204,16 +204,30 @@ describe('Search', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     const dialog = await screen.findByRole('dialog', { name: 'Filters' })
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Genre' }))
     fireEvent.click(within(dialog).getByText('Drama'))
     fireEvent.click(within(dialog).getByText('Comedy'))
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Platform' }))
     fireEvent.click(within(dialog).getByText('Netflix'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Filters · 2' })).toBeInTheDocument())
   })
 
-  it('shows a filtered-empty message, and Clear restores the full trending list', async () => {
+  it('shows both facets as sections in one scrollable sheet, with no category switch needed', async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([
+      show({ id: 1, name: 'Drama Show', genre_ids: [18] }),
+      show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
+    ])
+    mockPlatforms([[2, { provider_name: 'Hulu', logo_path: null }]])
+    render(<Search />)
+    await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    expect(within(dialog).getByText('Platform')).toBeInTheDocument()
+    expect(within(dialog).getByText('Genre')).toBeInTheDocument()
+    expect(within(dialog).queryByRole('radio')).not.toBeInTheDocument()
+  })
+
+  it('shows a filtered-empty message, and Clear all restores the full trending list', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([
       show({ id: 1, name: 'Drama Show', genre_ids: [18] }),
       show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
@@ -224,9 +238,7 @@ describe('Search', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     let dialog = await screen.findByRole('dialog', { name: 'Filters' })
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Genre' }))
     fireEvent.click(within(dialog).getByText('Drama'))
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Platform' }))
     fireEvent.click(within(dialog).getByText('Hulu'))
 
     await waitFor(() => expect(screen.getByText('No trending shows match the selected filters.')).toBeInTheDocument())
@@ -234,19 +246,19 @@ describe('Search', () => {
     expect(screen.queryByText('Hulu Comedy Show')).not.toBeInTheDocument()
 
     dialog = screen.getByRole('dialog', { name: 'Filters' })
-    fireEvent.click(within(dialog).getByText('Clear'))
+    fireEvent.click(within(dialog).getByText('Clear all'))
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
     expect(screen.getByText('Hulu Comedy Show')).toBeInTheDocument()
   })
 
-  it('closes the Filters dropdown on an outside pointerdown', async () => {
+  it('closes the Filters sheet on Escape', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 1, name: 'Drama Show', genre_ids: [18] })])
     render(<Search />)
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     await screen.findByRole('dialog', { name: 'Filters' })
-    fireEvent.pointerDown(document.body)
+    fireEvent.keyDown(document, { key: 'Escape' })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Filters' })).not.toBeInTheDocument())
   })
 

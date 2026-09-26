@@ -17,7 +17,7 @@ function facets(overrides: Partial<SearchFilterFacets> = {}): SearchFilterFacets
 }
 
 describe('SearchFiltersPanel', () => {
-  it('renders a chip for each facet in the active category, switching via the segmented control', () => {
+  it('renders both facets as separate sections at once, with no category switch needed', () => {
     render(
       <SearchFiltersPanel
         facets={facets({ platforms: ['Netflix', 'Hulu'], genres: ['Drama', 'Comedy'] })}
@@ -28,14 +28,12 @@ describe('SearchFiltersPanel', () => {
     )
     expect(screen.getByText('Netflix')).toBeInTheDocument()
     expect(screen.getByText('Hulu')).toBeInTheDocument()
-    expect(screen.queryByText('Drama')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     expect(screen.getByText('Drama')).toBeInTheDocument()
     expect(screen.getByText('Comedy')).toBeInTheDocument()
-    expect(screen.queryByText('Netflix')).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   })
 
-  it('reflects the active filters via aria-pressed on each chip', () => {
+  it('reflects the active filters via aria-pressed on each chip, across both sections at once', () => {
     const filters: SearchFilters = {
       genres: new Set(['Drama']),
       platforms: new Set(['Netflix']),
@@ -50,7 +48,6 @@ describe('SearchFiltersPanel', () => {
     )
     expect(screen.getByText('Netflix')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('Hulu')).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     expect(screen.getByText('Drama')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('Comedy')).toHaveAttribute('aria-pressed', 'false')
   })
@@ -90,7 +87,6 @@ describe('SearchFiltersPanel', () => {
         onClose={vi.fn()}
       />,
     )
-    fireEvent.click(screen.getByRole('radio', { name: 'Genre' }))
     fireEvent.click(screen.getByText('Drama'))
     expect(onChange).toHaveBeenCalledWith({
       genres: new Set(['Drama']),
@@ -140,7 +136,7 @@ describe('SearchFiltersPanel', () => {
     })
   })
 
-  it('does not render a Clear button when no filters are active', () => {
+  it('does not render a Clear all button when no filters are active', () => {
     render(
       <SearchFiltersPanel
         facets={facets({ platforms: ['Netflix'], genres: ['Drama'] })}
@@ -149,10 +145,10 @@ describe('SearchFiltersPanel', () => {
         onClose={vi.fn()}
       />,
     )
-    expect(screen.queryByText('Clear')).not.toBeInTheDocument()
+    expect(screen.queryByText('Clear all')).not.toBeInTheDocument()
   })
 
-  it('renders a Clear button when a filter is active, and it resets both facets', () => {
+  it('renders a Clear all button when a filter is active, and it resets both facets', () => {
     const onChange = vi.fn()
     const filters: SearchFilters = {
       genres: new Set(['Drama']),
@@ -166,7 +162,7 @@ describe('SearchFiltersPanel', () => {
         onClose={vi.fn()}
       />,
     )
-    const clearButton = screen.getByText('Clear')
+    const clearButton = screen.getByText('Clear all')
     expect(clearButton).toBeInTheDocument()
     fireEvent.click(clearButton)
     expect(onChange).toHaveBeenCalledTimes(1)
@@ -175,7 +171,7 @@ describe('SearchFiltersPanel', () => {
     expect(arg.platforms.size).toBe(0)
   })
 
-  it('renders a Clear button when only platforms are active', () => {
+  it('renders a Clear all button when only platforms are active', () => {
     const filters: SearchFilters = {
       genres: new Set(),
       platforms: new Set(['Netflix']),
@@ -188,7 +184,7 @@ describe('SearchFiltersPanel', () => {
         onClose={vi.fn()}
       />,
     )
-    expect(screen.getByText('Clear')).toBeInTheDocument()
+    expect(screen.getByText('Clear all')).toBeInTheDocument()
   })
 
   it('omits the Platform section when facets.platforms is empty', () => {
@@ -217,7 +213,7 @@ describe('SearchFiltersPanel', () => {
     expect(screen.getByText('Platform')).toBeInTheDocument()
   })
 
-  it('wires onClose through to the underlying DropdownPanel (Escape closes it)', () => {
+  it('wires onClose through to the underlying BottomSheet (Escape closes it)', () => {
     const onClose = vi.fn()
     render(
       <SearchFiltersPanel facets={facets()} filters={emptySearchFilters()} onChange={vi.fn()} onClose={onClose} />,
