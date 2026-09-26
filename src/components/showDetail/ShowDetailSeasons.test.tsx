@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../../test/framerMotionMock'
 
@@ -180,5 +180,20 @@ describe('ShowDetailSeasons', () => {
     renderSeasons({ activeSeason: 3, season: season({ air_date: '2099-06-15' }) })
     expect(screen.getByText(/Airs/)).toBeInTheDocument()
     expect(screen.queryByRole('radiogroup', { name: 'Rate Season 3' })).not.toBeInTheDocument()
+  })
+
+  it('picks "up next" using the TVmaze-corrected air date, not episode 1\'s raw (already-past) TMDB date', () => {
+    renderSeasons({
+      season: season({
+        episodes: [
+          episode({ id: 1, episode_number: 1, air_date: '2000-01-01' }),
+          episode({ id: 2, episode_number: 2, name: 'Episode Two', air_date: '2000-01-08' }),
+        ],
+      }),
+      effectiveAirDate: (ep) => (ep.episode_number === 1 ? '2099-01-01' : ep.air_date),
+    })
+    const badge = screen.getByText('Up next')
+    const row = badge.closest('.group') as HTMLElement
+    expect(within(row).getByText('Episode Two')).toBeInTheDocument()
   })
 })

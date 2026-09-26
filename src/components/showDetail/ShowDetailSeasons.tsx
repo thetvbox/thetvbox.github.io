@@ -63,7 +63,14 @@ export default function ShowDetailSeasons({
   const nextUpRef = useRef<HTMLDivElement>(null)
   const hasJumpedRef = useRef(false)
 
-  const nextUpEpisode = season?.episodes.find(
+  // Recomputed only when the season or the TVmaze corrections change (not on every
+  // watch toggle), so EpisodeRow's memoization below actually has something stable to compare.
+  const episodesWithEffectiveDates = useMemo(
+    () => season?.episodes.map((ep) => (ep.air_date ? { ...ep, air_date: effectiveAirDate(ep) } : ep)) ?? null,
+    [season, effectiveAirDate],
+  )
+
+  const nextUpEpisode = episodesWithEffectiveDates?.find(
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
   const seasonAirDate = season?.air_date ?? null
@@ -72,13 +79,6 @@ export default function ShowDetailSeasons({
   const seasonSegments = useMemo(
     () => computeSeasonProgress(show.seasons, countWatchedBySeason(Object.values(watched)))?.segments ?? [],
     [show.seasons, watched],
-  )
-
-  // Recomputed only when the season or the TVmaze corrections change (not on every
-  // watch toggle), so EpisodeRow's memoization below actually has something stable to compare.
-  const episodesWithEffectiveDates = useMemo(
-    () => season?.episodes.map((ep) => (ep.air_date ? { ...ep, air_date: effectiveAirDate(ep) } : ep)) ?? null,
-    [season, effectiveAirDate],
   )
 
   const lastWatchedEpisode = season?.episodes
