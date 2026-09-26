@@ -1,9 +1,10 @@
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
 import {
   MODAL_BACKDROP_ANIMATE,
   MODAL_BACKDROP_EXIT,
@@ -28,14 +29,7 @@ export default function Modal({ onClose, label, children, maxWidth = 'max-w-md',
   const panelRef = useRef<HTMLDivElement>(null)
   useEscapeAndFocusReturn(true, onClose)
   useFocusTrap(true, panelRef)
-
-  useEffect(() => {
-    const original = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = original
-    }
-  }, [])
+  useBodyScrollLock()
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

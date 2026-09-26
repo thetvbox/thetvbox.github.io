@@ -2,9 +2,10 @@ import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import type { PanInfo } from 'framer-motion'
 import type { ReactNode } from 'react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
 import {
   GLASS_SPRING,
   MODAL_BACKDROP_ANIMATE,
@@ -26,14 +27,7 @@ export default function BottomSheet({ onClose, label, children, className = '' }
   const panelRef = useRef<HTMLDivElement>(null)
   useEscapeAndFocusReturn(true, onClose)
   useFocusTrap(true, panelRef)
-
-  useEffect(() => {
-    const original = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = original
-    }
-  }, [])
+  useBodyScrollLock()
 
   /** Closes the sheet once a downward drag passes the distance or velocity threshold. */
   function handleDragEnd(_event: unknown, info: PanInfo) {
