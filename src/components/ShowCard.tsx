@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { yearFromDate } from '../lib/tmdb'
@@ -8,7 +9,7 @@ import StreamingBadge from './StreamingBadge'
 import PosterTile from './PosterTile'
 import type { TmdbShowSummary } from '../types'
 
-export default function ShowCard({
+function ShowCard({
   show,
   provider,
   index = 0,
@@ -36,3 +37,5 @@ export default function ShowCard({
     </motion.div>
   )
 }
+
+export default memo(ShowCard)

@@ -54,4 +54,8 @@ describe('ShowCard', () => {
     const { container } = renderCard({ provider: { provider_name: 'Netflix', logo_path: '/n.png' } })
     expect(container.querySelector('[title="Netflix"]')).toBeInTheDocument()
   })
+
+  it('is memoized, since it renders at high multiplicity in the Search/Home grids', () => {
+    expect((ShowCard as unknown as { $$typeof: symbol }).$$typeof).toBe(Symbol.for('react.memo'))
+  })
 })
