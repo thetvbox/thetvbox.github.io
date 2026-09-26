@@ -66,11 +66,16 @@ export default function RatingDistribution({
               aria-label={`${counts[i]} show${pluralSuffix(counts[i])} rated ${b.toFixed(1)} stars${hasShows ? ' -- show list' : ''}`}
               title={`${counts[i]} show${pluralSuffix(counts[i])} rated ${b.toFixed(1)}`}
               onClick={() => setSelected((prev) => (prev === b ? null : b))}
-              className={`flex-1 rounded-t-sm transition-[height,background-color] duration-300 disabled:cursor-default ${
-                isSelected ? 'bg-star' : 'bg-star/70 enabled:hover:bg-star/90'
-              }`}
-              style={{ height: `${counts[i] === 0 ? 3 : Math.max(10, (counts[i] / max) * 100)}%` }}
-            />
+              className="group flex h-full flex-1 items-end disabled:cursor-default"
+            >
+              <span
+                aria-hidden="true"
+                className={`w-full rounded-t-sm transition-[height,background-color] duration-300 ${
+                  isSelected ? 'bg-star' : hasShows ? 'bg-star/70 group-hover:bg-star/90' : 'bg-star/70'
+                }`}
+                style={{ height: `${counts[i] === 0 ? 3 : Math.max(10, (counts[i] / max) * 100)}%` }}
+              />
+            </button>
           )
         })}
       </div>

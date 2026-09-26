@@ -64,6 +64,12 @@ describe('RatingDistribution', () => {
     expect(screen.getAllByRole('button', { name: /show.*rated/ })).toHaveLength(10)
   })
 
+  it('gives every bar button a full-height touch target, even a lightly-populated bucket', () => {
+    renderWithRouter([rating({ rating: 4 })])
+    const bucket4 = screen.getByRole('button', { name: /1 show rated 4\.0/ })
+    expect(bucket4).toHaveClass('h-full')
+  })
+
   it('disables buckets with no shows', () => {
     renderWithRouter([rating({ rating: 4 })])
     const bucket4 = screen.getByRole('button', { name: /1 show rated 4\.0/ })
