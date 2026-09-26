@@ -53,9 +53,9 @@ export default function RewatchLogControl({
               setSaving(true)
               try {
                 await onConfirm(dateInputToNoonIso(date))
+                setOpen(false)
               } finally {
                 setSaving(false)
-                setOpen(false)
               }
             }}
             onCancel={() => setOpen(false)}
