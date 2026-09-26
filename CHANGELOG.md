@@ -222,6 +222,37 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- Profile's Diary/History/Watchlist/Dropped/Lists tab strip couldn't be
+  swiped left after swiping right on a phone: each `Chip`'s invisible,
+  full-coverage `HapticOverlay` checkbox has Safari's native switch-control
+  drag-to-toggle behavior, which was swallowing the horizontal scroll
+  gesture. `HapticOverlay` now sets `touch-action: manipulation` so a pan
+  scrolls the strip instead of being captured by the switch.
+- Activity's "Filter by person" (and "Filter by genre") trigger could end
+  up on its own line on a narrow phone once the segmented control next to
+  it no longer fit the same row -- and because that trigger's wrapper only
+  ever centered itself via the row's `justify-between`, wrapping to its own
+  line left it flush left, so the dropdown anchored `right-0` to it opened
+  off the left edge of the screen instead of under the button. Both
+  triggers now carry `ml-auto`, so they stay pinned to the row's right
+  edge (same as before) whether or not the row has wrapped.
+- A season's rating control had no idea whether that season had actually
+  aired yet, so you could rate an unreleased season same as any other.
+  `TmdbSeasonDetail` now carries the season's own `air_date` (TMDB already
+  returns it, the type just didn't have it), and while it's still in the
+  future the rating control is replaced by an "Airs <date>" badge -- same
+  treatment `EpisodeRow` already gives an unaired episode -- with a
+  matching guard in `handleRateSeason` as a second line of defense.
+- Search's "Filter by platform" matched a show against only its single
+  "best guess" `where to watch` badge pick, so a show streaming on
+  Netflix *and* some higher-priority service for the badge was invisible
+  to the Netflix filter -- the fewer services the badge algorithm ranks
+  above Netflix in a given region, the more this looked like "Netflix
+  barely has anything." Filtering and the Platform facet list now match
+  against every service a show actually streams on
+  (`resolveShowPlatformNames`, sharing `resolveShowPlatforms`' cache so
+  nothing double-fetches), while the ShowCard badge keeps using the single
+  best-guess pick.
 - The top bar only had a solid glass background on desktop (`md:glass-surface`),
   so on mobile it was fully transparent and page content scrolling underneath it
   visually collided with the icons/wordmark, reading as if the bar itself was
