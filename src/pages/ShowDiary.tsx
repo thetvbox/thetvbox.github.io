@@ -32,7 +32,11 @@ export default function ShowDiary() {
   useDocumentTitle(rating?.show_name ?? watched[0]?.show_name ?? null)
 
   useEffect(() => {
-    if (!username || Number.isNaN(showIdNum)) return
+    if (!username || Number.isNaN(showIdNum)) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setLoading(false)
+      return
+    }
     let cancelled = false
     // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)

@@ -107,6 +107,12 @@ describe('ShowDiary', () => {
     await waitFor(() => expect(screen.getByText('No activity for this show yet.')).toBeInTheDocument())
   })
 
+  it('does not hang on the loading skeleton forever when showId is malformed', async () => {
+    renderDiary('bob', 'not-a-number')
+    await waitFor(() => expect(screen.getByText('No activity for this show yet.')).toBeInTheDocument())
+    expect(fetchUserByUsername).not.toHaveBeenCalled()
+  })
+
   it('shows the rating, show name, and watched count', async () => {
     vi.mocked(fetchUserByUsername).mockResolvedValue(bob)
     vi.mocked(fetchShowRating).mockResolvedValue(rating())
