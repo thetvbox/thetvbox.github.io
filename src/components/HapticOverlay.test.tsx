@@ -16,6 +16,11 @@ describe('HapticOverlay', () => {
     expect(input).toHaveClass('absolute', 'inset-0')
   })
 
+  it('allows touch panning through the switch, so it never swallows a scroll swipe on an ancestor tab strip', () => {
+    const { container } = render(<HapticOverlay />)
+    expect(container.querySelector('input[type="checkbox"]')).toHaveClass('touch-manipulation')
+  })
+
   it('sets the experimental `switch` attribute after mount, for the iOS haptic trick', () => {
     const { container } = render(<HapticOverlay />)
     expect(container.querySelector('input[type="checkbox"]')).toHaveAttribute('switch')
