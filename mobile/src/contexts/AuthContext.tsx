@@ -30,6 +30,8 @@ interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   accountSetup: AccountSetupKind | null;
+  accountError: string | null;
+  retryAccountResolution: () => void;
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   sendEmailOtp: (email: string) => Promise<void>;
@@ -73,7 +75,7 @@ interface ResolvedAccount {
   accountSetup: AccountSetupKind | null;
 }
 
-/** Resolves a Supabase Auth session to this app's public.users row (by auth_user_id, falling back to email), and decides whether the account-setup screen is still owed. */
+/** Resolves a Supabase Auth session to this app's public.users row (by auth_user_id, falling back to email), and decides whether the account-setup screen is still owed. Throws on a genuine query failure rather than treating it as "no account yet", so a transient error can't misroute an existing user into account creation. */
 async function resolveAccount(session: Session | null): Promise<ResolvedAccount> {
   if (!session?.user) return { user: null, accountSetup: null };
   const authUserId = session.user.id;
@@ -84,11 +86,17 @@ async function resolveAccount(session: Session | null): Promise<ResolvedAccount>
     .select()
     .eq('auth_user_id', authUserId)
     .maybeSingle();
+  if (linkedError) throw new Error(linkedError.message);
 
-  let matched = !linkedError ? (linked as AppUser | null) : null;
+  let matched = linked as AppUser | null;
 
   if (!matched && email) {
-    const { data: byEmail } = await supabase.from(TABLE_USERS).select().eq('email', email).maybeSingle();
+    const { data: byEmail, error: emailError } = await supabase
+      .from(TABLE_USERS)
+      .select()
+      .eq('email', email)
+      .maybeSingle();
+    if (emailError) throw new Error(emailError.message);
     if (byEmail) {
       matched = byEmail as AppUser;
       linkAuthUserId(matched.id, authUserId).catch(() => {});
@@ -107,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [accountSetup, setAccountSetup] = useState<AccountSetupKind | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [resolveAttempt, setResolveAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -129,11 +139,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    setAccountError(null);
     resolveAccount(session)
       .then((resolved) => {
         if (cancelled) return;
         setUser(resolved.user);
         setAccountSetup(resolved.accountSetup);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setAccountError(err instanceof Error ? err.message : 'Could not load your account.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -141,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [session]);
+  }, [session, resolveAttempt]);
 
   const refreshAccount = useCallback(async () => {
     const resolved = await resolveAccount(session);
@@ -155,6 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       loading,
       accountSetup,
+      accountError,
+      retryAccountResolution() {
+        setResolveAttempt((n) => n + 1);
+      },
       async signInWithApple() {
         let credential: AppleAuthentication.AppleAuthenticationCredential;
         try {
@@ -270,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [user, session, loading, accountSetup, refreshAccount],
+    [user, session, loading, accountSetup, accountError, refreshAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

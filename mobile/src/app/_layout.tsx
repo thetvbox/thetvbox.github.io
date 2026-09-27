@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AccountErrorScreen } from '@/components/auth/account-error-screen';
 import { AccountSetupScreen } from '@/components/auth/account-setup-screen';
 import { BiometricLockScreen } from '@/components/auth/biometric-lock-screen';
 import { LoginScreen } from '@/components/auth/login-screen';
@@ -14,10 +15,11 @@ import { useBiometricGate } from '@/hooks/useBiometricGate';
 SplashScreen.preventAutoHideAsync();
 
 function AppGate() {
-  const { user, loading, accountSetup } = useAuth();
+  const { user, loading, accountSetup, accountError, retryAccountResolution } = useAuth();
   const { unlocked, checking, promptUnlock } = useBiometricGate(Boolean(user) && !accountSetup);
 
   if (loading) return <View className="flex-1 bg-base-950" />;
+  if (accountError) return <AccountErrorScreen message={accountError} onRetry={retryAccountResolution} />;
   if (!user && !accountSetup) return <LoginScreen />;
   if (accountSetup) return <AccountSetupScreen />;
   if (!unlocked) return <BiometricLockScreen checking={checking} onRetry={promptUnlock} />;
