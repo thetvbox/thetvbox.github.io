@@ -971,3 +971,41 @@ drop policy if exists "Anyone can delete personal access tokens" on public.perso
 create policy "Anyone can delete personal access tokens"
   on public.personal_access_tokens for delete
   using (true);
+
+-- Native push tokens registered by the iOS/Android mobile app via
+-- expo-notifications, one row per device -- see
+-- supabase/functions/send-push/index.ts, which delivers to these
+-- through Expo's push API alongside the existing Web Push channel above.
+create table if not exists public.expo_push_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  token text not null unique,
+  platform text not null default 'ios',
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz
+);
+
+create index if not exists expo_push_tokens_user_id_idx on public.expo_push_tokens (user_id);
+
+alter table public.expo_push_tokens enable row level security;
+
+drop policy if exists "Anyone can read expo push tokens" on public.expo_push_tokens;
+create policy "Anyone can read expo push tokens"
+  on public.expo_push_tokens for select
+  using (true);
+
+drop policy if exists "Anyone can insert expo push tokens" on public.expo_push_tokens;
+create policy "Anyone can insert expo push tokens"
+  on public.expo_push_tokens for insert
+  with check (true);
+
+drop policy if exists "Anyone can update expo push tokens" on public.expo_push_tokens;
+create policy "Anyone can update expo push tokens"
+  on public.expo_push_tokens for update
+  using (true)
+  with check (true);
+
+drop policy if exists "Anyone can delete expo push tokens" on public.expo_push_tokens;
+create policy "Anyone can delete expo push tokens"
+  on public.expo_push_tokens for delete
+  using (true);
