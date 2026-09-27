@@ -24,10 +24,11 @@ interface ChipGroupProps {
   selected: Set<string>
   onToggle: (value: string) => void
   counts?: Map<string, number>
+  labelFor?: (value: string) => string
 }
 
-/** Wrapping row of toggle Chips for one facet's options, sharing a Set<string> selection model. `counts`, when given, shows each option's live match count and disables one that's currently at zero (and not already selected) instead of removing it, so combining this facet with another one never makes an option silently vanish. */
-export function ChipGroup({ options, selected, onToggle, counts }: ChipGroupProps) {
+/** Wrapping row of toggle Chips for one facet's options, sharing a Set<string> selection model. `counts`, when given, shows each option's live match count and disables one that's currently at zero (and not already selected) instead of removing it, so combining this facet with another one never makes an option silently vanish. `labelFor` renders a friendlier label (e.g. a country/language name) than the raw option value. */
+export function ChipGroup({ options, selected, onToggle, counts, labelFor }: ChipGroupProps) {
   return (
     <View className="flex-row flex-wrap gap-1.5">
       {options.map((opt) => {
@@ -35,7 +36,7 @@ export function ChipGroup({ options, selected, onToggle, counts }: ChipGroupProp
         const isActive = selected.has(opt)
         return (
           <Chip key={opt} active={isActive} onPress={() => onToggle(opt)} disabled={count === 0 && !isActive}>
-            {opt}
+            {labelFor?.(opt) ?? opt}
             {count !== undefined && <Text className="opacity-70"> · {count}</Text>}
           </Chip>
         )
