@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
           <ul className="mt-2 space-y-1.5">
             <li>
               <strong className="text-base-200">Account info:</strong> your email address, username, and display
-              name, plus a sign-in identifier from Apple or Google if you use one of those to sign in.
+              name, plus a sign-in identifier from Apple if you use it to sign in.
             </li>
             <li>
               <strong className="text-base-200">Activity you create:</strong> the shows/episodes you mark watched,
@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
             </li>
             <li>
               <strong className="text-base-200">Expo</strong> relays push notifications to your device using your
-              push token; Apple and Google are only involved if you choose to sign in with them, through their
+              push token; Apple is only involved if you choose to sign in with it, through Apple's
               standard sign-in flow.
             </li>
           </ul>
