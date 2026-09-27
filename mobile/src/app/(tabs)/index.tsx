@@ -1,4 +1,5 @@
 import { Link } from 'expo-router'
+import { SymbolView } from 'expo-symbols'
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -13,6 +14,7 @@ import { SeasonProgressBar } from '@/components/season-progress-bar'
 import { UpcomingRow } from '@/components/upcoming-row'
 import type { UpcomingItem } from '@/components/upcoming-row'
 import { useAuth } from '@/contexts/AuthContext'
+import { useThemeColors } from '@/hooks/use-theme-colors'
 import { useStreamingPlatforms } from '@/hooks/useStreamingPlatforms'
 import { BottomTabInset } from '@/constants/theme'
 import { formatShortDate } from '@/lib/date'
@@ -55,8 +57,11 @@ function greeting(): string {
   return 'Good evening'
 }
 
+const HOME_SEE_ALL_CHEVRON_SIZE = 11;
+
 export default function HomeScreen() {
   const { user } = useAuth()
+  const theme = useThemeColors()
   const [ratings, setRatings] = useState<ShowRating[]>([])
   const [watched, setWatched] = useState<EpisodeWatched[]>([])
   const [started, setStarted] = useState<ShowStarted[]>([])
@@ -308,10 +313,15 @@ export default function HomeScreen() {
                     Your Watchlist
                   </Text>
                   <Link href="/profile" asChild>
-                    <Pressable accessibilityRole="link" accessibilityLabel="Manage your watchlist">
+                    <Pressable
+                      accessibilityRole="link"
+                      accessibilityLabel="Manage your watchlist"
+                      className="flex-row items-center gap-0.5"
+                    >
                       <Text className="text-xs font-medium text-accent-400">
-                        {watchlist.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'} →
+                        {watchlist.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'}
                       </Text>
+                      <SymbolView name="chevron.right" size={HOME_SEE_ALL_CHEVRON_SIZE} tintColor={theme.accent} />
                     </Pressable>
                   </Link>
                 </View>
@@ -340,10 +350,15 @@ export default function HomeScreen() {
                     Your Lists
                   </Text>
                   <Link href={`/profile?${PROFILE_LISTS_TAB_QUERY}`} asChild>
-                    <Pressable accessibilityRole="link" accessibilityLabel="Manage your lists">
+                    <Pressable
+                      accessibilityRole="link"
+                      accessibilityLabel="Manage your lists"
+                      className="flex-row items-center gap-0.5"
+                    >
                       <Text className="text-xs font-medium text-accent-400">
-                        {lists.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'} →
+                        {lists.length > HOME_PREVIEW_LIMIT ? 'See all' : 'Manage'}
                       </Text>
+                      <SymbolView name="chevron.right" size={HOME_SEE_ALL_CHEVRON_SIZE} tintColor={theme.accent} />
                     </Pressable>
                   </Link>
                 </View>
