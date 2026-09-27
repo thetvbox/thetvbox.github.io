@@ -3,14 +3,10 @@ import type { ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 
 import { supabase } from '@/lib/supabase';
 import { TABLE_USERS } from '@/lib/constants';
 import type { AppUser } from '@/types';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export type AccountSetupKind = 'new' | 'existing';
 
@@ -33,7 +29,6 @@ interface AuthContextValue {
   accountError: string | null;
   retryAccountResolution: () => void;
   signInWithApple: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   sendEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (email: string, token: string) => Promise<void>;
   createAccount: (input: CreateAccountInput) => Promise<void>;
@@ -192,41 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           token: credential.identityToken,
         });
         if (error) throw new Error(error.message);
-      },
-      async signInWithGoogle() {
-        const redirectTo = AuthSession.makeRedirectUri();
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo, skipBrowserRedirect: true },
-        });
-        if (error) throw new Error(error.message);
-        if (!data?.url) throw new Error('Could not start Google sign-in.');
-
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-        if (result.type === 'cancel' || result.type === 'dismiss') return;
-        if (result.type !== 'success' || !result.url) throw new Error('Google sign-in did not complete.');
-
-        const url = new URL(result.url);
-        const params = new URLSearchParams(url.hash ? url.hash.slice(1) : url.search);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (sessionError) throw new Error(sessionError.message);
-          return;
-        }
-
-        const code = params.get('code');
-        if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) throw new Error(exchangeError.message);
-          return;
-        }
-
-        throw new Error('Google sign-in did not return a session.');
       },
       async sendEmailOtp(email) {
         const { error } = await supabase.auth.signInWithOtp({ email: email.toLowerCase().trim() });

@@ -10,9 +10,9 @@ import { AuthButton, AuthErrorBanner, AuthLinkButton, AuthTextField } from '@/co
 
 type Step = 'options' | 'email' | 'otp'
 
-/** Sign-in screen: Apple, Google, and an emailed one-time code, shown whenever there's no Supabase Auth session yet. */
+/** Sign-in screen: Apple and an emailed one-time code, shown whenever there's no Supabase Auth session yet. */
 export function LoginScreen() {
-  const { signInWithApple, signInWithGoogle, sendEmailOtp, verifyEmailOtp } = useAuth()
+  const { signInWithApple, sendEmailOtp, verifyEmailOtp } = useAuth()
   const { busy, error, run } = useAsyncAction()
 
   const [step, setStep] = useState<Step>('options')
@@ -45,13 +45,6 @@ export function LoginScreen() {
                 onPress={() => run(signInWithApple)}
               />
             )}
-
-            <AuthButton
-              label="Continue with Google"
-              variant="secondary"
-              disabled={busy}
-              onPress={() => run(signInWithGoogle)}
-            />
 
             <AuthButton
               label="Continue with email"

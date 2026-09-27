@@ -12,7 +12,6 @@
     "aes-js": "^3.1.2",
     "expo": "~57.0.25",
     "expo-apple-authentication": "^57.0.2",
-    "expo-auth-session": "^57.0.13",
     "expo-build-properties": "^57.0.22",
     "expo-clipboard": "^57.0.2",
     "expo-constants": "~57.0.19",
