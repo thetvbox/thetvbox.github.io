@@ -10,6 +10,7 @@ import { useOutsideClick } from '../hooks/useOutsideClick'
 import ProfileActivity from '../components/ProfileActivity'
 import ProfileFollowSection from '../components/ProfileFollowSection'
 import ChangelogPanel from '../components/ChangelogPanel'
+import CreditsPanel from '../components/CreditsPanel'
 import ShortcutsPanel from '../components/ShortcutsPanel'
 import PushNotificationsPanel from '../components/PushNotificationsPanel'
 import DropdownPanel from '../components/DropdownPanel'
@@ -40,6 +41,7 @@ export default function Profile() {
   const { theme, setTheme, transparency, setTransparency } = useTheme()
   useDocumentTitle(user ? `@${user.username}` : 'Profile')
   const [changelogOpen, setChangelogOpen] = useState(false)
+  const [creditsOpen, setCreditsOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [pushOpen, setPushOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -120,7 +122,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mt-8 border-t border-hairline pt-4">
+      <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-hairline pt-4">
         <button
           type="button"
           onClick={() => setChangelogOpen((v) => !v)}
@@ -128,8 +130,19 @@ export default function Profile() {
         >
           TV Box v{appVersion} · What&apos;s new
         </button>
+        <span className="text-base-700">·</span>
+        <button
+          type="button"
+          onClick={() => setCreditsOpen((v) => !v)}
+          className="text-xs text-base-500 hover:text-base-300"
+        >
+          Credits &amp; privacy
+        </button>
         <AnimatePresence>
           {changelogOpen && <ChangelogPanel key="changelog" onClose={() => setChangelogOpen(false)} />}
+        </AnimatePresence>
+        <AnimatePresence>
+          {creditsOpen && <CreditsPanel key="credits" onClose={() => setCreditsOpen(false)} />}
         </AnimatePresence>
       </div>
 

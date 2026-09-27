@@ -11,6 +11,7 @@ export const ROUTES = {
   compare: '/compare/:username',
   listDetail: '/u/:username/lists/:listId',
   recap: '/recap',
+  privacy: '/privacy',
 } as const
 
 /** Builds the show detail route for a given show id. */

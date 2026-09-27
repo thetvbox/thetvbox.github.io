@@ -27,6 +27,7 @@ const ShowDiary = lazy(() => import('./pages/ShowDiary'))
 const Compare = lazy(() => import('./pages/Compare'))
 const ListDetail = lazy(() => import('./pages/ListDetail'))
 const Recap = lazy(() => import('./pages/Recap'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 
 function PageLoader() {
   return (
@@ -59,6 +60,14 @@ function AppShell() {
       cancelled = true
     }
   }, [user])
+
+  if (location.pathname === ROUTES.privacy) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PrivacyPolicy />
+      </Suspense>
+    )
+  }
 
   if (!user && isGateConfigured && !gatePassed) {
     return <PasscodeGate onSuccess={() => setGatePassed(true)} />
