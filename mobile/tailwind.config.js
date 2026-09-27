@@ -1,0 +1,56 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: 'class',
+  content: [
+    './src/app/**/*.{js,jsx,ts,tsx}',
+    './src/components/**/*.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+  ],
+  presets: [require('nativewind/preset')],
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['var(--font-display)'],
+        mono: ['var(--font-mono)'],
+        rounded: ['var(--font-rounded)'],
+        serif: ['var(--font-serif)'],
+      },
+      colors: {
+        base: {
+          950: 'var(--color-base-950)',
+          900: 'var(--color-base-900)',
+          850: 'var(--color-base-850)',
+          800: 'var(--color-base-800)',
+          750: 'var(--color-base-750)',
+          700: 'var(--color-base-700)',
+          600: 'var(--color-base-600)',
+          500: 'var(--color-base-500)',
+          400: 'var(--color-base-400)',
+          300: 'var(--color-base-300)',
+          200: 'var(--color-base-200)',
+          100: 'var(--color-base-100)',
+        },
+        accent: {
+          300: 'var(--color-accent-300)',
+          400: 'var(--color-accent-400)',
+          500: 'var(--color-accent-500)',
+          600: 'var(--color-accent-600)',
+          700: 'var(--color-accent-700)',
+        },
+        star: 'var(--color-star)',
+        'star-dim': 'var(--color-star-dim)',
+        'icon-bg-1': 'var(--color-icon-bg-1)',
+        'icon-bg-2': 'var(--color-icon-bg-2)',
+        danger: 'var(--color-danger)',
+        warning: 'var(--color-warning)',
+        hairline: 'var(--color-hairline)',
+        'hairline-strong': 'var(--color-hairline-strong)',
+        hover: 'var(--color-hover)',
+        'hover-strong': 'var(--color-hover-strong)',
+        glass: 'var(--color-glass)',
+        'glass-strong': 'var(--color-glass-strong)',
+      },
+    },
+  },
+  plugins: [],
+};
