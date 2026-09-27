@@ -35,7 +35,6 @@ export function useBiometricGate(enabled: boolean): BiometricGateState {
     }
     setUnlocked(false);
     promptUnlock();
-    // Only re-run when `enabled` flips, not on every promptUnlock identity change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
 

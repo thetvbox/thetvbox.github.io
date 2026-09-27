@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { followUser, unfollowUser } from '@/lib/follows';
 
-import { followUser, unfollowUser } from '../lib/follows';
 import { useToast } from './useToast';
 
 /** Shared follow/unfollow mutation logic: optimistic update, error rollback, undo toast on unfollow. */
