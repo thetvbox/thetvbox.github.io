@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import type { TextInputProps } from 'react-native'
 
 import { useColorScheme } from '@/hooks/use-color-scheme'
+import { impactHaptic, selectionHaptic } from '@/lib/haptics'
 import {
   AUTH_BUTTON_SPINNER_COLOR,
   AUTH_ERROR_BANNER_CLASSES,
@@ -43,7 +44,10 @@ export function AuthButton({ label, onPress, disabled, loading, variant = 'prima
     <Pressable
       className={isPrimary ? AUTH_PRIMARY_BUTTON_CLASSES : AUTH_SECONDARY_BUTTON_CLASSES}
       disabled={isDisabled}
-      onPress={onPress}
+      onPress={() => {
+        impactHaptic()
+        onPress()
+      }}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: Boolean(loading) }}
       accessibilityLabel={label}
@@ -69,7 +73,10 @@ export function AuthLinkButton({ label, onPress, disabled, tone = 'muted' }: Aut
   return (
     <Pressable
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        selectionHaptic()
+        onPress()
+      }}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: Boolean(disabled) }}
