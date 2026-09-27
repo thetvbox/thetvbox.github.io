@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/useToast'
 import { BottomTabInset } from '@/constants/theme'
 import { compareHref } from '@/lib/navigation'
 import { errorMessage } from '@/lib/format'
+import { profileShareUrl } from '@/lib/routes'
 import { fetchUserByUsername } from '@/lib/users'
 import type { AppUser } from '@/types'
 
@@ -85,6 +86,7 @@ export default function PublicProfileScreen() {
                 <View className="shrink-0 flex-row items-center gap-2">
                   <ShareButton
                     title={`@${profile.username} on TV Box`}
+                    url={profileShareUrl(profile.username)}
                     onResult={(result) => {
                       if (result === 'copied') showInfo('Link copied to clipboard')
                       if (result === 'failed') showError('Failed to share this profile.')

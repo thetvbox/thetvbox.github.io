@@ -37,3 +37,15 @@ export function compareRoute(username: string): string {
 export function listDetailRoute(username: string, listId: string): string {
   return `/u/${username}/lists/${listId}`
 }
+
+const WEB_APP_URL = 'https://thetvbox.github.io'
+
+/** Full shareable web URL for a user's public profile (the web app is hash-routed). */
+export function profileShareUrl(username: string): string {
+  return `${WEB_APP_URL}/#${profileRoute(username)}`
+}
+
+/** Full shareable web URL for a list (the web app is hash-routed). */
+export function listDetailShareUrl(username: string, listId: string): string {
+  return `${WEB_APP_URL}/#${listDetailRoute(username, listId)}`
+}
