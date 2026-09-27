@@ -1,17 +1,23 @@
 import { useState } from 'react'
 import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { GlassView } from 'expo-glass-effect'
+import { SymbolView } from 'expo-symbols'
+import Animated, { FadeInUp } from 'react-native-reanimated'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useAsyncAction } from '@/hooks/useAsyncAction'
+import { useThemeColors } from '@/hooks/use-theme-colors'
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '@/lib/constants'
 import { AuthButton, AuthErrorBanner, AuthLinkButton, AuthTextField } from '@/components/auth/auth-controls'
+import { AuthHero } from '@/components/auth/auth-hero'
 
 /** Post-sign-in setup: creates a brand-new profile row, or collects name/preferred-name for an existing passkey account signing in natively for the first time. */
 export function AccountSetupScreen() {
   const { accountSetup, user, createAccount, completeProfile, skipAccountSetup, signOut } = useAuth()
   const isNew = accountSetup === 'new'
   const { busy, error, run } = useAsyncAction()
+  const theme = useThemeColors()
 
   const [username, setUsername] = useState('')
   const [fullName, setFullName] = useState('')
@@ -35,49 +41,82 @@ export function AccountSetupScreen() {
 
   return (
     <View className="flex-1 bg-base-950">
-      <SafeAreaView className="flex-1 justify-center gap-6 px-6">
-        <View className="gap-2">
-          <Text className="text-2xl font-bold text-base-100">
-            {isNew ? 'Create your account' : `Welcome back${user?.username ? `, @${user.username}` : ''}`}
-          </Text>
-          <Text className="text-base-400">
-            {isNew
-              ? 'Pick a username and tell us your name.'
-              : 'A couple quick details to finish setting up your account.'}
-          </Text>
-        </View>
+      <SafeAreaView className="flex-1 justify-center px-6">
+        <AuthHero
+          title={isNew ? 'Create your account' : `Welcome back${user?.username ? `, @${user.username}` : ''}`}
+          tagline={isNew ? 'Pick a username and tell us your name.' : 'A couple quick details to finish setting up.'}
+        />
 
-        {error && <AuthErrorBanner message={error} />}
+        <Animated.View entering={FadeInUp.delay(80).duration(420)} className="mt-8" style={{ overflow: 'hidden', borderRadius: 28 }}>
+          <GlassView glassEffectStyle="regular" isInteractive style={{ padding: 24 }}>
+            <View className="gap-4">
+              {error && <AuthErrorBanner message={error} />}
 
-        <View className="gap-3">
-          {isNew && (
-            <AuthTextField
-              autoCapitalize="none"
-              autoComplete="username"
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              maxLength={USERNAME_MAX_LENGTH}
-            />
-          )}
-          <AuthTextField autoComplete="name" placeholder="Full name" value={fullName} onChangeText={setFullName} />
-          <AuthTextField
-            placeholder="Preferred name (optional)"
-            value={preferredName}
-            onChangeText={setPreferredName}
-          />
-          {isNew && username.length > 0 && !usernameValid && (
-            <Text className="text-warning">
-              {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} letters, numbers, or underscores.
-            </Text>
-          )}
-        </View>
+              <View className="gap-3">
+                {isNew && (
+                  <View className="relative justify-center">
+                    <SymbolView
+                      name="at"
+                      size={18}
+                      tintColor={theme.textSecondary}
+                      style={{ position: 'absolute', left: 16, zIndex: 1 }}
+                    />
+                    <AuthTextField
+                      autoCapitalize="none"
+                      autoComplete="username"
+                      autoFocus
+                      placeholder="Username"
+                      value={username}
+                      onChangeText={setUsername}
+                      maxLength={USERNAME_MAX_LENGTH}
+                      className="pl-11"
+                    />
+                  </View>
+                )}
+                <View className="relative justify-center">
+                  <SymbolView
+                    name="person.fill"
+                    size={18}
+                    tintColor={theme.textSecondary}
+                    style={{ position: 'absolute', left: 16, zIndex: 1 }}
+                  />
+                  <AuthTextField
+                    autoComplete="name"
+                    placeholder="Full name"
+                    value={fullName}
+                    onChangeText={setFullName}
+                    className="pl-11"
+                  />
+                </View>
+                <View className="relative justify-center">
+                  <SymbolView
+                    name="sparkles"
+                    size={18}
+                    tintColor={theme.textSecondary}
+                    style={{ position: 'absolute', left: 16, zIndex: 1 }}
+                  />
+                  <AuthTextField
+                    placeholder="Preferred name (optional)"
+                    value={preferredName}
+                    onChangeText={setPreferredName}
+                    className="pl-11"
+                  />
+                </View>
+                {isNew && username.length > 0 && !usernameValid && (
+                  <Text className="text-warning">
+                    {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} letters, numbers, or underscores.
+                  </Text>
+                )}
+              </View>
 
-        <AuthButton label="Continue" loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
+              <AuthButton label="Continue" loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
 
-        {!isNew && <AuthLinkButton label="Skip for now" disabled={busy} onPress={skipAccountSetup} />}
+              {!isNew && <AuthLinkButton label="Skip for now" disabled={busy} onPress={skipAccountSetup} />}
 
-        <AuthLinkButton label="Sign out" tone="faint" disabled={busy} onPress={() => signOut()} />
+              <AuthLinkButton label="Sign out" tone="faint" disabled={busy} onPress={() => signOut()} />
+            </View>
+          </GlassView>
+        </Animated.View>
       </SafeAreaView>
     </View>
   )
