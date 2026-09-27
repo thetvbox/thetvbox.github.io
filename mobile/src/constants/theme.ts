@@ -18,6 +18,8 @@ export const Colors = {
     star: '#b45309',
     danger: '#dc2626',
     warning: '#b45309',
+    iconBg1: '#d7dde6',
+    iconBg2: '#7c8898',
   },
   dark: {
     text: '#ffffff',
@@ -29,6 +31,8 @@ export const Colors = {
     star: '#ffb020',
     danger: '#f87171',
     warning: '#fcd34d',
+    iconBg1: '#4b5568',
+    iconBg2: '#181b22',
   },
 } as const;
 
