@@ -23,6 +23,7 @@ import { fetchListsForUser } from '@/lib/lists'
 import { listDetailHref, showHref } from '@/lib/navigation'
 import { nowWatching, summarizeShowActivity } from '@/lib/showActivity'
 import { fetchDismissedForUser } from '@/lib/showDismissed'
+import { syncSpotlightIndex } from '@/lib/spotlightIndex'
 import { fetchDroppedForUser } from '@/lib/showDropped'
 import {
   computeSeasonProgress,
@@ -113,6 +114,17 @@ export default function HomeScreen() {
     [ratings, watched, started, dismissed, dropped],
   )
   const watching = useMemo(() => nowWatching(activity), [activity])
+
+  useEffect(() => {
+    if (loading) return
+    const watchingIds = new Set(watching.map((s) => s.showId))
+    syncSpotlightIndex([
+      ...watching.map((s) => ({ showId: s.showId, showName: s.showName, subtitle: 'Now Watching' })),
+      ...watchlist
+        .filter((w) => !watchingIds.has(w.show_id))
+        .map((w) => ({ showId: w.show_id, showName: w.show_name, subtitle: 'Watchlist' })),
+    ])
+  }, [loading, watching, watchlist])
 
   const watchedBySeasonByShow = useMemo(() => {
     const byShow = new Map<number, EpisodeWatched[]>()

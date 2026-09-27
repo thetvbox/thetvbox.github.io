@@ -1,0 +1,7 @@
+{
+  "name": "spotlight-index",
+  "version": "1.0.0",
+  "description": "Local Expo module: indexes shows into iOS Core Spotlight and routes taps back into the app.",
+  "main": "index.ts",
+  "private": true
+}
