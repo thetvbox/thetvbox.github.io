@@ -1,44 +1,36 @@
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react'
+import { Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '@/lib/constants';
+import { useAuth } from '@/contexts/AuthContext'
+import { useAsyncAction } from '@/hooks/useAsyncAction'
+import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '@/lib/constants'
+import { AuthButton, AuthErrorBanner, AuthLinkButton, AuthTextField } from '@/components/auth/auth-controls'
 
 /** Post-sign-in setup: creates a brand-new profile row, or collects name/preferred-name for an existing passkey account signing in natively for the first time. */
 export function AccountSetupScreen() {
-  const { accountSetup, user, createAccount, completeProfile, skipAccountSetup, signOut } = useAuth();
-  const isNew = accountSetup === 'new';
-  const scheme = useColorScheme();
-  const placeholderColor = scheme === 'light' ? '#56637a' : '#6b6b78';
+  const { accountSetup, user, createAccount, completeProfile, skipAccountSetup, signOut } = useAuth()
+  const isNew = accountSetup === 'new'
+  const { busy, error, run } = useAsyncAction()
 
-  const [username, setUsername] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [preferredName, setPreferredName] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [preferredName, setPreferredName] = useState('')
 
-  const trimmedUsername = username.trim();
-  const usernameValid = !isNew || USERNAME_PATTERN.test(trimmedUsername);
-  const canSubmit = fullName.trim().length > 0 && usernameValid && !busy;
+  const trimmedUsername = username.trim()
+  const usernameValid = !isNew || USERNAME_PATTERN.test(trimmedUsername)
+  const canSubmit = fullName.trim().length > 0 && usernameValid && !busy
 
-  async function handleSubmit() {
-    setError(null);
-    setBusy(true);
-    try {
-      const name = fullName.trim();
-      const preferred = preferredName.trim() || name;
+  function handleSubmit() {
+    run(async () => {
+      const name = fullName.trim()
+      const preferred = preferredName.trim() || name
       if (isNew) {
-        await createAccount({ username: trimmedUsername, fullName: name, preferredName: preferred });
+        await createAccount({ username: trimmedUsername, fullName: name, preferredName: preferred })
       } else {
-        await completeProfile({ fullName: name, preferredName: preferred });
+        await completeProfile({ fullName: name, preferredName: preferred })
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
-    } finally {
-      setBusy(false);
-    }
+    })
   }
 
   return (
@@ -55,39 +47,24 @@ export function AccountSetupScreen() {
           </Text>
         </View>
 
-        {error && (
-          <View className="rounded-2xl border border-hairline bg-glass px-4 py-3">
-            <Text className="text-danger">{error}</Text>
-          </View>
-        )}
+        {error && <AuthErrorBanner message={error} />}
 
         <View className="gap-3">
           {isNew && (
-            <TextInput
+            <AuthTextField
               autoCapitalize="none"
               autoComplete="username"
               placeholder="Username"
-              placeholderTextColor={placeholderColor}
               value={username}
               onChangeText={setUsername}
               maxLength={USERNAME_MAX_LENGTH}
-              className="h-[50px] rounded-2xl border border-hairline-strong px-4 text-base text-base-100"
             />
           )}
-          <TextInput
-            autoComplete="name"
-            placeholder="Full name"
-            placeholderTextColor={placeholderColor}
-            value={fullName}
-            onChangeText={setFullName}
-            className="h-[50px] rounded-2xl border border-hairline-strong px-4 text-base text-base-100"
-          />
-          <TextInput
+          <AuthTextField autoComplete="name" placeholder="Full name" value={fullName} onChangeText={setFullName} />
+          <AuthTextField
             placeholder="Preferred name (optional)"
-            placeholderTextColor={placeholderColor}
             value={preferredName}
             onChangeText={setPreferredName}
-            className="h-[50px] rounded-2xl border border-hairline-strong px-4 text-base text-base-100"
           />
           {isNew && username.length > 0 && !usernameValid && (
             <Text className="text-warning">
@@ -96,28 +73,12 @@ export function AccountSetupScreen() {
           )}
         </View>
 
-        <Pressable
-          className="h-[50px] items-center justify-center rounded-2xl bg-accent-500 active:opacity-80 disabled:opacity-50"
-          disabled={!canSubmit}
-          onPress={handleSubmit}
-        >
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-base font-semibold text-white">Continue</Text>
-          )}
-        </Pressable>
+        <AuthButton label="Continue" loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
 
-        {!isNew && (
-          <Pressable disabled={busy} onPress={skipAccountSetup}>
-            <Text className="text-center text-base-400">Skip for now</Text>
-          </Pressable>
-        )}
+        {!isNew && <AuthLinkButton label="Skip for now" disabled={busy} onPress={skipAccountSetup} />}
 
-        <Pressable disabled={busy} onPress={() => signOut()}>
-          <Text className="text-center text-base-500">Sign out</Text>
-        </Pressable>
+        <AuthLinkButton label="Sign out" tone="faint" disabled={busy} onPress={() => signOut()} />
       </SafeAreaView>
     </View>
-  );
+  )
 }
