@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, View } from 'react-native';
 
@@ -78,6 +79,16 @@ function AppGate() {
 /** Root shell: sign-in, account setup, and the Face ID lock all gate the tab/stack navigation below them. */
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { setColorScheme } = useNativeWindColorScheme();
+
+  useEffect(() => {
+    // NativeWind's own appearance listener can lag behind or get stuck relative to
+    // RN's native useColorScheme() on iOS (nativewind/nativewind#1626) -- force it
+    // back in sync with the authoritative RN value whenever it changes, including
+    // on first mount.
+    setColorScheme(colorScheme === 'dark' || colorScheme === 'light' ? colorScheme : 'system');
+  }, [colorScheme, setColorScheme]);
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
