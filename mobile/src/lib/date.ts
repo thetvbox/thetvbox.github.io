@@ -71,6 +71,11 @@ export function dateInputToNoonIso(dateInput: string): string {
   return new Date(`${dateInput}T12:00:00`).toISOString()
 }
 
+/** Converts a native date picker's Date (whose time-of-day is meaningless here) to an ISO timestamp anchored at local noon. */
+export function dateToNoonIso(date: Date): string {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0).toISOString()
+}
+
 /** True if a TMDB date-only string is still ahead of today, by the viewer's local calendar day. */
 export function isFutureDate(dateStr: string): boolean {
   const [y, m, d] = dateStr.split('-').map(Number)
