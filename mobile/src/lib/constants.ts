@@ -67,6 +67,7 @@ export const TABLE_PUSH_SUBSCRIPTIONS = 'push_subscriptions'
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000
 export const PASSCODE_LENGTH = 6
+export const EMAIL_OTP_LENGTH = 6
 
 export const PROFILE_LISTS_TAB_QUERY = 'tab=lists'
 
