@@ -17,7 +17,10 @@ interface AuthHeroProps {
   tagline: string;
 }
 
-/** Branded header shared by the login and account-setup screens: a softly-glowing TV Box mark over a title and tagline, with a gentle entrance animation. */
+const BADGE_SIZE = 84;
+const GLOW_SIZE = 108;
+
+/** Branded header shared by the login and account-setup screens: the TV Box mark cropped into a clean circular badge with a soft pulsing glow ring behind it, a title, and a tagline. */
 export function AuthHero({ title, tagline }: AuthHeroProps) {
   const theme = useThemeColors();
   const glowOpacity = useSharedValue(0.45);
@@ -34,15 +37,15 @@ export function AuthHero({ title, tagline }: AuthHeroProps) {
 
   return (
     <Animated.View entering={FadeInDown.duration(520).springify().damping(16)} className="items-center gap-3">
-      <View className="items-center justify-center" style={{ width: 96, height: 96 }}>
+      <View className="items-center justify-center" style={{ width: GLOW_SIZE, height: GLOW_SIZE }}>
         <Animated.View
           style={[
             glowStyle,
             {
               position: 'absolute',
-              width: 88,
-              height: 88,
-              borderRadius: 44,
+              width: GLOW_SIZE,
+              height: GLOW_SIZE,
+              borderRadius: GLOW_SIZE / 2,
               backgroundColor: theme.iconBg2,
               shadowColor: theme.star,
               shadowOpacity: 0.55,
@@ -51,7 +54,20 @@ export function AuthHero({ title, tagline }: AuthHeroProps) {
             },
           ]}
         />
-        <AppLogo size={72} />
+        <View
+          style={{
+            width: BADGE_SIZE,
+            height: BADGE_SIZE,
+            borderRadius: BADGE_SIZE / 2,
+            overflow: 'hidden',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.18)',
+          }}
+        >
+          <AppLogo size={BADGE_SIZE * 1.08} />
+        </View>
       </View>
       <View className="items-center gap-1">
         <Text className="text-3xl font-bold text-base-100">{title}</Text>
