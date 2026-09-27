@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { useRef } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,11 +20,12 @@ const BACKDROP_HEIGHT = 220;
 const HERO_OVERLAP = 72;
 
 export default function ShowDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, jumpToProgress } = useLocalSearchParams<{ id: string; jumpToProgress?: string }>();
   const showId = Number(id);
   const { user } = useAuth();
   const d = useShowDetail(showId, user);
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   if (Number.isNaN(showId)) {
     return <ErrorText className="p-8 text-center text-sm">Invalid show.</ErrorText>;
@@ -35,7 +37,7 @@ export default function ShowDetailScreen() {
   return (
     <View className="flex-1 bg-base-950">
       <Stack.Screen options={{ headerTransparent: true, headerTitle: d.show?.name ?? '', headerTintColor: '#fff', headerBackTitle: 'Back' }} />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
         <View style={{ height: BACKDROP_HEIGHT }} className="w-full overflow-hidden bg-base-850">
           {d.show?.backdrop_path && (
             <Image source={{ uri: backdropUrl(d.show.backdrop_path) ?? undefined }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={200} />
@@ -132,6 +134,8 @@ export default function ShowDetailScreen() {
               effectiveAirDate={d.effectiveAirDate}
               onToggleWatched={d.handleToggleWatched}
               onMarkWatchedWithDate={d.handleMarkWatchedWithDate}
+              jumpToProgress={jumpToProgress === '1'}
+              scrollViewRef={scrollViewRef}
             />
           )}
         </View>

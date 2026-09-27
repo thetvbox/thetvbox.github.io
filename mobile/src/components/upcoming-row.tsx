@@ -18,7 +18,7 @@ export interface UpcomingItem {
 /** One "what's airing next" row for Home's Upcoming list. */
 export function UpcomingRow({ item }: { item: UpcomingItem }) {
   return (
-    <Link href={showHref(item.showId)} asChild>
+    <Link href={showHref(item.showId, { jumpToProgress: true })} asChild>
       <Pressable
         className={`flex-row items-center gap-3 active:opacity-70 ${ROW_CARD_BASE_CLASSES}`}
         accessibilityRole="link"
