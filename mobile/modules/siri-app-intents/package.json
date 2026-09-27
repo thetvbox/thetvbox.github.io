@@ -1,0 +1,7 @@
+{
+  "name": "siri-app-intents",
+  "version": "1.0.0",
+  "description": "Local Expo module: the Siri App Intents (log watched / what's next) and the token store they read from.",
+  "main": "index.ts",
+  "private": true
+}

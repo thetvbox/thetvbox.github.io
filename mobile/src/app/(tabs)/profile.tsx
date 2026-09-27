@@ -9,6 +9,7 @@ import { ProfileActivity, PROFILE_ACTIVITY_TABS } from '@/components/profile-act
 import type { ProfileActivityTab } from '@/components/profile-activity'
 import { ProfileFollowSection } from '@/components/profile-follow-section'
 import { PushNotificationsSheet } from '@/components/push-notifications-sheet'
+import { SiriShortcutsSheet } from '@/components/siri-shortcuts-sheet'
 import { useAuth } from '@/contexts/AuthContext'
 import { BottomTabInset } from '@/constants/theme'
 import { profileHref } from '@/lib/navigation'
@@ -22,12 +23,14 @@ export default function ProfileScreen() {
   const initialTab: ProfileActivityTab | undefined =
     tab && (PROFILE_ACTIVITY_TABS as string[]).includes(tab) ? (tab as ProfileActivityTab) : undefined
   const [pushSheetVisible, setPushSheetVisible] = useState(false)
+  const [siriSheetVisible, setSiriSheetVisible] = useState(false)
 
   async function handleMenuAction(event: NativeActionEvent) {
     const id = event.nativeEvent.event
     if (id === 'recap') router.push('/recap')
     else if (id === 'public' && user) router.push(profileHref(user.username))
     else if (id === 'notifications') setPushSheetVisible(true)
+    else if (id === 'siri') setSiriSheetVisible(true)
     else if (id === 'signout') await signOut()
   }
 
@@ -52,6 +55,7 @@ export default function ProfileScreen() {
                 { id: 'recap', title: 'Year in review', image: 'sparkles' },
                 { id: 'public', title: 'Public view', image: 'person.crop.circle' },
                 { id: 'notifications', title: 'Notifications', image: 'bell' },
+                { id: 'siri', title: 'Siri & Shortcuts', image: 'mic' },
                 {
                   id: 'signout',
                   title: 'Sign out',
@@ -75,6 +79,9 @@ export default function ProfileScreen() {
           userId={user.id}
           onClose={() => setPushSheetVisible(false)}
         />
+      )}
+      {user && (
+        <SiriShortcutsSheet visible={siriSheetVisible} userId={user.id} onClose={() => setSiriSheetVisible(false)} />
       )}
     </View>
   )
