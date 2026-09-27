@@ -90,7 +90,12 @@ export default function RootLayout() {
   }, [colorScheme, setColorScheme]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    // Remounting the whole subtree on scheme change works around NativeWind v4's dark-mode
+    // reactivity bug (nativewind/nativewind#1626): an already-mounted tree can get stuck on a
+    // stale colorScheme, but a freshly-created one always computes styles from the current
+    // value. This costs a brief re-render (and any in-flight local state) on an actual system
+    // theme toggle, which is an acceptable trade for never showing a stuck-wrong theme.
+    <ThemeProvider key={colorScheme} value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <SearchProvider>
           <MembersProvider>
