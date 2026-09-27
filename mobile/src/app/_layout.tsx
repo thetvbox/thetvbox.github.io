@@ -7,6 +7,7 @@ import { AccountSetupScreen } from '@/components/auth/account-setup-screen';
 import { BiometricLockScreen } from '@/components/auth/biometric-lock-screen';
 import { LoginScreen } from '@/components/auth/login-screen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SearchProvider } from '@/contexts/SearchContext';
 import { useBiometricGate } from '@/hooks/useBiometricGate';
 
 SplashScreen.preventAutoHideAsync();
@@ -29,6 +30,17 @@ function AppGate() {
       <Stack.Screen name="u/[username]/lists/[listId]" options={{ title: 'List' }} />
       <Stack.Screen name="compare/[username]" options={{ title: 'Compare' }} />
       <Stack.Screen name="recap" options={{ title: 'Recap' }} />
+      <Stack.Screen
+        name="search-filters"
+        options={{
+          presentation: 'formSheet',
+          sheetAllowedDetents: [0.5, 1],
+          sheetInitialDetentIndex: 0,
+          sheetGrabberVisible: true,
+          sheetCornerRadius: 24,
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
+      />
     </Stack>
   );
 }
@@ -39,8 +51,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <AnimatedSplashOverlay />
-        <AppGate />
+        <SearchProvider>
+          <AnimatedSplashOverlay />
+          <AppGate />
+        </SearchProvider>
       </AuthProvider>
     </ThemeProvider>
   );
