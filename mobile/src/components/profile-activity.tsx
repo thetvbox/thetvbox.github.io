@@ -67,6 +67,12 @@ export function ProfileActivity({ userId, username, initialTab = 'diary' }: Prof
   const { toast, showUndo, showError, dismiss } = useToast()
 
   useEffect(() => {
+    if (!initialTab) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTab(initialTab)
+  }, [initialTab])
+
+  useEffect(() => {
     let cancelled = false
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
