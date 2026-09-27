@@ -11,25 +11,32 @@ export function FilterSection({ title, children }: { title: string; children: Re
   )
 }
 
-/** Wrapping row of toggle Chips for one facet's options, sharing a Set<string> selection model. */
+/** Wrapping row of toggle Chips for one facet's options, sharing a Set<string> selection model. `counts`, when given, shows each option's live match count and dims+disables one that's currently at zero (and not already selected) instead of removing it -- so combining this facet with another one never makes an option silently vanish. */
 export function ChipGroup({
   options,
   selected,
   onToggle,
   labelFor,
+  counts,
 }: {
   options: string[]
   selected: Set<string>
   onToggle: (value: string) => void
   labelFor?: (value: string) => string
+  counts?: Map<string, number>
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {options.map((opt) => (
-        <Chip key={opt} active={selected.has(opt)} onClick={() => onToggle(opt)}>
-          {labelFor ? labelFor(opt) : opt}
-        </Chip>
-      ))}
+      {options.map((opt) => {
+        const count = counts?.get(opt)
+        const isActive = selected.has(opt)
+        return (
+          <Chip key={opt} active={isActive} onClick={() => onToggle(opt)} disabled={count === 0 && !isActive}>
+            {labelFor ? labelFor(opt) : opt}
+            {count !== undefined && <span className="ml-1 opacity-70">· {count}</span>}
+          </Chip>
+        )
+      })}
     </div>
   )
 }

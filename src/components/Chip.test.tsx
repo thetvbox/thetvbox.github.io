@@ -31,4 +31,26 @@ describe('Chip', () => {
     fireEvent.click(screen.getByText('Drama'))
     expect(onClick).toHaveBeenCalledTimes(1)
   })
+
+  it('is not disabled by default', () => {
+    render(
+      <Chip active={false} onClick={vi.fn()}>
+        Drama
+      </Chip>,
+    )
+    expect(screen.getByText('Drama').closest('button')).not.toBeDisabled()
+  })
+
+  it('disables the button and blocks onClick when disabled', () => {
+    const onClick = vi.fn()
+    render(
+      <Chip active={false} onClick={onClick} disabled>
+        Drama
+      </Chip>,
+    )
+    const button = screen.getByText('Drama').closest('button')
+    expect(button).toBeDisabled()
+    fireEvent.click(button as HTMLButtonElement)
+    expect(onClick).not.toHaveBeenCalled()
+  })
 })
