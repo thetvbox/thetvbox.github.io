@@ -24,6 +24,7 @@ import { listDetailHref, showHref } from '@/lib/navigation'
 import { nowWatching, summarizeShowActivity } from '@/lib/showActivity'
 import { fetchDismissedForUser } from '@/lib/showDismissed'
 import { syncSpotlightIndex } from '@/lib/spotlightIndex'
+import { nextEpisodeWidget } from '@/widgets/next-episode-widget'
 import { fetchDroppedForUser } from '@/lib/showDropped'
 import {
   computeSeasonProgress,
@@ -189,6 +190,21 @@ export default function HomeScreen() {
       cancelled = true
     }
   }, [watchingKey, watchedBySeasonByShow])
+
+  useEffect(() => {
+    const top = watching[0]
+    if (!top) {
+      nextEpisodeWidget.updateSnapshot({ showName: null, seasonNumber: null, episodeNumber: null })
+      return
+    }
+    const progress = seasonProgress.get(top.showId)
+    if (!progress) return
+    nextEpisodeWidget.updateSnapshot({
+      showName: top.showName,
+      seasonNumber: progress.currentSeasonNumber,
+      episodeNumber: progress.currentSeasonWatched + 1,
+    })
+  }, [watching, seasonProgress])
 
   const showWatchingSkeleton = loading || (watchingIds.length > 0 && enrichedKey !== watchingKey)
 

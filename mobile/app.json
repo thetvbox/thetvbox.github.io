@@ -43,7 +43,21 @@
           }
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "NextEpisodeWidget",
+              "displayName": "Continue Watching",
+              "description": "Shows the next episode of the show you're currently watching.",
+              "supportedFamilies": ["systemSmall", "systemMedium"],
+              "contentMarginsDisabled": false
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
