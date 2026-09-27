@@ -36,7 +36,9 @@ import type {
   WatchlistItem,
 } from '@/types'
 
-type Tab = 'diary' | 'history' | 'watchlist' | 'dropped' | 'lists'
+export type ProfileActivityTab = 'diary' | 'history' | 'watchlist' | 'dropped' | 'lists'
+export const PROFILE_ACTIVITY_TABS: ProfileActivityTab[] = ['diary', 'history', 'watchlist', 'dropped', 'lists']
+type Tab = ProfileActivityTab
 
 interface ProfileActivityProps {
   userId: string
