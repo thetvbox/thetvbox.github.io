@@ -15,6 +15,9 @@ export const Colors = {
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
     accent: '#7c3aed',
+    star: '#b45309',
+    danger: '#dc2626',
+    warning: '#b45309',
   },
   dark: {
     text: '#ffffff',
@@ -23,6 +26,9 @@ export const Colors = {
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
     accent: '#a78bfa',
+    star: '#ffb020',
+    danger: '#f87171',
+    warning: '#fcd34d',
   },
 } as const;
 

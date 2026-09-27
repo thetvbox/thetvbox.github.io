@@ -5,8 +5,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors, Spacing } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Spacing } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 /** The slice of React Navigation's BottomTabBarProps this component actually reads -- kept local
  * rather than imported from expo-router's internal (non-public) react-navigation/bottom-tabs path. */
@@ -35,8 +35,7 @@ const INDICATOR_SPRING = { damping: 22, stiffness: 260 };
 /** tv-box's floating glass pill bottom tab bar, ported from Navbar.tsx's mobile nav -- same inset-from-edges pill shape and sliding active-tab highlight, but the pill itself is a real native GlassView (Liquid Glass on iOS 26+) instead of a hand-rolled backdrop-filter approximation. */
 export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps) {
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
-  const theme = Colors[scheme === 'unspecified' || !scheme ? 'light' : scheme];
+  const theme = useThemeColors();
   const tabWidth = useSharedValue(0);
   const indicatorX = useSharedValue(0);
 

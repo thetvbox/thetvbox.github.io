@@ -4,16 +4,14 @@ import { Pressable } from 'react-native';
 
 import { GlassTabBar } from '@/components/glass-tab-bar';
 import { useSearch } from '@/contexts/SearchContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 const FILTERS_ICON_SIZE = 22;
 
 /** Native nav-bar button opening the Search filters sheet; hidden until the current results actually have filterable facets. */
 function SearchFiltersButton() {
   const { filtersAvailable, filtersActive } = useSearch();
-  const scheme = useColorScheme();
-  const theme = Colors[scheme === 'unspecified' || !scheme ? 'light' : scheme];
+  const theme = useThemeColors();
   if (!filtersAvailable) return null;
 
   return (
