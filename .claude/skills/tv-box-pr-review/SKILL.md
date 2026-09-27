@@ -36,6 +36,7 @@ Work through the checklist against the actual changed files, not the whole repo 
 ## 5. Accessibility
 
 - Toggle-style buttons (follow/unfollow, filter chips, tabs, quick-action pills) must report `aria-pressed`, matching their visual active state.
+- In `mobile/`, RN has no `aria-pressed` -- the equivalent is `accessibilityRole="button"` + `accessibilityState` + `accessibilityLabel` on the `Pressable`.
 - New panels, dropdowns, or modals that can be dismissed should use `useEscapeAndFocusReturn` rather than a bespoke Escape handler, so focus-return behavior stays consistent.
 - Interactive touch targets should be roughly 44px or larger.
 - `alt` text on meaningful images; decorative images (backdrops, gradients) can use `alt=""`.
