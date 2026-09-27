@@ -47,12 +47,17 @@
       [
         "expo-widgets",
         {
+          "bundleIdentifier": "com.thetvbox.mobile.ExpoWidgetsTarget",
+          "groupIdentifier": "group.com.thetvbox.mobile",
           "widgets": [
             {
               "name": "NextEpisodeWidget",
               "displayName": "Continue Watching",
               "description": "Shows the next episode of the show you're currently watching.",
-              "supportedFamilies": ["systemSmall", "systemMedium"],
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium"
+              ],
               "contentMarginsDisabled": false
             }
           ]
@@ -62,6 +67,30 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.thetvbox.mobile.ExpoWidgetsTarget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.thetvbox.mobile"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "601dab96-35d0-4f13-b684-42afa1c895dc"
+      }
+    },
+    "owner": "tv-box"
   }
 }
