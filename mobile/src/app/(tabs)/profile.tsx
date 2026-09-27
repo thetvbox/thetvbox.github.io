@@ -1,5 +1,6 @@
 import { MenuView, type NativeActionEvent } from '@expo/ui/community/menu'
 import { router, useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -7,23 +8,26 @@ import { Avatar } from '@/components/avatar'
 import { ProfileActivity, PROFILE_ACTIVITY_TABS } from '@/components/profile-activity'
 import type { ProfileActivityTab } from '@/components/profile-activity'
 import { ProfileFollowSection } from '@/components/profile-follow-section'
+import { PushNotificationsSheet } from '@/components/push-notifications-sheet'
 import { useAuth } from '@/contexts/AuthContext'
 import { BottomTabInset } from '@/constants/theme'
 import { profileHref } from '@/lib/navigation'
 
 const PROFILE_BOTTOM_PADDING = BottomTabInset + 40
 
-/** The signed-in user's own profile: their activity plus a "More" menu for year-in-review, the public view of this profile, and signing out -- ported from web's Profile.tsx (appearance and push-notification settings are handled automatically/natively and aren't ported, see the progress notes). */
+/** The signed-in user's own profile: their activity plus a "More" menu for year-in-review, the public view of this profile, notifications, and signing out -- ported from web's Profile.tsx (appearance is handled automatically/natively and isn't ported, see the progress notes). */
 export default function ProfileScreen() {
   const { user, signOut } = useAuth()
   const { tab } = useLocalSearchParams<{ tab?: string }>()
   const initialTab: ProfileActivityTab | undefined =
     tab && (PROFILE_ACTIVITY_TABS as string[]).includes(tab) ? (tab as ProfileActivityTab) : undefined
+  const [pushSheetVisible, setPushSheetVisible] = useState(false)
 
   async function handleMenuAction(event: NativeActionEvent) {
     const id = event.nativeEvent.event
     if (id === 'recap') router.push('/recap')
     else if (id === 'public' && user) router.push(profileHref(user.username))
+    else if (id === 'notifications') setPushSheetVisible(true)
     else if (id === 'signout') await signOut()
   }
 
@@ -47,6 +51,7 @@ export default function ProfileScreen() {
               actions={[
                 { id: 'recap', title: 'Year in review', image: 'sparkles' },
                 { id: 'public', title: 'Public view', image: 'person.crop.circle' },
+                { id: 'notifications', title: 'Notifications', image: 'bell' },
                 {
                   id: 'signout',
                   title: 'Sign out',
@@ -64,6 +69,13 @@ export default function ProfileScreen() {
           {user && <ProfileActivity userId={user.id} username={user.username} initialTab={initialTab} />}
         </ScrollView>
       </SafeAreaView>
+      {user && (
+        <PushNotificationsSheet
+          visible={pushSheetVisible}
+          userId={user.id}
+          onClose={() => setPushSheetVisible(false)}
+        />
+      )}
     </View>
   )
 }
