@@ -106,6 +106,8 @@ export interface AppUser {
   email: string
   username: string
   created_at: string
+  full_name?: string | null
+  preferred_name?: string | null
 }
 
 export interface Follow {
