@@ -213,6 +213,43 @@ describe('SearchFiltersPanel', () => {
     expect(screen.getByText('Platform')).toBeInTheDocument()
   })
 
+  it("shows each chip's live count, and disables an unselected option at zero without hiding it", () => {
+    render(
+      <SearchFiltersPanel
+        facets={facets({ platforms: ['Netflix', 'Hulu'], genres: ['Drama'] })}
+        filters={emptySearchFilters()}
+        counts={{
+          platforms: new Map([['Netflix', 3], ['Hulu', 0]]),
+          genres: new Map([['Drama', 2]]),
+        }}
+        onChange={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('· 3')).toBeInTheDocument()
+    expect(screen.getByText('· 2')).toBeInTheDocument()
+    expect(screen.getByText('· 0')).toBeInTheDocument()
+    expect(screen.getByText('Hulu').closest('button')).toBeDisabled()
+    expect(screen.getByText('Netflix').closest('button')).not.toBeDisabled()
+  })
+
+  it("keeps an already-selected option clickable even at zero count, so it can still be cleared", () => {
+    const onChange = vi.fn()
+    render(
+      <SearchFiltersPanel
+        facets={facets({ platforms: ['Hulu'] })}
+        filters={{ genres: new Set(), platforms: new Set(['Hulu']) }}
+        counts={{ platforms: new Map([['Hulu', 0]]), genres: new Map() }}
+        onChange={onChange}
+        onClose={vi.fn()}
+      />,
+    )
+    const hulu = screen.getByText('Hulu').closest('button') as HTMLButtonElement
+    expect(hulu).not.toBeDisabled()
+    fireEvent.click(hulu)
+    expect(onChange).toHaveBeenCalledWith({ genres: new Set(), platforms: new Set() })
+  })
+
   it('wires onClose through to the underlying BottomSheet (Escape closes it)', () => {
     const onClose = vi.fn()
     render(

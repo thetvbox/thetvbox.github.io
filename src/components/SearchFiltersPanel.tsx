@@ -2,7 +2,7 @@ import BottomSheet from './BottomSheet'
 import { ChipGroup, FilterSection } from './FilterSection'
 import PanelHeader from './PanelHeader'
 import { emptySearchFilters, isSearchFiltersActive } from '../lib/searchFilters'
-import type { SearchFilterFacets, SearchFilters } from '../lib/searchFilters'
+import type { SearchFilterCounts, SearchFilterFacets, SearchFilters } from '../lib/searchFilters'
 
 type Category = 'platforms' | 'genres'
 
@@ -10,11 +10,13 @@ type Category = 'platforms' | 'genres'
 export default function SearchFiltersPanel({
   facets,
   filters,
+  counts,
   onChange,
   onClose,
 }: {
   facets: SearchFilterFacets
   filters: SearchFilters
+  counts?: SearchFilterCounts
   onChange: (filters: SearchFilters) => void
   onClose: () => void
 }) {
@@ -45,13 +47,23 @@ export default function SearchFiltersPanel({
 
       {facets.platforms.length > 0 && (
         <FilterSection title="Platform">
-          <ChipGroup options={facets.platforms} selected={filters.platforms} onToggle={(v) => toggle('platforms', v)} />
+          <ChipGroup
+            options={facets.platforms}
+            selected={filters.platforms}
+            onToggle={(v) => toggle('platforms', v)}
+            counts={counts?.platforms}
+          />
         </FilterSection>
       )}
 
       {facets.genres.length > 0 && (
         <FilterSection title="Genre">
-          <ChipGroup options={facets.genres} selected={filters.genres} onToggle={(v) => toggle('genres', v)} />
+          <ChipGroup
+            options={facets.genres}
+            selected={filters.genres}
+            onToggle={(v) => toggle('genres', v)}
+            counts={counts?.genres}
+          />
         </FilterSection>
       )}
     </BottomSheet>

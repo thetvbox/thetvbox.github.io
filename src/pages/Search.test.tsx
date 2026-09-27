@@ -227,7 +227,31 @@ describe('Search', () => {
     expect(within(dialog).queryByRole('radio')).not.toBeInTheDocument()
   })
 
-  it('shows a filtered-empty message, and Clear all restores the full trending list', async () => {
+  it("dims and disables a facet option that would combine to zero matches, instead of letting the selection go to zero", async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([
+      show({ id: 1, name: 'Drama Show', genre_ids: [18] }),
+      show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
+    ])
+    mockPlatforms([[2, { provider_name: 'Hulu', logo_path: null }]])
+    render(<Search />)
+    await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByText('Drama'))
+
+    // Hulu's only show is the Comedy one, not the Drama one -- selecting it now would leave
+    // nothing on screen, so it reads "· 0" and can't be tapped, rather than allowing a
+    // dead-end combination the way a plain filter chip would.
+    expect(within(dialog).getByText('· 0')).toBeInTheDocument()
+    const hulu = within(dialog).getByText('Hulu').closest('button') as HTMLButtonElement
+    expect(hulu).toBeDisabled()
+    fireEvent.click(hulu)
+    expect(screen.getByText('Drama Show')).toBeInTheDocument()
+    expect(screen.queryByText('Hulu Comedy Show')).not.toBeInTheDocument()
+  })
+
+  it('restores the full trending list when Clear all is pressed', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([
       show({ id: 1, name: 'Drama Show', genre_ids: [18] }),
       show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
@@ -239,16 +263,13 @@ describe('Search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
     let dialog = await screen.findByRole('dialog', { name: 'Filters' })
     fireEvent.click(within(dialog).getByText('Drama'))
-    fireEvent.click(within(dialog).getByText('Hulu'))
-
-    await waitFor(() => expect(screen.getByText('No trending shows match the selected filters.')).toBeInTheDocument())
-    expect(screen.queryByText('Drama Show')).not.toBeInTheDocument()
-    expect(screen.queryByText('Hulu Comedy Show')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Hulu Comedy Show')).not.toBeInTheDocument())
+    expect(screen.getByText('Drama Show')).toBeInTheDocument()
 
     dialog = screen.getByRole('dialog', { name: 'Filters' })
     fireEvent.click(within(dialog).getByText('Clear all'))
-    await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
-    expect(screen.getByText('Hulu Comedy Show')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Hulu Comedy Show')).toBeInTheDocument())
+    expect(screen.getByText('Drama Show')).toBeInTheDocument()
   })
 
   it('closes the Filters sheet on Escape', async () => {

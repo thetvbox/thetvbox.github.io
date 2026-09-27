@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildSearchFilterFacets,
   countActiveSearchFilters,
+  countSearchFilterOptions,
   emptySearchFilters,
   filterShows,
   isSearchFiltersActive,
@@ -157,5 +158,46 @@ describe('pruneSearchFilters', () => {
     const filters = { genres: new Set(['Drama']), platforms: new Set<string>() }
     const pruned = pruneSearchFilters(filters, { genres: ['Drama', 'Comedy'], platforms: [] })
     expect(pruned).toBe(filters)
+  })
+})
+
+describe('countSearchFilterOptions', () => {
+  const platformNames = new Map([
+    [1, new Set(['Netflix'])],
+    [2, new Set(['Hulu'])],
+  ])
+  const shows = [
+    show({ id: 1, name: 'Drama Netflix Show', genre_ids: [18] }),
+    show({ id: 2, name: 'Comedy Hulu Show', genre_ids: [35] }),
+  ]
+  const facets = buildSearchFilterFacets(shows, genreNames, platformNames)
+
+  it('gives every facet option an explicit count, including zero, rather than omitting it', () => {
+    const counts = countSearchFilterOptions(shows, emptySearchFilters(), facets, genreNames, platformNames)
+    expect(counts.genres.get('Drama')).toBe(1)
+    expect(counts.genres.get('Comedy')).toBe(1)
+    expect(counts.platforms.get('Netflix')).toBe(1)
+    expect(counts.platforms.get('Hulu')).toBe(1)
+  })
+
+  it("combines a genre option's count with the OTHER facet's (platform) current selection", () => {
+    const filters = { genres: new Set<string>(), platforms: new Set(['Netflix']) }
+    const counts = countSearchFilterOptions(shows, filters, facets, genreNames, platformNames)
+    expect(counts.genres.get('Drama')).toBe(1) // Drama Netflix Show is on Netflix
+    expect(counts.genres.get('Comedy')).toBe(0) // Comedy Hulu Show is not on Netflix
+  })
+
+  it("never lets one genre's own selection change another genre's own displayed count", () => {
+    const filters = { genres: new Set(['Drama']), platforms: new Set<string>() }
+    const counts = countSearchFilterOptions(shows, filters, facets, genreNames, platformNames)
+    // Comedy's count is computed against the platform facet only, not against the already-selected Drama.
+    expect(counts.genres.get('Comedy')).toBe(1)
+  })
+
+  it('is symmetric for platform options against the current genre selection', () => {
+    const filters = { genres: new Set(['Drama']), platforms: new Set<string>() }
+    const counts = countSearchFilterOptions(shows, filters, facets, genreNames, platformNames)
+    expect(counts.platforms.get('Netflix')).toBe(1) // Drama Netflix Show matches Drama
+    expect(counts.platforms.get('Hulu')).toBe(0) // Comedy Hulu Show doesn't match Drama
   })
 })

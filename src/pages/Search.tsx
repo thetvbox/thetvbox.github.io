@@ -15,6 +15,7 @@ import ErrorText from '../components/ErrorText'
 import {
   buildSearchFilterFacets,
   countActiveSearchFilters,
+  countSearchFilterOptions,
   emptySearchFilters,
   filterShows,
   isSearchFiltersActive,
@@ -61,6 +62,10 @@ export default function Search() {
   const filteredShows = useMemo(
     () => filterShows(activeShows, filters, genreNames, activePlatformNames),
     [activeShows, filters, genreNames, activePlatformNames],
+  )
+  const filterCounts = useMemo(
+    () => countSearchFilterOptions(activeShows, filters, facets, genreNames, activePlatformNames),
+    [activeShows, filters, facets, genreNames, activePlatformNames],
   )
   const filtersAvailable = facets.genres.length > 0 || facets.platforms.length > 0
 
@@ -193,6 +198,7 @@ export default function Search() {
             key="search-filters"
             facets={facets}
             filters={filters}
+            counts={filterCounts}
             onChange={setFilters}
             onClose={() => setFiltersOpen(false)}
           />
