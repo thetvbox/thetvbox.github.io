@@ -35,6 +35,10 @@ export const NOW_WATCHING_PREVIEW_LIMIT = 6
 
 export const POSTER_THUMB_SIZE = 'w185'
 
+export const POSTER_GRID_COLUMNS = 3
+export const POSTER_GRID_GAP_PX = 16
+export const POSTER_ASPECT_RATIO = 2 / 3
+
 export const PROVIDER_PICKER_MAX_RESULTS = 8
 
 export const ACTIVITY_FETCH_LIMIT = 20_000

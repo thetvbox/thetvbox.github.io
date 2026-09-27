@@ -83,7 +83,9 @@ export function AuthLinkButton({ label, onPress, disabled, tone = 'muted' }: Aut
 export function AuthErrorBanner({ message }: { message: string }) {
   return (
     <View className={AUTH_ERROR_BANNER_CLASSES}>
-      <Text className="text-danger">{message}</Text>
+      <Text accessibilityRole="alert" className="text-danger">
+        {message}
+      </Text>
     </View>
   )
 }
