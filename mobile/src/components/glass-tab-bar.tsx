@@ -55,7 +55,7 @@ export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps
       <GlassView
         glassEffectStyle="regular"
         isInteractive
-        style={[styles.pill, { backgroundColor: 'rgba(20,20,24,0.55)' }]}
+        style={styles.pill}
         onLayout={(e) => {
           // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are intentionally mutable via `.value`.
           tabWidth.value = e.nativeEvent.layout.width / state.routes.length;
@@ -63,7 +63,7 @@ export function GlassTabBar({ state, descriptors, navigation }: GlassTabBarProps
       >
         <Animated.View
           pointerEvents="none"
-          style={[styles.indicator, indicatorStyle, { backgroundColor: `${theme.accent}26`, borderColor: `${theme.accent}66` }]}
+          style={[styles.indicator, indicatorStyle, { backgroundColor: `${theme.backgroundSelected}26`, borderColor: `${theme.backgroundSelected}66` }]}
         />
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
