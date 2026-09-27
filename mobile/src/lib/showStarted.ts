@@ -1,0 +1,68 @@
+import { supabase } from './supabase'
+import { fetchPaginated } from './pagination'
+import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_STARTED } from './constants'
+import type { ShowStarted, ShowStartedWithUser } from '../types'
+
+/** Fetches all shows one user has explicitly started. */
+export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]> {
+  const { data, error } = await supabase.from(TABLE_SHOW_STARTED).select('*').eq('user_id', userId)
+
+  if (error) throw error
+  return (data ?? []) as ShowStarted[]
+}
+
+/** Every started-show row across the whole group, joined with usernames, for a group "now watching" view. */
+export async function fetchStartedAllUsers(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<ShowStartedWithUser[]> {
+  return fetchPaginated<ShowStartedWithUser>(async (from, to) => {
+    const { data, error, count } = await supabase
+      .from(TABLE_SHOW_STARTED)
+      .select('*, users(username)', { count: 'exact' })
+      .order('started_at', { ascending: false })
+      .order('id')
+      .range(from, to)
+    return { data: data as unknown as ShowStartedWithUser[] | null, error, count }
+  }, limit)
+}
+
+/** Fetches one user's started status for a single show, or null if not started. */
+export async function fetchStartedItem(userId: string, showId: number): Promise<ShowStarted | null> {
+  const { data, error } = await supabase
+    .from(TABLE_SHOW_STARTED)
+    .select('*')
+    .eq('user_id', userId)
+    .eq('show_id', showId)
+    .maybeSingle()
+
+  if (error) throw error
+  return (data as ShowStarted) ?? null
+}
+
+export interface StartShowInput {
+  userId: string
+  showId: number
+  showName: string
+  showPosterPath: string | null
+  showTotalEpisodes: number | null
+}
+
+/** Records a "start watching" declaration without touching episode_watched. */
+export async function startShow(input: StartShowInput): Promise<ShowStarted> {
+  const { data, error } = await supabase
+    .from(TABLE_SHOW_STARTED)
+    .upsert(
+      {
+        user_id: input.userId,
+        show_id: input.showId,
+        show_name: input.showName,
+        show_poster_path: input.showPosterPath,
+        show_total_episodes: input.showTotalEpisodes,
+        started_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,show_id' },
+    )
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as ShowStarted
+}
