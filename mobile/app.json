@@ -62,7 +62,8 @@
             }
           ]
         }
-      ]
+      ],
+      "./plugins/withDisableUserScriptSandboxing"
     ],
     "experiments": {
       "typedRoutes": true,
