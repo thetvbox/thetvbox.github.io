@@ -358,6 +358,35 @@ describe('Activity', () => {
     expect(screen.getAllByText('Show One').length).toBeGreaterThan(0)
   })
 
+  it("shows each genre's live count for the selected person, and disables (without hiding) a genre they don't have", async () => {
+    vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2', 'u3']))
+    vi.mocked(fetchStartedAllUsers).mockResolvedValue([
+      startedFor(friend, { id: 's-friend' }),
+      startedFor(stranger, { id: 's-stranger', show_id: 2, show_name: 'Show Two' }),
+    ])
+    vi.mocked(getShowDetailsBulk).mockResolvedValue(
+      new Map([
+        [1, showDetail({ genres: [{ id: 1, name: 'Drama' }] })],
+        [2, showDetail({ id: 2, name: 'Show Two', genres: [{ id: 2, name: 'Comedy' }] })],
+      ]),
+    )
+    renderActivity()
+    await waitFor(() => expect(screen.getAllByText('Show Two').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByText('@friend'))
+
+    // @friend only watches the Drama show, so Comedy now reads zero and can't be tapped --
+    // but it's still shown, not hidden, so it's clear why (and that the facets do combine).
+    expect(within(dialog).getByText('· 0')).toBeInTheDocument()
+    const comedy = within(dialog).getByText('Comedy').closest('button') as HTMLButtonElement
+    expect(comedy).toBeDisabled()
+    fireEvent.click(comedy)
+    expect(screen.getByText('What @friend has been up to.')).toBeInTheDocument()
+  })
+
   it('Clear all resets the genre selection', async () => {
     vi.mocked(fetchFollowingIds).mockResolvedValue(new Set(['u2']))
     vi.mocked(fetchStartedAllUsers).mockResolvedValue([

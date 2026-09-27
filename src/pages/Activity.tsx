@@ -192,6 +192,34 @@ export default function Activity() {
     return Array.from(genres).sort()
   }, [scopedWatching, showDetails])
 
+  // Live per-option counts for the Filters sheet -- combined with the OTHER facet's current
+  // selection, but never with this facet's own other selections, so picking one genre never
+  // changes another genre's own displayed count (standard multi-select facet-count semantics).
+  const genreCounts = useMemo(() => {
+    const counts = new Map<string, number>(watchingGenres.map((g) => [g, 0]))
+    for (const w of personFilteredWatching) {
+      for (const g of showDetails.get(w.showId)?.genres ?? []) {
+        if (counts.has(g.name)) counts.set(g.name, (counts.get(g.name) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [watchingGenres, personFilteredWatching, showDetails])
+
+  const personCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const u of filterableMembers) {
+      const feedCount = scoped.filter((item) => actorUsername(item) === u.username).length
+      const watchingCount = scopedWatching.filter(
+        (w) =>
+          w.username === u.username &&
+          (selectedGenres.size === 0 ||
+            (showDetails.get(w.showId)?.genres ?? []).some((g) => selectedGenres.has(g.name))),
+      ).length
+      counts.set(u.username, feedCount + watchingCount)
+    }
+    return counts
+  }, [filterableMembers, scoped, scopedWatching, selectedGenres, showDetails])
+
   const filteredWatching = useMemo(() => {
     if (selectedGenres.size === 0) return personFilteredWatching
     return personFilteredWatching.filter((w) => {
@@ -313,9 +341,11 @@ export default function Activity() {
             me={me}
             activeUsername={filterUsername}
             onSelectUsername={setFilterUsername}
+            personCounts={personCounts}
             genres={watchingGenres}
             selectedGenres={selectedGenres}
             onToggleGenre={toggleGenre}
+            genreCounts={genreCounts}
             onClear={() => {
               setFilterUsername(null)
               setSelectedGenres(new Set())

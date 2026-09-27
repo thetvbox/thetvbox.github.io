@@ -96,6 +96,41 @@ describe('ActivityFiltersPanel', () => {
     expect(screen.getByText('Clear all')).toBeInTheDocument()
   })
 
+  it("shows no per-option counts when the counts maps aren't passed", () => {
+    renderPanel()
+    expect(screen.queryByText(/^· \d+$/)).not.toBeInTheDocument()
+  })
+
+  it("shows each person's live count next to their row", () => {
+    renderPanel({ personCounts: new Map([['me', 4], ['friend', 0]]) })
+    expect(screen.getByText('You').closest('button')).toHaveTextContent('You4')
+    expect(screen.getByText('@friend').closest('button')).toHaveTextContent('@friend0')
+  })
+
+  it('disables an unselected person at zero count instead of hiding their row', () => {
+    renderPanel({ personCounts: new Map([['friend', 0]]) })
+    expect(screen.getByText('@friend')).toBeInTheDocument()
+    expect(screen.getByText('@friend').closest('button')).toBeDisabled()
+    expect(screen.getByText('You').closest('button')).not.toBeDisabled()
+  })
+
+  it('keeps the already-active person clickable even at zero count, so they can still be cleared', () => {
+    const onSelectUsername = vi.fn()
+    renderPanel({ activeUsername: 'friend', personCounts: new Map([['friend', 0]]), onSelectUsername })
+    const button = screen.getByText('@friend').closest('button') as HTMLButtonElement
+    expect(button).not.toBeDisabled()
+    fireEvent.click(button)
+    expect(onSelectUsername).toHaveBeenCalledWith(null)
+  })
+
+  it("shows each genre chip's live count, and disables an unselected option at zero", () => {
+    renderPanel({ genreCounts: new Map([['Drama', 2], ['Comedy', 0]]) })
+    expect(screen.getByText('· 2')).toBeInTheDocument()
+    expect(screen.getByText('· 0')).toBeInTheDocument()
+    expect(screen.getByText('Comedy').closest('button')).toBeDisabled()
+    expect(screen.getByText('Drama').closest('button')).not.toBeDisabled()
+  })
+
   it('wires onClose through to the underlying BottomSheet (Escape closes it)', () => {
     const onClose = vi.fn()
     renderPanel({ onClose })

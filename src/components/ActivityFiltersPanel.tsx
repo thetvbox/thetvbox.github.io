@@ -10,9 +10,11 @@ interface ActivityFiltersPanelProps {
   me: AppUser | null
   activeUsername: string | null
   onSelectUsername: (username: string | null) => void
+  personCounts?: Map<string, number>
   genres: string[]
   selectedGenres: Set<string>
   onToggleGenre: (genre: string) => void
+  genreCounts?: Map<string, number>
   onClear: () => void
   onClose: () => void
 }
@@ -23,9 +25,11 @@ export default function ActivityFiltersPanel({
   me,
   activeUsername,
   onSelectUsername,
+  personCounts,
   genres,
   selectedGenres,
   onToggleGenre,
+  genreCounts,
   onClear,
   onClose,
 }: ActivityFiltersPanelProps) {
@@ -52,24 +56,30 @@ export default function ActivityFiltersPanel({
       {members.length > 1 && (
         <FilterSection title="Person">
           <ul className="space-y-1">
-            {members.map((u) => (
-              <li key={u.id}>
-                <PersonRow
-                  active={activeUsername === u.username}
-                  onClick={() => onSelectUsername(activeUsername === u.username ? null : u.username)}
-                >
-                  <Avatar username={u.username} size="xs" />
-                  <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
-                </PersonRow>
-              </li>
-            ))}
+            {members.map((u) => {
+              const active = activeUsername === u.username
+              const count = personCounts?.get(u.username)
+              return (
+                <li key={u.id}>
+                  <PersonRow
+                    active={active}
+                    disabled={count === 0 && !active}
+                    onClick={() => onSelectUsername(active ? null : u.username)}
+                  >
+                    <Avatar username={u.username} size="xs" />
+                    <span>{me?.username === u.username ? 'You' : `@${u.username}`}</span>
+                    {count !== undefined && <span className="ml-auto text-xs opacity-70">{count}</span>}
+                  </PersonRow>
+                </li>
+              )
+            })}
           </ul>
         </FilterSection>
       )}
 
       {genres.length > 1 && (
         <FilterSection title="Genre · Now Watching">
-          <ChipGroup options={genres} selected={selectedGenres} onToggle={onToggleGenre} />
+          <ChipGroup options={genres} selected={selectedGenres} onToggle={onToggleGenre} counts={genreCounts} />
         </FilterSection>
       )}
     </BottomSheet>
@@ -78,10 +88,12 @@ export default function ActivityFiltersPanel({
 
 function PersonRow({
   active,
+  disabled = false,
   onClick,
   children,
 }: {
   active: boolean
+  disabled?: boolean
   onClick: () => void
   children: ReactNode
 }) {
@@ -89,9 +101,14 @@ function PersonRow({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={active}
       className={`flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left text-sm font-medium transition-colors duration-200 ${
-        active ? 'bg-accent-500/15 text-accent-300' : 'text-base-200 hover:bg-hover'
+        active
+          ? 'bg-accent-500/15 text-accent-300'
+          : disabled
+            ? 'text-base-600 opacity-40'
+            : 'text-base-200 hover:bg-hover'
       }`}
     >
       {children}
