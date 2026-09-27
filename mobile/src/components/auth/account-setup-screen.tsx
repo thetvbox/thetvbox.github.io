@@ -48,7 +48,7 @@ export function AccountSetupScreen() {
         />
 
         <Animated.View entering={FadeInUp.delay(80).duration(420)} className="mt-8" style={{ overflow: 'hidden', borderRadius: 28 }}>
-          <GlassView glassEffectStyle="regular" isInteractive style={{ padding: 24 }}>
+          <GlassView glassEffectStyle="regular" style={{ padding: 24 }}>
             <View className="gap-4">
               {error && <AuthErrorBanner message={error} />}
 
