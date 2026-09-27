@@ -42,9 +42,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const UNDEFINED_COLUMN = '42703';
 const UNIQUE_VIOLATION = '23505';
+const APPLE_CANCELED_CODE = 'ERR_REQUEST_CANCELED';
 const PROFILE_SKIP_PREFIX = 'tvbox_profile_setup_skipped:';
+
+function isAppleSignInCancellation(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { code?: unknown }).code === APPLE_CANCELED_CODE;
+}
 
 async function wasProfileSetupSkipped(userId: string): Promise<boolean> {
   try {
@@ -58,6 +62,10 @@ async function rememberProfileSetupSkipped(userId: string): Promise<void> {
   try {
     await AsyncStorage.setItem(PROFILE_SKIP_PREFIX + userId, '1');
   } catch {}
+}
+
+async function linkAuthUserId(userId: string, authUserId: string): Promise<void> {
+  await supabase.from(TABLE_USERS).update({ auth_user_id: authUserId }).eq('id', userId);
 }
 
 interface ResolvedAccount {
@@ -83,19 +91,7 @@ async function resolveAccount(session: Session | null): Promise<ResolvedAccount>
     const { data: byEmail } = await supabase.from(TABLE_USERS).select().eq('email', email).maybeSingle();
     if (byEmail) {
       matched = byEmail as AppUser;
-      if (!linkedError) {
-        // auth_user_id column exists on this schema -- best-effort link for next time. If there's
-        // no update policy allowing it yet, this silently affects 0 rows; resolveAccount just runs
-        // the email match again next time, which is harmless.
-        supabase
-          .from(TABLE_USERS)
-          .update({ auth_user_id: authUserId })
-          .eq('id', matched.id)
-          .then(
-            () => {},
-            () => {},
-          );
-      }
+      linkAuthUserId(matched.id, authUserId).catch(() => {});
     }
   }
 
@@ -160,12 +156,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       accountSetup,
       async signInWithApple() {
-        const credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-          ],
-        });
+        let credential: AppleAuthentication.AppleAuthenticationCredential;
+        try {
+          credential = await AppleAuthentication.signInAsync({
+            requestedScopes: [
+              AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+              AppleAuthentication.AppleAuthenticationScope.EMAIL,
+            ],
+          });
+        } catch (err) {
+          if (isAppleSignInCancellation(err)) return;
+          throw err;
+        }
         if (!credential.identityToken) throw new Error('Apple did not return an identity token.');
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
@@ -223,39 +225,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async createAccount({ username, fullName, preferredName }) {
         if (!session?.user?.email) throw new Error('You need to be signed in before creating an account.');
         const email = session.user.email.toLowerCase().trim();
-        const trimmedUsername = username.trim();
 
-        // Tries the full row first, then drops fields the live schema doesn't have yet (this
-        // database is mid-migration: auth_user_id and full_name/preferred_name may not exist),
-        // so sign-up still works with whatever subset of columns is actually live.
-        const attempts: Record<string, string>[] = [
-          {
+        const { error } = await supabase
+          .from(TABLE_USERS)
+          .insert({
             email,
-            username: trimmedUsername,
+            username: username.trim(),
             auth_user_id: session.user.id,
             full_name: fullName.trim(),
             preferred_name: preferredName.trim(),
-          },
-          { email, username: trimmedUsername, auth_user_id: session.user.id },
-          { email, username: trimmedUsername },
-        ];
+          })
+          .select()
+          .single();
 
-        let lastError: { code?: string; message: string } | null = null;
-        for (const payload of attempts) {
-          const { error } = await supabase.from(TABLE_USERS).insert(payload).select().single();
-          lastError = error;
-          if (!error || error.code !== UNDEFINED_COLUMN) break;
-        }
-
-        if (lastError) {
-          if (lastError.code === UNIQUE_VIOLATION) {
+        if (error) {
+          if (error.code === UNIQUE_VIOLATION) {
             throw new Error(
-              lastError.message.includes('username')
+              error.message.includes('username')
                 ? 'That username is taken. Try another.'
                 : 'An account with that email already exists.',
             );
           }
-          throw new Error(lastError.message);
+          throw new Error(error.message);
         }
         await refreshAccount();
       },
@@ -267,11 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', user.id)
           .select()
           .maybeSingle();
-        if (!data || error) {
-          // Not persisted -- the columns or the update policy aren't live on this database yet.
-          // Don't keep re-prompting every session; the fields just won't show until they are.
-          await rememberProfileSetupSkipped(user.id);
-        }
+        if (error) throw new Error(error.message);
+        if (!data) throw new Error('Could not save your details. Try again.');
         await refreshAccount();
       },
       skipAccountSetup() {
