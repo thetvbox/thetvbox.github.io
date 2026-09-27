@@ -45,118 +45,123 @@ export function LoginScreen() {
   const appVersion = Constants.expoConfig?.version
 
   return (
-    <View className="flex-1 bg-base-950">
-      <SafeAreaView className="flex-1">
-        <View className="flex-1 justify-center px-6">
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24 }}>
           <AuthHero title="TV Box" tagline="Track what you watch, together." />
 
-          <View className="mt-8" style={{ overflow: 'hidden', borderRadius: 28 }}>
-            <GlassView glassEffectStyle="regular" style={{ padding: 24 }}>
-              <View className="gap-4">
-                {error && <AuthErrorBanner message={error} />}
+          <View style={{ marginTop: 32, borderRadius: 28, overflow: 'hidden' }}>
+            {/* GlassView renders only the material -- it has no interactive children of its own,
+                because a GlassView with nested Pressables inside it swallows their touches on
+                iOS (the buttons below sit in a normal sibling view stacked on top instead). */}
+            <GlassView
+              glassEffectStyle="regular"
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+            <View style={{ padding: 24, gap: 16 }}>
+              {error && <AuthErrorBanner message={error} />}
 
-                {step === 'options' && (
-                  <Animated.View key="options" entering={entering} exiting={exiting} className="gap-3">
-                    {appleAvailable && (
-                      <AppleAuthentication.AppleAuthenticationButton
-                        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                        buttonStyle={
-                          scheme === 'dark'
-                            ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                            : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                        }
-                        cornerRadius={14}
-                        style={{ width: '100%', height: 50 }}
-                        onPress={() => run(signInWithApple)}
-                      />
-                    )}
-
-                    {appleAvailable && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <View style={{ height: 1, flex: 1, backgroundColor: hairlineColor }} />
-                        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1, color: theme.textSecondary }}>
-                          OR
-                        </Text>
-                        <View style={{ height: 1, flex: 1, backgroundColor: hairlineColor }} />
-                      </View>
-                    )}
-
-                    <AuthButton
-                      label="Continue with email"
-                      variant="secondary"
-                      disabled={busy}
-                      onPress={() => goTo('email', 1)}
+              {step === 'options' && (
+                <Animated.View key="options" entering={entering} exiting={exiting} style={{ gap: 12 }}>
+                  {appleAvailable && (
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                      buttonStyle={
+                        scheme === 'dark'
+                          ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                          : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                      }
+                      cornerRadius={14}
+                      style={{ width: '100%', height: 50 }}
+                      onPress={() => run(signInWithApple)}
                     />
-                  </Animated.View>
-                )}
+                  )}
 
-                {step === 'email' && (
-                  <Animated.View key="email" entering={entering} exiting={exiting}>
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="gap-3">
-                      <Text className="text-base-400">{"Enter your email and we'll send you a one-time code."}</Text>
-                      <View className="relative justify-center">
-                        <SymbolView
-                          name="envelope.fill"
-                          size={18}
-                          tintColor={theme.textSecondary}
-                          style={{ position: 'absolute', left: 16, zIndex: 1 }}
-                        />
-                        <AuthTextField
-                          autoCapitalize="none"
-                          autoComplete="email"
-                          autoFocus
-                          keyboardType="email-address"
-                          placeholder="you@example.com"
-                          value={email}
-                          onChangeText={setEmail}
-                          className="pl-11"
-                        />
-                      </View>
-                      <AuthButton
-                        label="Send code"
-                        loading={busy}
-                        disabled={busy || !EMAIL_PATTERN.test(email.trim())}
-                        onPress={() =>
-                          run(async () => {
-                            await sendEmailOtp(email)
-                            goTo('otp', 1)
-                          })
-                        }
+                  {appleAvailable && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ height: 1, flex: 1, backgroundColor: hairlineColor }} />
+                      <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1, color: theme.textSecondary }}>
+                        OR
+                      </Text>
+                      <View style={{ height: 1, flex: 1, backgroundColor: hairlineColor }} />
+                    </View>
+                  )}
+
+                  <AuthButton
+                    label="Continue with email"
+                    variant="secondary"
+                    disabled={busy}
+                    onPress={() => goTo('email', 1)}
+                  />
+                </Animated.View>
+              )}
+
+              {step === 'email' && (
+                <Animated.View key="email" entering={entering} exiting={exiting}>
+                  <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="gap-3">
+                    <Text className="text-base-400">{"Enter your email and we'll send you a one-time code."}</Text>
+                    <View className="relative justify-center">
+                      <SymbolView
+                        name="envelope.fill"
+                        size={18}
+                        tintColor={theme.textSecondary}
+                        style={{ position: 'absolute', left: 16, zIndex: 1 }}
                       />
-                      <AuthLinkButton label="Back" onPress={() => goTo('options', -1)} />
-                    </KeyboardAvoidingView>
-                  </Animated.View>
-                )}
-
-                {step === 'otp' && (
-                  <Animated.View key="otp" entering={entering} exiting={exiting}>
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="gap-3">
-                      <Text className="text-center text-base-300">Enter the code we sent to {email}</Text>
                       <AuthTextField
-                        autoComplete="one-time-code"
+                        autoCapitalize="none"
+                        autoComplete="email"
                         autoFocus
-                        keyboardType="number-pad"
-                        placeholder="123456"
-                        value={code}
-                        onChangeText={setCode}
-                        className="text-center text-lg tracking-widest"
+                        keyboardType="email-address"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChangeText={setEmail}
+                        className="pl-11"
                       />
-                      <AuthButton
-                        label="Verify"
-                        loading={busy}
-                        disabled={busy || code.trim().length < EMAIL_OTP_LENGTH}
-                        onPress={() => run(() => verifyEmailOtp(email, code.trim()))}
-                      />
-                      <AuthLinkButton label="Use a different email" onPress={() => goTo('email', -1)} />
-                    </KeyboardAvoidingView>
-                  </Animated.View>
-                )}
-              </View>
-            </GlassView>
+                    </View>
+                    <AuthButton
+                      label="Send code"
+                      loading={busy}
+                      disabled={busy || !EMAIL_PATTERN.test(email.trim())}
+                      onPress={() =>
+                        run(async () => {
+                          await sendEmailOtp(email)
+                          goTo('otp', 1)
+                        })
+                      }
+                    />
+                    <AuthLinkButton label="Back" onPress={() => goTo('options', -1)} />
+                  </KeyboardAvoidingView>
+                </Animated.View>
+              )}
+
+              {step === 'otp' && (
+                <Animated.View key="otp" entering={entering} exiting={exiting}>
+                  <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="gap-3">
+                    <Text className="text-center text-base-300">Enter the code we sent to {email}</Text>
+                    <AuthTextField
+                      autoComplete="one-time-code"
+                      autoFocus
+                      keyboardType="number-pad"
+                      placeholder="123456"
+                      value={code}
+                      onChangeText={setCode}
+                      className="text-center text-lg tracking-widest"
+                    />
+                    <AuthButton
+                      label="Verify"
+                      loading={busy}
+                      disabled={busy || code.trim().length < EMAIL_OTP_LENGTH}
+                      onPress={() => run(() => verifyEmailOtp(email, code.trim()))}
+                    />
+                    <AuthLinkButton label="Use a different email" onPress={() => goTo('email', -1)} />
+                  </KeyboardAvoidingView>
+                </Animated.View>
+              )}
+            </View>
           </View>
         </View>
 
-        <View className="items-center gap-0.5 px-6 pb-2">
+        <View style={{ alignItems: 'center', gap: 2, paddingHorizontal: 24, paddingBottom: 8 }}>
           {appVersion && <Text className="text-xs text-base-600">Version {appVersion}</Text>}
           {__DEV__ && <Text className="text-[11px] text-base-600">Development build</Text>}
         </View>
