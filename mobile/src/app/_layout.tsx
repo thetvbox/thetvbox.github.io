@@ -7,6 +7,7 @@ import { AccountSetupScreen } from '@/components/auth/account-setup-screen';
 import { BiometricLockScreen } from '@/components/auth/biometric-lock-screen';
 import { LoginScreen } from '@/components/auth/login-screen';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { MembersProvider } from '@/contexts/MembersContext';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { useBiometricGate } from '@/hooks/useBiometricGate';
 
@@ -52,8 +53,10 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <SearchProvider>
-          <AnimatedSplashOverlay />
-          <AppGate />
+          <MembersProvider>
+            <AnimatedSplashOverlay />
+            <AppGate />
+          </MembersProvider>
         </SearchProvider>
       </AuthProvider>
     </ThemeProvider>

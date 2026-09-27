@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable } from 'react-native';
 
 import { GlassTabBar } from '@/components/glass-tab-bar';
+import { useMembers } from '@/contexts/MembersContext';
 import { useSearch } from '@/contexts/SearchContext';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
@@ -33,6 +34,7 @@ function SearchFiltersButton() {
 /** tv-box's iOS/Android tab bar: a real GlassView-based floating pill (see glass-tab-bar.tsx) instead of the starter template's default NativeTabs, so the actual mobile Liquid Glass proof-of-concept renders in tv-box's own bottom-pill shape. Web keeps the starter's separate app-tabs.web.tsx top nav, out of scope for this pass. */
 export default function AppTabs() {
   const { setQuery } = useSearch();
+  const { setQuery: setMembersQuery } = useMembers();
 
   return (
     <Tabs tabBar={(props) => <GlassTabBar {...props} />} screenOptions={{ headerShown: false }}>
@@ -51,7 +53,18 @@ export default function AppTabs() {
           headerRight: () => <SearchFiltersButton />,
         }}
       />
-      <Tabs.Screen name="members" options={{ title: 'Members' }} />
+      <Tabs.Screen
+        name="members"
+        options={{
+          title: 'Members',
+          headerShown: true,
+          headerSearchBarOptions: {
+            placeholder: 'Find a username…',
+            onChangeText: (event) => setMembersQuery(event.nativeEvent.text),
+            onClose: () => setMembersQuery(''),
+          },
+        }}
+      />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );
