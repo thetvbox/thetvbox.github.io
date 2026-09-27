@@ -259,6 +259,17 @@ All notable changes to TV Box are documented here. Format loosely follows
   pattern behind all of this now lives in one place (`FilterSection`/
   `ChipGroup` in `src/components/FilterSection.tsx`) instead of being
   duplicated per panel.
+- Activity's and Search's Filters sheets now show a live match count next
+  to every person/genre/platform option (e.g. "Drama · 3"), computed
+  against whichever *other* facet is currently selected -- so selecting
+  a person or a platform never leaves you guessing what a genre chip
+  would do if you tapped it next. An option that would currently match
+  nothing is dimmed and can't be newly selected (it stays tappable if
+  it's already the active selection, so it can still be cleared) rather
+  than being hidden or left to produce an empty screen -- the same
+  "dim, don't remove" approach faceted filters like Yelp's use. Two
+  facets no longer just happen to combine correctly; the sheet now
+  shows you that they do before you tap anything.
 
 ### Fixed
 
