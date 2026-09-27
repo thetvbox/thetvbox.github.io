@@ -7,11 +7,12 @@ interface PickerSheetProps {
   visible: boolean;
   title: string;
   onClose: () => void;
+  headerActions?: ReactNode;
   children: ReactNode;
 }
 
 /** Shared native page-sheet shell (title + Done) for the list and streaming-provider pickers. */
-export function PickerSheet({ visible, title, onClose, children }: PickerSheetProps) {
+export function PickerSheet({ visible, title, onClose, headerActions, children }: PickerSheetProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -21,9 +22,12 @@ export function PickerSheet({ visible, title, onClose, children }: PickerSheetPr
           <Text accessibilityRole="header" className="text-base font-semibold text-base-100">
             {title}
           </Text>
-          <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Done">
-            <Text className="text-sm font-semibold text-accent-400">Done</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-5">
+            {headerActions}
+            <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Done">
+              <Text className="text-sm font-semibold text-accent-400">Done</Text>
+            </Pressable>
+          </View>
         </View>
         <View className="flex-1 px-5" style={{ paddingBottom: insets.bottom + 16 }}>
           {children}
