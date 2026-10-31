@@ -11,7 +11,6 @@ import { getPushStatus, subscribeToPush, type PushStatus } from '@/lib/pushNotif
 
 interface PushNotificationsSheetProps {
   visible: boolean
-  userId: string
   onClose: () => void
 }
 
@@ -25,7 +24,7 @@ const STATUS_COPY: Record<PushStatus, string> = {
 }
 
 /** Push-notification permission sheet: the one-time post-sign-in prompt and Profile's manual "Notifications" entry both render this. */
-export function PushNotificationsSheet({ visible, userId, onClose }: PushNotificationsSheetProps) {
+export function PushNotificationsSheet({ visible, onClose }: PushNotificationsSheetProps) {
   const theme = useThemeColors()
   const [status, setStatus] = useState<PushStatus | 'loading'>('loading')
   const [busy, setBusy] = useState(false)
@@ -48,7 +47,7 @@ export function PushNotificationsSheet({ visible, userId, onClose }: PushNotific
     setBusy(true)
     setError(null)
     try {
-      await subscribeToPush(userId)
+      await subscribeToPush()
       setStatus('enabled')
     } catch (err) {
       setError(errorMessage(err, 'Could not enable push notifications.'))

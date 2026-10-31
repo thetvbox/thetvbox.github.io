@@ -4,7 +4,7 @@ import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
 
-import { STORAGE_KEYS, TABLE_EXPO_PUSH_TOKENS } from './constants'
+import { RPC_REGISTER_EXPO_PUSH_TOKEN, STORAGE_KEYS, TABLE_EXPO_PUSH_TOKENS } from './constants'
 import { supabase } from './supabase'
 
 export type PushStatus = 'unsupported' | 'disabled' | 'denied' | 'enabled'
@@ -23,8 +23,8 @@ export async function getPushStatus(): Promise<PushStatus> {
   return 'disabled'
 }
 
-/** Requests permission if needed, then registers this device's Expo push token for userId; throws if denied, unsupported, or the build has no EAS project configured. */
-export async function subscribeToPush(userId: string): Promise<void> {
+/** Requests permission if needed, then registers this device's Expo push token for the signed-in member (taking it over from whoever had it); throws if denied, unsupported, or the build has no EAS project configured. */
+export async function subscribeToPush(): Promise<void> {
   if (!isPushSupported()) {
     throw new Error('Push notifications need a physical device.')
   }
@@ -40,9 +40,7 @@ export async function subscribeToPush(userId: string): Promise<void> {
   }
   const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId })
 
-  const { error } = await supabase
-    .from(TABLE_EXPO_PUSH_TOKENS)
-    .upsert({ user_id: userId, token, platform: Platform.OS }, { onConflict: 'token' })
+  const { error } = await supabase.rpc(RPC_REGISTER_EXPO_PUSH_TOKEN, { p_token: token, p_platform: Platform.OS })
   if (error) throw error
 }
 

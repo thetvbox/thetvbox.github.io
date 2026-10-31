@@ -80,7 +80,6 @@ export default function ProfileScreen() {
       {user && (
         <PushNotificationsSheet
           visible={pushSheetVisible}
-          userId={user.id}
           onClose={() => setPushSheetVisible(false)}
         />
       )}

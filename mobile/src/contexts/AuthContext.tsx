@@ -5,13 +5,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { supabase } from '@/lib/supabase';
-import { TABLE_USERS } from '@/lib/constants';
+import { RPC_REDEEM_INVITE, TABLE_USERS } from '@/lib/constants';
 import type { AppUser } from '@/types';
 
 export type AccountSetupKind = 'new' | 'existing';
 
 interface CreateAccountInput {
   username: string;
+  inviteCode: string;
   fullName: string;
   preferredName: string;
 }
@@ -200,9 +201,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (error) throw new Error(error.message);
       },
-      async createAccount({ username, fullName, preferredName }) {
+      async createAccount({ username, inviteCode, fullName, preferredName }) {
         if (!session?.user?.email) throw new Error('You need to be signed in before creating an account.');
         const email = session.user.email.toLowerCase().trim();
+
+        const { data: accepted, error: inviteError } = await supabase.rpc(RPC_REDEEM_INVITE, { code: inviteCode.trim() });
+        if (inviteError) throw new Error(inviteError.message);
+        if (!accepted) throw new Error('That invite code isn’t right.');
 
         const { error } = await supabase
           .from(TABLE_USERS)

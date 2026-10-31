@@ -68,7 +68,6 @@ function AppGate() {
     {user && (
       <PushNotificationsSheet
         visible={pushOnboardingVisible}
-        userId={user.id}
         onClose={() => setPushOnboardingVisible(false)}
       />
     )}

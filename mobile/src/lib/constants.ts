@@ -68,6 +68,8 @@ export const TABLE_NOTIFICATIONS = 'notifications'
 export const TABLE_PERSONAL_ACCESS_TOKENS = 'personal_access_tokens'
 export const TABLE_PUSH_SUBSCRIPTIONS = 'push_subscriptions'
 export const TABLE_EXPO_PUSH_TOKENS = 'expo_push_tokens'
+export const RPC_REGISTER_EXPO_PUSH_TOKEN = 'register_expo_push_token'
+export const RPC_REDEEM_INVITE = 'redeem_invite'
 
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000

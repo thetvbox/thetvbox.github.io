@@ -20,19 +20,21 @@ export function AccountSetupScreen() {
   const theme = useThemeColors()
 
   const [username, setUsername] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [fullName, setFullName] = useState('')
   const [preferredName, setPreferredName] = useState('')
 
   const trimmedUsername = username.trim()
   const usernameValid = !isNew || USERNAME_PATTERN.test(trimmedUsername)
-  const canSubmit = fullName.trim().length > 0 && usernameValid && !busy
+  const inviteValid = !isNew || inviteCode.trim().length > 0
+  const canSubmit = fullName.trim().length > 0 && usernameValid && inviteValid && !busy
 
   function handleSubmit() {
     run(async () => {
       const name = fullName.trim()
       const preferred = preferredName.trim() || name
       if (isNew) {
-        await createAccount({ username: trimmedUsername, fullName: name, preferredName: preferred })
+        await createAccount({ username: trimmedUsername, inviteCode, fullName: name, preferredName: preferred })
       } else {
         await completeProfile({ fullName: name, preferredName: preferred })
       }
@@ -44,7 +46,7 @@ export function AccountSetupScreen() {
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24 }}>
         <AuthHero
           title={isNew ? 'Create your account' : `Welcome back${user?.username ? `, @${user.username}` : ''}`}
-          tagline={isNew ? 'Pick a username and tell us your name.' : 'A couple quick details to finish setting up.'}
+          tagline={isNew ? 'Pick a username, enter your invite code, and tell us your name.' : 'A couple quick details to finish setting up.'}
         />
 
         <Animated.View
@@ -74,6 +76,24 @@ export function AccountSetupScreen() {
                     value={username}
                     onChangeText={setUsername}
                     maxLength={USERNAME_MAX_LENGTH}
+                    className="pl-11"
+                  />
+                </View>
+              )}
+              {isNew && (
+                <View className="relative justify-center">
+                  <SymbolView
+                    name="key.fill"
+                    size={18}
+                    tintColor={theme.textSecondary}
+                    style={{ position: 'absolute', left: 16, zIndex: 1 }}
+                  />
+                  <AuthTextField
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    placeholder="Invite code"
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
                     className="pl-11"
                   />
                 </View>

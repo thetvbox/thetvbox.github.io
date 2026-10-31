@@ -8,6 +8,12 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Security
 
+- New members now need an invite code, which the database checks, and
+  must confirm their email with a one-time code before creating an
+  account. This applies on the web and in the iPhone app.
+- Passkeys can only be added by the account's own signed-in session.
+- Turning on notifications on a shared browser or phone now moves that
+  device to whoever signed in last.
 - Signing in or creating an account with a passkey now also starts a real
   Supabase session, and the app sends that session with every request.
   Signing out ends it. Anyone signed in from before this change is asked
