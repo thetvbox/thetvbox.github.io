@@ -1,7 +1,9 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../lib/supabase', () => ({ supabase: { from: vi.fn() } }))
+vi.mock('../lib/supabase', () => ({
+  supabase: { from: vi.fn(), auth: { getSession: vi.fn(), onAuthStateChange: vi.fn(), signOut: vi.fn() } },
+}))
 
 import { supabase } from '../lib/supabase'
 import { AuthProvider, useAuth } from './AuthContext'
@@ -20,9 +22,29 @@ function mockFrom(result: { data?: unknown; error?: unknown }) {
   return builder
 }
 
+let authListener: ((event: string) => void) | null = null
+const unsubscribe = vi.fn()
+
+/** Makes the mocked Supabase client report a stored session, or none. */
+function mockSession(hasSession: boolean) {
+  vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    data: { session: hasSession ? { access_token: 'a' } : null },
+    error: null,
+  } as never)
+}
+
 beforeEach(() => {
   localStorage.clear()
   vi.mocked(supabase.from).mockReset()
+  mockSession(true)
+  authListener = null
+  unsubscribe.mockReset()
+  vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(((listener: (event: string) => void) => {
+    authListener = listener
+    return { data: { subscription: { unsubscribe } } }
+  }) as never)
+  vi.mocked(supabase.auth.signOut).mockReset()
+  vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null } as never)
 })
 
 describe('AuthContext', () => {
@@ -44,11 +66,14 @@ describe('AuthContext', () => {
     expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
   })
 
-  it('register saves the new user and returns it, without signing them in', async () => {
-    mockFrom({ data: bob })
+  it('register saves the new user without reading it back, and returns it without signing them in', async () => {
+    const builder = mockFrom({})
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    const registered = await act(() => result.current.register('bob@example.com', 'bob'))
-    expect(registered).toEqual(bob)
+    const registered = await act(() => result.current.register(' Bob@Example.com ', ' bob '))
+    expect(registered).toMatchObject({ email: 'bob@example.com', username: 'bob' })
+    expect(registered.id).toMatch(/^[0-9a-f-]{36}$/)
+    expect(builder.insert).toHaveBeenCalledWith({ id: registered.id, email: 'bob@example.com', username: 'bob' })
+    expect(builder.select).not.toHaveBeenCalled()
     expect(result.current.user).toBeNull()
     expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
   })
@@ -80,12 +105,48 @@ describe('AuthContext', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.user)!)).toEqual(bob)
   })
 
-  it('signOut clears the user and storage', async () => {
+  it('signOut clears the user and storage, and ends the Supabase session', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
     act(() => result.current.signIn(bob))
     act(() => result.current.signOut())
     expect(result.current.user).toBeNull()
     expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
+    expect(supabase.auth.signOut).toHaveBeenCalled()
+  })
+
+  it('signs out a stored user who has no Supabase session, so they sign in again', async () => {
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(bob))
+    mockSession(false)
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+    await waitFor(() => expect(result.current.user).toBeNull())
+    expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
+  })
+
+  it('keeps a stored user whose Supabase session is still there', async () => {
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(bob))
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+    await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalled())
+    expect(result.current.user).toEqual(bob)
+  })
+
+  it('does not check for a session when nobody is stored', () => {
+    renderHook(() => useAuth(), { wrapper: AuthProvider })
+    expect(supabase.auth.getSession).not.toHaveBeenCalled()
+  })
+
+  it('clears the user when Supabase reports the session ended', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+    act(() => result.current.signIn(bob))
+    act(() => authListener?.('TOKEN_REFRESHED'))
+    expect(result.current.user).toEqual(bob)
+    act(() => authListener?.('SIGNED_OUT'))
+    expect(result.current.user).toBeNull()
+  })
+
+  it('stops listening to Supabase when unmounted', () => {
+    const { unmount } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+    unmount()
+    expect(unsubscribe).toHaveBeenCalled()
   })
 
   it('throws when useAuth is called outside a provider', () => {

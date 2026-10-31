@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 
-vi.mock('./supabase', () => ({ supabase: { functions: { invoke: vi.fn() } } }))
+vi.mock('./supabase', () => ({ supabase: { functions: { invoke: vi.fn() }, auth: { setSession: vi.fn() } } }))
 vi.mock('@simplewebauthn/browser', async () => {
   const actual = await vi.importActual<typeof import('@simplewebauthn/browser')>('@simplewebauthn/browser')
   return {
@@ -29,6 +29,8 @@ function httpError(body: unknown) {
 
 beforeEach(() => {
   vi.mocked(supabase.functions.invoke).mockReset()
+  vi.mocked(supabase.auth.setSession).mockReset()
+  vi.mocked(supabase.auth.setSession).mockResolvedValue({ data: {}, error: null } as never)
   vi.mocked(startAuthentication).mockReset()
   vi.mocked(startRegistration).mockReset()
   vi.mocked(browserSupportsWebAuthn).mockReset()
@@ -103,13 +105,15 @@ describe('fetchRegistrationOptions', () => {
   })
 })
 
+const tokens = { access_token: 'access', refresh_token: 'refresh' }
+
 describe('signInWithPasskey', () => {
   const options = { challenge: 'c1' } as never
 
   it('runs the authentication ceremony and returns the verified user', async () => {
     vi.mocked(startAuthentication).mockResolvedValue({ id: 'cred1' } as never)
     vi.mocked(supabase.functions.invoke).mockResolvedValue({
-      data: { user: { id: 'u1', username: 'bob' } },
+      data: { user: { id: 'u1', username: 'bob' }, session: tokens },
       error: null,
     } as never)
 
@@ -119,6 +123,21 @@ describe('signInWithPasskey', () => {
     expect(supabase.functions.invoke).toHaveBeenCalledWith('webauthn-authentication-verify', {
       body: { email: 'bob@example.com', response: { id: 'cred1' } },
     })
+    expect(supabase.auth.setSession).toHaveBeenCalledWith(tokens)
+  })
+
+  it('fails when the server returns no session', async () => {
+    vi.mocked(startAuthentication).mockResolvedValue({ id: 'cred1' } as never)
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { user: { id: 'u1' } }, error: null } as never)
+    await expect(signInWithPasskey('bob@example.com', options)).rejects.toThrow('Could not start your session. Try again.')
+    expect(supabase.auth.setSession).not.toHaveBeenCalled()
+  })
+
+  it('fails when the session cannot be installed', async () => {
+    vi.mocked(startAuthentication).mockResolvedValue({ id: 'cred1' } as never)
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { user: { id: 'u1' }, session: tokens }, error: null } as never)
+    vi.mocked(supabase.auth.setSession).mockResolvedValue({ data: {}, error: new Error('bad token') } as never)
+    await expect(signInWithPasskey('bob@example.com', options)).rejects.toThrow('Could not start your session. Try again.')
   })
 
   it('throws PasskeyCancelledError when the ceremony is aborted', async () => {
@@ -152,7 +171,7 @@ describe('registerPasskey', () => {
   it('runs the registration ceremony and returns the verified user', async () => {
     vi.mocked(startRegistration).mockResolvedValue({ id: 'cred2' } as never)
     vi.mocked(supabase.functions.invoke).mockResolvedValue({
-      data: { user: { id: 'u1', username: 'bob' } },
+      data: { user: { id: 'u1', username: 'bob' }, session: tokens },
       error: null,
     } as never)
 
@@ -162,6 +181,16 @@ describe('registerPasskey', () => {
     expect(supabase.functions.invoke).toHaveBeenCalledWith('webauthn-registration-verify', {
       body: { user_id: 'u1', response: { id: 'cred2' } },
     })
+    expect(supabase.auth.setSession).toHaveBeenCalledWith(tokens)
+  })
+
+  it('fails when the server returns a session without a refresh token', async () => {
+    vi.mocked(startRegistration).mockResolvedValue({ id: 'cred2' } as never)
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { user: { id: 'u1' }, session: { access_token: 'access' } },
+      error: null,
+    } as never)
+    await expect(registerPasskey('u1', options)).rejects.toThrow('Could not start your session. Try again.')
   })
 
   it('throws PasskeyCancelledError when the ceremony is aborted', async () => {

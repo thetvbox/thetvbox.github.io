@@ -11,6 +11,7 @@ import {
   resolveRelyingParty,
   serviceClient,
 } from '../_shared/webauthn.ts'
+import { startSession, supabaseSessionDeps } from '../_shared/session.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -96,5 +97,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to save the passkey. Try again.' }, 500)
   }
 
-  return jsonResponse({ user }, 200)
+  const session = await startSession(supabaseSessionDeps(supabase), user)
+  if ('error' in session) return jsonResponse({ error: session.error }, session.status)
+  return jsonResponse({ user, session: session.tokens }, 200)
 })

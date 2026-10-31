@@ -2,6 +2,7 @@
 
 import { verifyAuthenticationResponse } from 'npm:@simplewebauthn/server@14'
 import { base64UrlToBytes, consumeChallenge, CORS_HEADERS, jsonResponse, resolveRelyingParty, serviceClient } from '../_shared/webauthn.ts'
+import { startSession, supabaseSessionDeps } from '../_shared/session.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -84,5 +85,7 @@ Deno.serve(async (req) => {
     .update({ counter: verification.authenticationInfo.newCounter, last_used_at: new Date().toISOString() })
     .eq('id', credentialRow.id)
 
-  return jsonResponse({ user }, 200)
+  const session = await startSession(supabaseSessionDeps(supabase), user)
+  if ('error' in session) return jsonResponse({ error: session.error }, session.status)
+  return jsonResponse({ user, session: session.tokens }, 200)
 })

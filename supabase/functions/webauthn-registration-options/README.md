@@ -68,6 +68,21 @@ verify) also run `firstPasskeyAllowed` (`_shared/webauthn.ts`, logic in
 An older account without a passkey has to sign in another way first. Any
 failed lookup refuses.
 
+## Sessions
+
+Both verify functions (`webauthn-authentication-verify` and
+`webauthn-registration-verify`) finish by starting a real Supabase Auth
+session for the account (`_shared/session.ts`) and return it next to
+the user row. The browser installs it with `supabase.auth.setSession`.
+
+- If the account already has a linked login (`user_auth_links`, or the
+  older app's `users.auth_user_id`), that login is used.
+- Otherwise a login is created with the account's email and linked as
+  `passkey`.
+- If that email already belongs to a login that isn't linked to this
+  account, sign-in stops with a 409 until the person links it once by
+  email in the iPhone app.
+
 ## Tables
 
 `webauthn_credentials` (one row per registered passkey: credential ID,

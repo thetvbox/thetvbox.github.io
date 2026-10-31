@@ -19,6 +19,8 @@ const FN = {
   authenticationVerify: 'webauthn-authentication-verify',
 } as const
 
+const SESSION_FAILED_MESSAGE = 'Could not start your session. Try again.'
+
 /** Thrown when the person cancels or times out a passkey prompt -- distinct from a real failure. */
 export class PasskeyCancelledError extends Error {
   constructor() {
@@ -89,6 +91,16 @@ async function runCeremony<T>(ceremony: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Installs the Supabase session a verify function returned, so later requests run as the signed-in user. */
+async function installSession(session: unknown): Promise<void> {
+  const tokens = session as { access_token?: unknown; refresh_token?: unknown } | null | undefined
+  if (typeof tokens?.access_token !== 'string' || typeof tokens.refresh_token !== 'string') {
+    throw new Error(SESSION_FAILED_MESSAGE)
+  }
+  const { error } = await supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token })
+  if (error) throw new Error(SESSION_FAILED_MESSAGE)
+}
+
 /** Runs the WebAuthn sign-in ceremony and verifies it server-side, returning the signed-in user. */
 export async function signInWithPasskey(
   email: string,
@@ -97,6 +109,7 @@ export async function signInWithPasskey(
   const response = await runCeremony(() => startAuthentication({ optionsJSON: options }))
   const { data, error } = await supabase.functions.invoke(FN.authenticationVerify, { body: { email, response } })
   if (error) throw new Error((await readFunctionError(error)).message)
+  await installSession(data.session)
   return data.user as AppUser
 }
 
@@ -110,5 +123,6 @@ export async function registerPasskey(
     body: { user_id: userId, response },
   })
   if (error) throw new Error((await readFunctionError(error)).message)
+  await installSession(data.session)
   return data.user as AppUser
 }

@@ -113,7 +113,7 @@ export function bytesToBase64Url(bytes: Uint8Array): string {
 }
 
 /** Reverses bytesToBase64Url, decoding stored public key text back into raw bytes. */
-export function base64UrlToBytes(b64url: string): Uint8Array {
+export function base64UrlToBytes(b64url: string): Uint8Array<ArrayBuffer> {
   const padded = b64url.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64url.length / 4) * 4, '=')
   const binary = atob(padded)
   const bytes = new Uint8Array(binary.length)
@@ -122,7 +122,7 @@ export function base64UrlToBytes(b64url: string): Uint8Array {
 }
 
 /** Converts a UUID string into its raw 16 bytes, for use as a WebAuthn userID handle. */
-export function uuidToBytes(uuid: string): Uint8Array {
+export function uuidToBytes(uuid: string): Uint8Array<ArrayBuffer> {
   const hex = uuid.replace(/-/g, '')
   const bytes = new Uint8Array(16)
   for (let i = 0; i < 16; i++) bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16)

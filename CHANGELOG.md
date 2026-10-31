@@ -8,6 +8,14 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Security
 
+- Signing in or creating an account with a passkey now also starts a real
+  Supabase session, and the app sends that session with every request.
+  Signing out ends it. Anyone signed in from before this change is asked
+  to sign in once more. This lets the database check who is writing
+  (see the native repo's `lock_down_user_data` migration) and makes the
+  Shortcuts panel work again.
+- The push function now loads the notification itself and ignores the
+  rest of the request, so nobody can send a made-up push to a member.
 - Adding the first passkey to an account is now limited to brand-new
   sign-ups (within 15 minutes, with no login linked) and the account's
   signed-in owner. Before, anyone who knew an email address could add a

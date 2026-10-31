@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { STORAGE_KEYS, TABLE_USERS } from '../lib/constants'
@@ -27,6 +27,12 @@ function clearStoredUser(): void {
   } catch {}
 }
 
+/** Forgets the signed-in user, both in storage and in state. */
+function clearSignedInUser(setUser: (user: AppUser | null) => void): void {
+  clearStoredUser()
+  setUser(null)
+}
+
 interface AuthContextValue {
   user: AppUser | null
   register: (email: string, username: string) => Promise<AppUser>
@@ -48,16 +54,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   })
 
+  useEffect(() => {
+    let active = true
+    if (readStoredUser() !== null) {
+      void supabase.auth.getSession().then(({ data }) => {
+        if (active && !data.session) clearSignedInUser(setUser)
+      })
+    }
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') clearSignedInUser(setUser)
+    })
+    return () => {
+      active = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       /** Creates the account row only; the caller must call signIn() separately once a passkey is registered (see Login.tsx). */
       async register(email: string, username: string) {
-        const { data, error } = await supabase
+        const newUser: AppUser = {
+          id: crypto.randomUUID(),
+          email: email.toLowerCase().trim(),
+          username: username.trim(),
+          created_at: new Date().toISOString(),
+        }
+        const { error } = await supabase
           .from(TABLE_USERS)
-          .insert({ email: email.toLowerCase().trim(), username: username.trim() })
-          .select()
-          .single()
+          .insert({ id: newUser.id, email: newUser.email, username: newUser.username })
         if (error) {
           if (error.code === '23505') {
             throw new Error(
@@ -68,15 +94,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           throw error
         }
-        return data as AppUser
+        return newUser
       },
       signIn(nextUser: AppUser) {
         writeStoredUser(JSON.stringify(nextUser))
         setUser(nextUser)
       },
       signOut() {
-        clearStoredUser()
-        setUser(null)
+        clearSignedInUser(setUser)
+        void supabase.auth.signOut()
       },
     }),
     [user],
