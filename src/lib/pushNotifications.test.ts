@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createQueryBuilder } from '../test/supabaseMock'
 import { STORAGE_KEYS } from './constants'
 
-vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
+vi.mock('./supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }))
 
 import { supabase } from './supabase'
 import {
@@ -87,40 +87,41 @@ describe('isPushSubscribed', () => {
 describe('subscribeToPush', () => {
   it('throws when push is unsupported', async () => {
     vi.stubGlobal('navigator', { ...navigator, serviceWorker: {} })
-    await expect(subscribeToPush('u1')).rejects.toThrow('Push notifications are not supported in this browser.')
+    await expect(subscribeToPush()).rejects.toThrow('Push notifications are not supported in this browser.')
   })
 
-  it('subscribes and saves the subscription for the user', async () => {
-    const builder = mockFrom({ data: null, error: null })
+  it('subscribes and saves the subscription for the signed-in member', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null } as never)
     const subscribe = vi.fn().mockResolvedValue({
       toJSON: () => ({ endpoint: 'https://push.example/1', keys: { p256dh: 'pk', auth: 'ak' } }),
     })
     stubServiceWorker({ subscribe })
 
-    await subscribeToPush('u1')
+    await subscribeToPush()
 
     expect(subscribe).toHaveBeenCalledWith(
       expect.objectContaining({ userVisibleOnly: true, applicationServerKey: expect.any(Uint8Array) }),
     )
-    expect(builder.upsert).toHaveBeenCalledWith(
-      { user_id: 'u1', endpoint: 'https://push.example/1', p256dh: 'pk', auth: 'ak' },
-      { onConflict: 'endpoint' },
-    )
+    expect(supabase.rpc).toHaveBeenCalledWith('register_push_subscription', {
+      p_endpoint: 'https://push.example/1',
+      p_p256dh: 'pk',
+      p_auth: 'ak',
+    })
   })
 
   it('throws when the subscription is missing expected fields', async () => {
     const subscribe = vi.fn().mockResolvedValue({ toJSON: () => ({}) })
     stubServiceWorker({ subscribe })
-    await expect(subscribeToPush('u1')).rejects.toThrow('Could not read the push subscription details.')
+    await expect(subscribeToPush()).rejects.toThrow('Could not read the push subscription details.')
   })
 
   it('throws when saving the subscription fails', async () => {
-    mockFrom({ data: null, error: { message: 'boom' } })
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: { message: 'boom' } } as never)
     const subscribe = vi.fn().mockResolvedValue({
       toJSON: () => ({ endpoint: 'https://push.example/1', keys: { p256dh: 'pk', auth: 'ak' } }),
     })
     stubServiceWorker({ subscribe })
-    await expect(subscribeToPush('u1')).rejects.toEqual({ message: 'boom' })
+    await expect(subscribeToPush()).rejects.toEqual({ message: 'boom' })
   })
 })
 

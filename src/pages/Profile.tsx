@@ -154,7 +154,7 @@ export default function Profile() {
 
       <AnimatePresence>
         {pushOpen && user && (
-          <PushNotificationsPanel key="push" userId={user.id} onClose={() => setPushOpen(false)} />
+          <PushNotificationsPanel key="push" onClose={() => setPushOpen(false)} />
         )}
       </AnimatePresence>
     </div>

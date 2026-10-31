@@ -179,11 +179,7 @@ function AppShell() {
       </Suspense>
       <AnimatePresence>
         {showPushOnboarding && user && (
-          <PushNotificationsPanel
-            key="push-onboarding"
-            userId={user.id}
-            onClose={() => setShowPushOnboarding(false)}
-          />
+          <PushNotificationsPanel key="push-onboarding" onClose={() => setShowPushOnboarding(false)} />
         )}
       </AnimatePresence>
     </div>

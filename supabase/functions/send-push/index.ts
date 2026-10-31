@@ -53,21 +53,20 @@ function buildPushContent(n: NotificationRow): { title: string; body: string; ur
   }
 }
 
-/** How old a notification may be and still get a push, so an old id can't be replayed to resend it. */
+/** How long after a notification is created it can still be pushed. */
 const PUSH_WINDOW_MS = 5 * 60 * 1000
 
-/** Loads a notification created in the last few minutes, trusting only the stored row rather than the request body. */
-async function loadRecentNotification(
-  supabase: SupabaseClient,
-  id: string,
-): Promise<NotificationRow | null> {
+/** Marks a recent, not-yet-pushed notification as pushed and returns it, in one statement so each one is sent at most once. */
+async function claimNotification(supabase: SupabaseClient, id: string): Promise<NotificationRow | null> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('user_id, actor_username, type, show_id, show_name, rating, episode_count, created_at')
+    .update({ pushed_at: new Date().toISOString() })
     .eq('id', id)
+    .is('pushed_at', null)
     .gte('created_at', new Date(Date.now() - PUSH_WINDOW_MS).toISOString())
+    .select('user_id, actor_username, type, show_id, show_name, rating, episode_count')
     .maybeSingle()
-  if (error) console.error('Notification lookup failed', error)
+  if (error) console.error('Notification claim failed', error)
   return (data as NotificationRow | null) ?? null
 }
 
@@ -191,8 +190,8 @@ Deno.serve(async (req) => {
   if (typeof id !== 'string' || !id) return jsonResponse({ error: 'A notification id is required' }, 400)
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const n = await loadRecentNotification(supabase, id)
-  if (!n) return jsonResponse({ error: 'No recent notification with that id' }, 404)
+  const n = await claimNotification(supabase, id)
+  if (!n) return jsonResponse({ error: 'No recent, unsent notification with that id' }, 404)
   const content = buildPushContent(n)
 
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')

@@ -26,7 +26,6 @@ export interface SessionDeps {
 }
 
 export const SESSION_FAILED = 'Could not start your session. Try again.'
-export const LOGIN_NEEDS_LINKING = 'Sign in with your email in the TV Box iPhone app once to finish linking this account.'
 export const LOGIN_BELONGS_ELSEWHERE = 'This sign-in is linked to a different account.'
 
 /** Email of a login already tied to the account, or null when it has none yet. */
@@ -40,12 +39,11 @@ async function linkedLoginEmail(deps: SessionDeps, account: SessionAccount): Pro
   return null
 }
 
-/** Signs the account in through Supabase Auth, creating its login on first use, and returns the session tokens. */
+/** Signs the account in through Supabase Auth, using the login of its email (created on first use), and returns the session tokens. */
 export async function startSession(deps: SessionDeps, account: SessionAccount): Promise<SessionResult> {
   let email = await linkedLoginEmail(deps, account)
   if (!email) {
     const created = await deps.createLogin(account.email)
-    if (created === 'taken') return { error: LOGIN_NEEDS_LINKING, status: 409 }
     if (created === 'failed') return { error: SESSION_FAILED, status: 500 }
     email = account.email
   }

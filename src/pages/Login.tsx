@@ -21,34 +21,53 @@ import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { CARD_ENTRANCE_MOTION, STEP_SWAP_MOTION } from '../lib/motion'
-import { EMAIL_PATTERN, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants'
+import {
+  EMAIL_CODE_PATTERN,
+  EMAIL_PATTERN,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_PATTERN,
+} from '../lib/constants'
+import { claimAccount, createAccount, endPendingSession, sendEmailCode, verifyEmailCode } from '../lib/accountSetup'
 import { ROUTES } from '../lib/routes'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
 
+type CodePurpose = { kind: 'create'; username: string; inviteCode: string } | { kind: 'claim' }
+
 type Step =
   | { kind: 'email' }
   | { kind: 'username'; email: string }
+  | { kind: 'code'; email: string; purpose: CodePurpose }
   | { kind: 'signin'; email: string; options: PublicKeyCredentialRequestOptionsJSON }
   | { kind: 'bootstrap'; userId: string; username: string; options: PublicKeyCredentialCreationOptionsJSON }
 
+const TEXT_INPUT_CLASSES =
+  'w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-2.5 text-base text-base-100 placeholder:text-base-500 focus:border-accent-500/60 sm:text-sm'
+
 export default function Login() {
-  const { user, register, signIn } = useAuth()
+  const { user, signIn } = useAuth()
   const [step, setStep] = useState<Step>({ kind: 'email' })
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [emailCode, setEmailCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const emailInputRef = useDesktopAutoFocus(step.kind === 'email')
   const usernameInputRef = useDesktopAutoFocus(step.kind === 'username')
+  const codeInputRef = useDesktopAutoFocus(step.kind === 'code')
   useDocumentTitle('Sign in')
 
   if (user) return <Navigate to={ROUTES.home} replace />
 
   function goToEmailStep() {
+    void endPendingSession()
     setStep({ kind: 'email' })
     setUsername('')
+    setInviteCode('')
+    setEmailCode('')
     setError(null)
     setNotice(null)
   }
@@ -67,8 +86,8 @@ export default function Login() {
       if (result.status === 'ready') {
         setStep({ kind: 'signin', email, options: result.options })
       } else if (result.status === 'no_credentials') {
-        const options = await fetchRegistrationOptions(result.user.id)
-        setStep({ kind: 'bootstrap', userId: result.user.id, username: result.user.username, options })
+        await sendEmailCode(email)
+        setStep({ kind: 'code', email, purpose: { kind: 'claim' } })
       } else {
         setStep({ kind: 'username', email })
       }
@@ -88,13 +107,41 @@ export default function Login() {
       setError(`Username must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters: letters, numbers, underscores.`)
       return
     }
+    if (!inviteCode.trim()) {
+      setError('Enter the invite code you were given.')
+      return
+    }
     setBusy(true)
     try {
-      const newUser = await register(email, trimmed)
-      const options = await fetchRegistrationOptions(newUser.id)
-      setStep({ kind: 'bootstrap', userId: newUser.id, username: newUser.username, options })
+      await sendEmailCode(email)
+      setStep({ kind: 'code', email, purpose: { kind: 'create', username: trimmed, inviteCode: inviteCode.trim() } })
     } catch (err) {
-      setError(errorMessage(err, 'Could not create your account. Try again.'))
+      setError(errorMessage(err, 'Could not send the code. Try again.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleCodeSubmit(e: FormEvent, stepValue: Extract<Step, { kind: 'code' }>) {
+    e.preventDefault()
+    setError(null)
+    setNotice(null)
+    if (!EMAIL_CODE_PATTERN.test(emailCode.trim())) {
+      setError('Enter the code from the email we just sent.')
+      return
+    }
+    setBusy(true)
+    try {
+      await verifyEmailCode(stepValue.email, emailCode)
+      const account =
+        stepValue.purpose.kind === 'create'
+          ? await createAccount(stepValue.purpose.username, stepValue.purpose.inviteCode)
+          : await claimAccount()
+      const options = await fetchRegistrationOptions(account.id)
+      setEmailCode('')
+      setStep({ kind: 'bootstrap', userId: account.id, username: account.username, options })
+    } catch (err) {
+      setError(errorMessage(err, 'Something went wrong. Try again.'))
     } finally {
       setBusy(false)
     }
@@ -187,7 +234,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@gmail.com"
-                    className="w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-2.5 text-base text-base-100 placeholder:text-base-500 focus:border-accent-500/60 sm:text-sm"
+                    className={TEXT_INPUT_CLASSES}
                   />
                 </div>
                 {error && <ErrorText className="text-xs">{error}</ErrorText>}
@@ -202,7 +249,8 @@ export default function Login() {
                 <div>
                   <p className="text-sm text-base-300">
                     First time seeing <span className="font-medium text-base-100">{step.email}</span>.
-                    Pick a username to finish creating your account.
+                    Pick a username and enter your invite code. We&apos;ll email you a code to
+                    confirm it&apos;s you.
                   </p>
                   <input
                     id="username"
@@ -212,13 +260,53 @@ export default function Login() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="username"
-                    className="mt-3 w-full rounded-lg border border-hairline-strong bg-base-900 px-3.5 py-2.5 text-base text-base-100 placeholder:text-base-500 focus:border-accent-500/60 sm:text-sm"
+                    aria-label="Username"
+                    className={`mt-3 ${TEXT_INPUT_CLASSES}`}
+                  />
+                  <input
+                    id="invite-code"
+                    type="text"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="invite code"
+                    aria-label="Invite code"
+                    className={`mt-3 ${TEXT_INPUT_CLASSES}`}
                   />
                 </div>
                 {error && <ErrorText className="text-xs">{error}</ErrorText>}
                 <PrimaryButton disabled={busy}>
-                  {busy ? 'Creating account…' : 'Create account'}
+                  {busy ? 'Sending code…' : 'Continue'}
                 </PrimaryButton>
+                <button
+                  type="button"
+                  onClick={goToEmailStep}
+                  className="w-full text-center text-xs text-base-500 hover:text-base-300"
+                >
+                  &larr; Use a different email
+                </button>
+              </motion.form>
+            ) : step.kind === 'code' ? (
+              <motion.form key="code" {...STEP_SWAP_MOTION} onSubmit={(e) => handleCodeSubmit(e, step)} className="space-y-4">
+                <div>
+                  <label htmlFor="email-code" className="text-sm text-base-300">
+                    Enter the code we emailed to <span className="font-medium text-base-100">{step.email}</span>.
+                  </label>
+                  <input
+                    id="email-code"
+                    ref={codeInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    className={`mt-3 ${TEXT_INPUT_CLASSES}`}
+                  />
+                </div>
+                {error && <ErrorText className="text-xs">{error}</ErrorText>}
+                <PrimaryButton disabled={busy}>{busy ? 'Checking…' : 'Confirm email'}</PrimaryButton>
                 <button
                   type="button"
                   onClick={goToEmailStep}

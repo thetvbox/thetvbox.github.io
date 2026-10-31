@@ -17,7 +17,7 @@
 //    send-push Edge Function sent, and focuses (or opens) that url on click.
 //    See src/lib/pushNotifications.ts for how a device subscribes.
 
-const CACHE_VERSION = 'v1'
+const CACHE_VERSION = 'v2'
 const SHELL_CACHE = `tv-box-shell-${CACHE_VERSION}`
 const ASSET_CACHE = `tv-box-assets-${CACHE_VERSION}`
 const IMAGE_CACHE = `tv-box-images-${CACHE_VERSION}`

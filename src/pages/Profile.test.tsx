@@ -34,7 +34,6 @@ function renderProfile() {
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: bob,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -105,7 +104,6 @@ describe('Profile', () => {
     const signOut = vi.fn()
     vi.mocked(useAuth).mockReturnValue({
       user: bob,
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut,
     })

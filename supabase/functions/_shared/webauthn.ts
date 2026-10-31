@@ -1,7 +1,6 @@
 // Shared helpers for the webauthn-* Edge Functions. See ../webauthn-registration-options/README.md for the full design notes.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { mayAddFirstPasskey } from './passkeyGuard.ts'
 
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -32,39 +31,38 @@ export function serviceClient() {
   return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 }
 
-/** The Supabase Auth user behind the request's bearer token, or null for the anon key or no token. */
-async function callerAuthUserId(supabase: ReturnType<typeof serviceClient>, req: Request): Promise<string | null> {
-  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
-  if (!token) return null
-  try {
-    const { data } = await supabase.auth.getUser(token)
-    return data.user?.id ?? null
-  } catch {
+/** The account of the signed-in person making the request, or null for the anon key or a login without an account. */
+async function callerAccountId(req: Request): Promise<string | null> {
+  const authorization = req.headers.get('authorization')
+  if (!authorization) return null
+  const asCaller = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    global: { headers: { Authorization: authorization } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  const { data, error } = await asCaller.rpc('current_app_user_id')
+  return error || typeof data !== 'string' ? null : data
+}
+
+/** Whether the request comes from the account's own signed-in owner; only they may add its passkey. */
+export async function isAccountOwner(req: Request, accountId: string): Promise<boolean> {
+  return (await callerAccountId(req)) === accountId
+}
+
+/** Whether the account already has a passkey, or null when the lookup failed. */
+export async function hasPasskey(supabase: ReturnType<typeof serviceClient>, userId: string): Promise<boolean | null> {
+  const { count, error } = await supabase
+    .from('webauthn_credentials')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (error) {
+    console.error('Credential count failed', error)
     return null
   }
+  return (count ?? 0) > 0
 }
 
-/** Whether this request may add the first passkey to the account, failing closed when a lookup fails. */
-export async function firstPasskeyAllowed(
-  supabase: ReturnType<typeof serviceClient>,
-  req: Request,
-  account: { id: string; created_at: string; auth_user_id: string | null },
-): Promise<boolean> {
-  const { data: links, error } = await supabase.from('user_auth_links').select('auth_user_id').eq('user_id', account.id)
-  if (error) {
-    console.error('Auth link lookup failed', error)
-    return false
-  }
-  return mayAddFirstPasskey({
-    callerAuthUserId: await callerAuthUserId(supabase, req),
-    accountCreatedAt: account.created_at,
-    accountAuthUserId: account.auth_user_id,
-    linkedAuthUserIds: (links ?? []).map((link: { auth_user_id: string }) => link.auth_user_id),
-    now: Date.now(),
-  })
-}
-
-export const FIRST_PASSKEY_REFUSED = 'A passkey can only be added right after creating an account. Sign in another way first.'
+export const PASSKEY_NEEDS_SIGN_IN = 'Confirm your email first, then set up your passkey.'
+export const PASSKEY_ALREADY_SET = 'This account already has a passkey. Sign in with it instead.'
 
 export type ChallengeType = 'registration' | 'authentication'
 
@@ -84,7 +82,7 @@ export async function storeChallenge(
   })
 }
 
-/** Fetches and deletes (single-use) the pending, non-expired challenge for a user, or null if there isn't one. */
+/** Takes (single-use) the newest pending challenge for a user in one statement, or null if there is none or it expired. */
 export async function consumeChallenge(
   supabase: ReturnType<typeof serviceClient>,
   userId: string,
@@ -92,17 +90,14 @@ export async function consumeChallenge(
 ): Promise<string | null> {
   const { data } = await supabase
     .from('webauthn_challenges')
-    .select('id, challenge, expires_at')
+    .delete()
     .eq('user_id', userId)
     .eq('type', type)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!data) return null
-  await supabase.from('webauthn_challenges').delete().eq('id', data.id)
-  if (new Date(data.expires_at).getTime() < Date.now()) return null
-  return data.challenge
+    .select('challenge, expires_at, created_at')
+  const newest = (data ?? [])
+    .filter((row: { expires_at: string }) => new Date(row.expires_at).getTime() >= Date.now())
+    .sort((x: { created_at: string }, y: { created_at: string }) => y.created_at.localeCompare(x.created_at))[0]
+  return newest ? newest.challenge : null
 }
 
 /** Base64url-encodes raw bytes (no padding), for storing a credential's public key as text. */

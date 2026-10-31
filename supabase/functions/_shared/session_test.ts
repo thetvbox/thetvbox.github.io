@@ -1,5 +1,5 @@
 import { deepStrictEqual as assertEquals } from 'node:assert'
-import { LOGIN_BELONGS_ELSEWHERE, LOGIN_NEEDS_LINKING, SESSION_FAILED, type SessionDeps, startSession } from './session.ts'
+import { LOGIN_BELONGS_ELSEWHERE, SESSION_FAILED, type SessionDeps, startSession } from './session.ts'
 
 const tokens = { access_token: 'access', refresh_token: 'refresh' }
 const account = { id: 'acct-1', email: 'ada@example.com', auth_user_id: null }
@@ -43,9 +43,10 @@ Deno.test('the older app’s login on users.auth_user_id is used when there is n
   assertEquals(calls, ['session ada@example.com', 'link auth-1 acct-1'])
 })
 
-Deno.test('an email already used by an unlinked login asks the person to link it first', async () => {
-  const { deps } = fakeDeps({ createLogin: () => Promise.resolve('taken') })
-  assertEquals(await startSession(deps, account), { error: LOGIN_NEEDS_LINKING, status: 409 })
+Deno.test('an unlinked login that already uses the account email is linked and signed in', async () => {
+  const { deps, calls } = fakeDeps({ createLogin: (email) => (calls.push(`create ${email}`), Promise.resolve('taken')) })
+  assertEquals(await startSession(deps, account), { tokens })
+  assertEquals(calls, ['create ada@example.com', 'session ada@example.com', 'link auth-1 acct-1', 'legacy acct-1 auth-1'])
 })
 
 Deno.test('a failure to create the login or the session reports a retryable error', async () => {

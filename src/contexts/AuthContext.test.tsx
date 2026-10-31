@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/supabase', () => ({
-  supabase: { from: vi.fn(), auth: { getSession: vi.fn(), onAuthStateChange: vi.fn(), signOut: vi.fn() } },
+  supabase: { auth: { getSession: vi.fn(), onAuthStateChange: vi.fn(), signOut: vi.fn() } },
 }))
 
 import { supabase } from '../lib/supabase'
@@ -11,16 +11,6 @@ import { STORAGE_KEYS } from '../lib/constants'
 import type { AppUser } from '../types'
 
 const bob: AppUser = { id: 'u1', email: 'bob@example.com', username: 'bob', created_at: '2026-01-01T00:00:00Z' }
-
-function mockFrom(result: { data?: unknown; error?: unknown }) {
-  const builder: Record<string, unknown> = {}
-  const methods = ['select', 'insert', 'eq', 'single', 'maybeSingle']
-  for (const m of methods) builder[m] = vi.fn(() => builder)
-  ;(builder as { then: unknown }).then = (onFulfilled: (v: unknown) => unknown) =>
-    Promise.resolve({ data: null, error: null, ...result }).then(onFulfilled)
-  vi.mocked(supabase.from).mockReturnValue(builder as never)
-  return builder
-}
 
 let authListener: ((event: string) => void) | null = null
 const unsubscribe = vi.fn()
@@ -35,7 +25,6 @@ function mockSession(hasSession: boolean) {
 
 beforeEach(() => {
   localStorage.clear()
-  vi.mocked(supabase.from).mockReset()
   mockSession(true)
   authListener = null
   unsubscribe.mockReset()
@@ -64,38 +53,6 @@ describe('AuthContext', () => {
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
     expect(result.current.user).toBeNull()
     expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
-  })
-
-  it('register saves the new user without reading it back, and returns it without signing them in', async () => {
-    const builder = mockFrom({})
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    const registered = await act(() => result.current.register(' Bob@Example.com ', ' bob '))
-    expect(registered).toMatchObject({ email: 'bob@example.com', username: 'bob' })
-    expect(registered.id).toMatch(/^[0-9a-f-]{36}$/)
-    expect(builder.insert).toHaveBeenCalledWith({ id: registered.id, email: 'bob@example.com', username: 'bob' })
-    expect(builder.select).not.toHaveBeenCalled()
-    expect(result.current.user).toBeNull()
-    expect(localStorage.getItem(STORAGE_KEYS.user)).toBeNull()
-  })
-
-  it('register surfaces a friendly message for a duplicate username', async () => {
-    mockFrom({ error: { code: '23505', message: 'duplicate key value violates unique constraint "users_username_key"' } })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await expect(result.current.register('bob@example.com', 'bob')).rejects.toThrow('That username is taken. Try another.')
-  })
-
-  it('register surfaces a friendly message for a duplicate email', async () => {
-    mockFrom({ error: { code: '23505', message: 'duplicate key value violates unique constraint "users_email_key"' } })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await expect(result.current.register('bob@example.com', 'bob')).rejects.toThrow(
-      'An account with that email already exists.',
-    )
-  })
-
-  it('register rethrows non-conflict Supabase errors as-is', async () => {
-    mockFrom({ error: { code: '500', message: 'server error' } })
-    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
-    await expect(result.current.register('bob@example.com', 'bob')).rejects.toMatchObject({ message: 'server error' })
   })
 
   it('signIn persists the user and updates state', async () => {

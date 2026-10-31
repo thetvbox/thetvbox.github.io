@@ -63,7 +63,6 @@ const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created
 function authValue(overrides: Partial<ReturnType<typeof useAuth>> = {}) {
   return {
     user: null,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
     ...overrides,

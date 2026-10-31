@@ -3,8 +3,10 @@
 import { generateRegistrationOptions } from 'npm:@simplewebauthn/server@14'
 import {
   CORS_HEADERS,
-  FIRST_PASSKEY_REFUSED,
-  firstPasskeyAllowed,
+  hasPasskey,
+  isAccountOwner,
+  PASSKEY_ALREADY_SET,
+  PASSKEY_NEEDS_SIGN_IN,
   jsonResponse,
   resolveRelyingParty,
   serviceClient,
@@ -34,7 +36,7 @@ Deno.serve(async (req) => {
 
   const { data: user, error: userError } = await supabase
     .from('users')
-    .select('id, username, created_at, auth_user_id')
+    .select('id, username')
     .eq('id', userId)
     .maybeSingle()
   if (userError) {
@@ -42,19 +44,11 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to look up account' }, 500)
   }
   if (!user) return jsonResponse({ error: 'Account not found' }, 404)
-  if (!(await firstPasskeyAllowed(supabase, req, user))) return jsonResponse({ error: FIRST_PASSKEY_REFUSED }, 403)
+  if (!(await isAccountOwner(req, user.id))) return jsonResponse({ error: PASSKEY_NEEDS_SIGN_IN }, 403)
 
-  const { count, error: countError } = await supabase
-    .from('webauthn_credentials')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-  if (countError) {
-    console.error('Credential count failed', countError)
-    return jsonResponse({ error: 'Failed to check existing passkeys' }, 500)
-  }
-  if (count && count > 0) {
-    return jsonResponse({ error: 'This account already has a passkey. Sign in with it instead.' }, 403)
-  }
+  const existing = await hasPasskey(supabase, user.id)
+  if (existing === null) return jsonResponse({ error: 'Failed to check existing passkeys' }, 500)
+  if (existing) return jsonResponse({ error: PASSKEY_ALREADY_SET }, 403)
 
   const options = await generateRegistrationOptions({
     rpName: 'TV Box',

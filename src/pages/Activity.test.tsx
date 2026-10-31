@@ -110,7 +110,6 @@ beforeEach(() => {
   vi.mocked(fetchFollowingIds).mockReset().mockResolvedValue(new Set())
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })

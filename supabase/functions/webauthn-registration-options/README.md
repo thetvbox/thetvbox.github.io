@@ -53,20 +53,14 @@ way into that account is a valid WebAuthn assertion against a credential
 physically held on one of their own devices (Face ID, Touch ID, Windows
 Hello, or a security key).
 
-**The first passkey is limited too.** Accounts now also exist without a
-passkey for good: the native app creates accounts through email codes
-and Sign in with Apple. So both registration functions (options and
-verify) also run `firstPasskeyAllowed` (`_shared/webauthn.ts`, logic in
-`_shared/passkeyGuard.ts`). The first passkey can only be added by:
-
-- the account's signed-in owner (a Supabase Auth session linked to the
-  account, sent as the bearer token), or
-- an anonymous caller, on an account created in the last 15 minutes that
-  has no login linked yet. This is the normal web sign-up: pick a
-  username, then register a passkey straight away.
-
-An older account without a passkey has to sign in another way first. Any
-failed lookup refuses.
+**Only the signed-in owner can add a passkey.** Both registration
+functions (options and verify) require the caller's own Supabase session
+(sent as the bearer token) to resolve to the account
+(`isAccountOwner` in `_shared/webauthn.ts`, through
+`current_app_user_id()`). There is no anonymous path. New members first
+confirm their email with a one-time code and redeem the invite code,
+which creates the account. Then they add their passkey. Anyone with an
+account but no passkey confirms their email the same way.
 
 ## Sessions
 
@@ -79,9 +73,9 @@ the user row. The browser installs it with `supabase.auth.setSession`.
   older app's `users.auth_user_id`), that login is used.
 - Otherwise a login is created with the account's email and linked as
   `passkey`.
-- If that email already belongs to a login that isn't linked to this
-  account, sign-in stops with a 409 until the person links it once by
-  email in the iPhone app.
+- If that email already belongs to a login that isn't linked to any
+  account, that login is linked. If it's linked to a different account,
+  sign-in stops with a 409.
 
 ## Tables
 

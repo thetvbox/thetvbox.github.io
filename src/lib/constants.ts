@@ -23,6 +23,8 @@ export const USERNAME_MIN_LENGTH = 3
 export const USERNAME_MAX_LENGTH = 20
 export const USERNAME_PATTERN = new RegExp(`^[a-zA-Z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`)
 export const EMAIL_PATTERN = /^\S+@\S+\.\S+$/
+/** The one-time sign-in code Supabase emails: six to ten digits, depending on the project setting. */
+export const EMAIL_CODE_PATTERN = /^\d{6,10}$/
 
 export const SKELETON_ROWS = 5
 export const SKELETON_ROWS_COMPACT = 3
@@ -63,6 +65,10 @@ export const TABLE_FOLLOWS = 'follows'
 export const TABLE_NOTIFICATIONS = 'notifications'
 export const TABLE_PERSONAL_ACCESS_TOKENS = 'personal_access_tokens'
 export const TABLE_PUSH_SUBSCRIPTIONS = 'push_subscriptions'
+
+export const RPC_REDEEM_INVITE = 'redeem_invite'
+export const RPC_CLAIM_ACCOUNT = 'claim_account_by_email'
+export const RPC_REGISTER_PUSH_SUBSCRIPTION = 'register_push_subscription'
 
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000

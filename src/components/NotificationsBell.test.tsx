@@ -56,7 +56,6 @@ function renderBell(open = true, onOpenChange = vi.fn()) {
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -71,7 +70,6 @@ describe('NotificationsBell', () => {
   it('renders nothing when signed out', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

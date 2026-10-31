@@ -8,14 +8,13 @@ import { useToast } from '../hooks/useToast'
 import { errorMessage } from '../lib/format'
 
 interface PushNotificationsPanelProps {
-  userId: string
   onClose: () => void
 }
 
 type Status = 'loading' | 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'error'
 
 /** Enable/disable sheet for Web Push notifications on this device. */
-export default function PushNotificationsPanel({ userId, onClose }: PushNotificationsPanelProps) {
+export default function PushNotificationsPanel({ onClose }: PushNotificationsPanelProps) {
   const [status, setStatus] = useState<Status>('loading')
   const [busy, setBusy] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
@@ -55,7 +54,7 @@ export default function PushNotificationsPanel({ userId, onClose }: PushNotifica
         setStatus(permission === 'denied' ? 'denied' : 'unsubscribed')
         return
       }
-      await subscribeToPush(userId)
+      await subscribeToPush()
       setStatus('subscribed')
     } catch (err) {
       showError(errorMessage(err, 'Failed to enable push notifications. Try again.'))

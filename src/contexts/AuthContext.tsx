@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import { STORAGE_KEYS, TABLE_USERS } from '../lib/constants'
+import { STORAGE_KEYS } from '../lib/constants'
 import type { AppUser } from '../types'
 
 /** Reads the stored session user, guarding against storage being unavailable. */
@@ -35,7 +35,6 @@ function clearSignedInUser(setUser: (user: AppUser | null) => void): void {
 
 interface AuthContextValue {
   user: AppUser | null
-  register: (email: string, username: string) => Promise<AppUser>
   signIn: (user: AppUser) => void
   signOut: () => void
 }
@@ -73,29 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      /** Creates the account row only; the caller must call signIn() separately once a passkey is registered (see Login.tsx). */
-      async register(email: string, username: string) {
-        const newUser: AppUser = {
-          id: crypto.randomUUID(),
-          email: email.toLowerCase().trim(),
-          username: username.trim(),
-          created_at: new Date().toISOString(),
-        }
-        const { error } = await supabase
-          .from(TABLE_USERS)
-          .insert({ id: newUser.id, email: newUser.email, username: newUser.username })
-        if (error) {
-          if (error.code === '23505') {
-            throw new Error(
-              error.message.includes('username')
-                ? 'That username is taken. Try another.'
-                : 'An account with that email already exists.',
-            )
-          }
-          throw error
-        }
-        return newUser
-      },
       signIn(nextUser: AppUser) {
         writeStoredUser(JSON.stringify(nextUser))
         setUser(nextUser)

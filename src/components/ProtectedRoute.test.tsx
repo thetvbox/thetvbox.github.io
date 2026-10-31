@@ -32,7 +32,6 @@ describe('ProtectedRoute', () => {
   it('redirects to /login when signed out', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })
@@ -43,7 +42,6 @@ describe('ProtectedRoute', () => {
   it('renders children when signed in', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: me,
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

@@ -81,7 +81,6 @@ beforeEach(() => {
   vi.mocked(fetchRewatchesForShow).mockReset().mockResolvedValue([])
   vi.mocked(useAuth).mockReturnValue({
     user: bob,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -132,7 +131,6 @@ describe('ShowDiary', () => {
   it("shows a third-person unrated message for a visitor's diary", async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { ...bob, id: 'me2', username: 'me' },
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

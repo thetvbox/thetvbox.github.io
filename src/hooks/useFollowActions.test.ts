@@ -16,7 +16,6 @@ beforeEach(() => {
   vi.mocked(unfollowUser).mockReset().mockResolvedValue(undefined)
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -43,7 +42,6 @@ describe('useFollowActions', () => {
   it('follow: does nothing when signed out', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

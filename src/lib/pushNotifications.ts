@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { STORAGE_KEYS, TABLE_PUSH_SUBSCRIPTIONS, VAPID_PUBLIC_KEY } from './constants'
+import { RPC_REGISTER_PUSH_SUBSCRIPTION, STORAGE_KEYS, TABLE_PUSH_SUBSCRIPTIONS, VAPID_PUBLIC_KEY } from './constants'
 
 /** True when this browser can register a push subscription at all. */
 export function isPushSupported(): boolean {
@@ -22,8 +22,8 @@ export async function isPushSubscribed(): Promise<boolean> {
   return subscription !== null
 }
 
-/** Subscribes this device to push and saves the subscription for userId. */
-export async function subscribeToPush(userId: string): Promise<void> {
+/** Subscribes this device to push and saves the subscription for the signed-in member, taking it over from anyone who had it before. */
+export async function subscribeToPush(): Promise<void> {
   if (!isPushSupported()) {
     throw new Error('Push notifications are not supported in this browser.')
   }
@@ -36,12 +36,11 @@ export async function subscribeToPush(userId: string): Promise<void> {
   if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
     throw new Error('Could not read the push subscription details.')
   }
-  const { error } = await supabase
-    .from(TABLE_PUSH_SUBSCRIPTIONS)
-    .upsert(
-      { user_id: userId, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
-      { onConflict: 'endpoint' },
-    )
+  const { error } = await supabase.rpc(RPC_REGISTER_PUSH_SUBSCRIPTION, {
+    p_endpoint: json.endpoint,
+    p_p256dh: json.keys.p256dh,
+    p_auth: json.keys.auth,
+  })
   if (error) throw error
 }
 

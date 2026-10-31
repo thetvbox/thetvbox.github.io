@@ -37,25 +37,25 @@ afterEach(() => {
 describe('PushNotificationsPanel', () => {
   it('shows an unsupported message when the browser lacks push support', async () => {
     vi.mocked(isPushSupported).mockReturnValue(false)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
     expect(await screen.findByText(/doesn.t support push notifications/)).toBeInTheDocument()
   })
 
   it('shows a blocked message when notifications are already denied', async () => {
     stubNotification('denied')
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
     expect(await screen.findByText(/Notifications are blocked/)).toBeInTheDocument()
   })
 
   it('offers to enable when not yet subscribed', async () => {
     vi.mocked(isPushSubscribed).mockResolvedValue(false)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
     expect(await screen.findByRole('button', { name: 'Enable push notifications' })).toBeInTheDocument()
   })
 
   it('shows the on state and a disable action when already subscribed', async () => {
     vi.mocked(isPushSubscribed).mockResolvedValue(true)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
     expect(await screen.findByText('Push notifications are on for this device.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Disable on this device' })).toBeInTheDocument()
   })
@@ -64,18 +64,18 @@ describe('PushNotificationsPanel', () => {
     const requestPermission = vi.fn().mockResolvedValue('granted')
     stubNotification('default', requestPermission)
     vi.mocked(subscribeToPush).mockResolvedValue(undefined)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Enable push notifications' }))
 
-    await waitFor(() => expect(subscribeToPush).toHaveBeenCalledWith('u1'))
+    await waitFor(() => expect(subscribeToPush).toHaveBeenCalled())
     expect(await screen.findByText('Push notifications are on for this device.')).toBeInTheDocument()
   })
 
   it('does not subscribe when permission is denied at the prompt', async () => {
     const requestPermission = vi.fn().mockResolvedValue('denied')
     stubNotification('default', requestPermission)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Enable push notifications' }))
 
@@ -87,7 +87,7 @@ describe('PushNotificationsPanel', () => {
     const requestPermission = vi.fn().mockResolvedValue('granted')
     stubNotification('default', requestPermission)
     vi.mocked(subscribeToPush).mockRejectedValue(new Error('boom'))
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Enable push notifications' }))
 
@@ -97,7 +97,7 @@ describe('PushNotificationsPanel', () => {
   it('unsubscribes when disabling', async () => {
     vi.mocked(isPushSubscribed).mockResolvedValue(true)
     vi.mocked(unsubscribeFromPush).mockResolvedValue(undefined)
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Disable on this device' }))
 
@@ -107,7 +107,7 @@ describe('PushNotificationsPanel', () => {
 
   it('shows an error state with a retry option instead of hanging on "loading" when the status check fails', async () => {
     vi.mocked(isPushSubscribed).mockRejectedValue(new Error('boom'))
-    render(<PushNotificationsPanel userId="u1" onClose={vi.fn()} />)
+    render(<PushNotificationsPanel onClose={vi.fn()} />)
 
     expect(await screen.findByText(/Couldn.t check your push notification status/)).toBeInTheDocument()
 
@@ -119,7 +119,7 @@ describe('PushNotificationsPanel', () => {
 
   it('calls onClose when the panel header close button is clicked', async () => {
     const onClose = vi.fn()
-    render(<PushNotificationsPanel userId="u1" onClose={onClose} />)
+    render(<PushNotificationsPanel onClose={onClose} />)
     await screen.findByRole('button', { name: 'Enable push notifications' })
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalled()

@@ -27,7 +27,6 @@ beforeEach(() => {
   vi.mocked(submitBugReport).mockReset()
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })

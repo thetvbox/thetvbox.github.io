@@ -105,7 +105,6 @@ beforeEach(() => {
   vi.mocked(createList).mockReset()
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -254,7 +253,6 @@ describe('ProfileActivity', () => {
   it('hides owner-only controls for a visitor viewing someone else\'s profile', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { ...me, id: 'someone-else' },
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

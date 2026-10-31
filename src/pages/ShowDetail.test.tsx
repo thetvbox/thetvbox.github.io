@@ -116,7 +116,6 @@ function renderShowDetail(id = '1') {
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: me,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })

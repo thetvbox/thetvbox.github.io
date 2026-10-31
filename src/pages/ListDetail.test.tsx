@@ -71,7 +71,6 @@ beforeEach(() => {
   vi.mocked(removeShowFromList).mockReset().mockResolvedValue(undefined)
   vi.mocked(useAuth).mockReturnValue({
     user: owner,
-    register: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
   })
@@ -137,7 +136,6 @@ describe('ListDetail', () => {
   it('hides owner controls for a visitor', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { ...owner, id: 'visitor1' },
-      register: vi.fn(),
       signIn: vi.fn(),
       signOut: vi.fn(),
     })

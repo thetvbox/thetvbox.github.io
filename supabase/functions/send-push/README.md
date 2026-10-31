@@ -22,10 +22,12 @@ followed person finishing one -- with no separate logic to keep in sync.
 
 `verify_jwt` is off, since the caller is the database, not a signed-in
 person. To keep that safe, the function trusts nothing in the request
-except the `id`. It loads the notification row itself with the service
-role, and only sends for one created in the last five minutes. A forged
-call can't invent text or pick a recipient, and an old id can't be
-replayed. The trigger reads this function's URL from the Vault secret
+except the `id`. With the service role it marks the row as pushed
+(`pushed_at`) and reads it back in one statement. It only does that for a
+row created in the last five minutes that hasn't been pushed yet. So a
+forged call can't invent text or pick a recipient, and each notification
+is pushed at most once. A notification restored by "undo" keeps its
+`pushed_at`, so it isn't pushed again. The trigger reads this function's URL from the Vault secret
 `send_push_url`. Without that secret (on a local stack, for example), no
 push is attempted.
 
