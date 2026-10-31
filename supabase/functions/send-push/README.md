@@ -15,16 +15,19 @@ migration adds `send_push_on_notification()`, a Postgres trigger function
 that fires `AFTER INSERT ON public.notifications` (the same table the
 existing `notify_on_follow` / `notify_on_show_rating` /
 `notify_on_show_finished` triggers already populate) and calls this
-function via `pg_net.http_post`, passing the new row as the JSON body.
+function via `pg_net.http_post`, passing only the new row's `id`.
 So a push follows the exact same events the in-app notification bell
 already shows -- a new follower, a followed person rating a show, or a
 followed person finishing one -- with no separate logic to keep in sync.
 
-`verify_jwt` is off, matching the app's other custom-auth functions:
-`pg_net` calls this with the anon key as a bearer token (this app has no
-real user sessions to verify), and the function's own job -- send to
-devices on file for the row's own `user_id` -- doesn't need a JWT to be
-meaningful.
+`verify_jwt` is off, since the caller is the database, not a signed-in
+person. To keep that safe, the function trusts nothing in the request
+except the `id`. It loads the notification row itself with the service
+role, and only sends for one created in the last five minutes. A forged
+call can't invent text or pick a recipient, and an old id can't be
+replayed. The trigger reads this function's URL from the Vault secret
+`send_push_url`. Without that secret (on a local stack, for example), no
+push is attempted.
 
 ## Subscriptions and cleanup
 

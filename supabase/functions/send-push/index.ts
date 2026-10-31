@@ -1,24 +1,7 @@
-// Supabase Edge Function: sends a Web Push notification to every device
-// subscribed for a notification row's recipient. Invoked by the
-// send_push_on_notification() Postgres trigger (see the
-// add_push_subscriptions_and_trigger migration) right after a row is
-// inserted into public.notifications, via pg_net.http_post. See
-// README.md next to this file for the full design notes.
-//
-// verify_jwt is off: pg_net calls this with the anon key as a bearer
-// token (this app has no real user sessions to verify), and the
-// function's own job is narrow enough -- send to devices already on
-// file for the row's own user_id -- that no further auth check adds
-// anything here.
-//
-// Alongside Web Push, this also delivers to native iOS/Android devices
-// registered in public.expo_push_tokens (the mobile app's
-// expo-notifications token), via Expo's push API -- no APNs/FCM keys of
-// our own needed, Expo relays to Apple/Google. The two channels are
-// independent: a missing VAPID config only disables the web channel.
+// Supabase Edge Function: sends a push notification for a new notifications row to its recipient's devices. See README.md next to this file for the full design notes.
 
 import webpush from 'npm:web-push@3.6.7'
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -70,6 +53,24 @@ function buildPushContent(n: NotificationRow): { title: string; body: string; ur
   }
 }
 
+/** How old a notification may be and still get a push, so an old id can't be replayed to resend it. */
+const PUSH_WINDOW_MS = 5 * 60 * 1000
+
+/** Loads a notification created in the last few minutes, trusting only the stored row rather than the request body. */
+async function loadRecentNotification(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<NotificationRow | null> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('user_id, actor_username, type, show_id, show_name, rating, episode_count, created_at')
+    .eq('id', id)
+    .gte('created_at', new Date(Date.now() - PUSH_WINDOW_MS).toISOString())
+    .maybeSingle()
+  if (error) console.error('Notification lookup failed', error)
+  return (data as NotificationRow | null) ?? null
+}
+
 interface ExpoPushTicket {
   status: 'ok' | 'error'
   id?: string
@@ -79,7 +80,7 @@ interface ExpoPushTicket {
 
 /** Sends to every Expo push token on file for the notification's user, and removes any Expo reports as no longer registered. */
 async function sendExpoPush(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userId: string,
   content: { title: string; body: string; url: string },
 ): Promise<{ sent: number; removed: number }> {
@@ -129,7 +130,7 @@ async function sendExpoPush(
 
 /** Sends to every Web Push subscription on file for the notification's user, and removes any the push service reports as gone. */
 async function sendWebPush(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userId: string,
   content: { title: string; body: string; url: string },
   vapidPublicKey: string,
@@ -186,13 +187,13 @@ Deno.serve(async (req) => {
   } catch {
     return jsonResponse({ error: 'Invalid JSON body' }, 400)
   }
-  const n = payload as Partial<NotificationRow> | null
-  if (!n?.user_id || !n.actor_username || !n.type) {
-    return jsonResponse({ error: 'A notification row is required' }, 400)
-  }
+  const id = (payload as { id?: unknown } | null)?.id
+  if (typeof id !== 'string' || !id) return jsonResponse({ error: 'A notification id is required' }, 400)
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const content = buildPushContent(n as NotificationRow)
+  const n = await loadRecentNotification(supabase, id)
+  if (!n) return jsonResponse({ error: 'No recent notification with that id' }, 404)
+  const content = buildPushContent(n)
 
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
