@@ -6,6 +6,14 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Security
+
+- Adding the first passkey to an account is now limited to brand-new
+  sign-ups (within 15 minutes, with no login linked) and the account's
+  signed-in owner. Before, anyone who knew an email address could add a
+  passkey to an account that didn't have one yet and sign in as that
+  person.
+
 ### Added
 
 - App chrome redesigned to match the native iOS Apple TV app: the bottom

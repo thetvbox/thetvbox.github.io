@@ -3,6 +3,8 @@
 import { generateRegistrationOptions } from 'npm:@simplewebauthn/server@14'
 import {
   CORS_HEADERS,
+  FIRST_PASSKEY_REFUSED,
+  firstPasskeyAllowed,
   jsonResponse,
   resolveRelyingParty,
   serviceClient,
@@ -32,7 +34,7 @@ Deno.serve(async (req) => {
 
   const { data: user, error: userError } = await supabase
     .from('users')
-    .select('id, username')
+    .select('id, username, created_at, auth_user_id')
     .eq('id', userId)
     .maybeSingle()
   if (userError) {
@@ -40,6 +42,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to look up account' }, 500)
   }
   if (!user) return jsonResponse({ error: 'Account not found' }, 404)
+  if (!(await firstPasskeyAllowed(supabase, req, user))) return jsonResponse({ error: FIRST_PASSKEY_REFUSED }, 403)
 
   const { count, error: countError } = await supabase
     .from('webauthn_credentials')

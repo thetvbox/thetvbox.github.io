@@ -1,6 +1,7 @@
 // Shared helpers for the webauthn-* Edge Functions. See ../webauthn-registration-options/README.md for the full design notes.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { mayAddFirstPasskey } from './passkeyGuard.ts'
 
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +31,40 @@ export function resolveRelyingParty(req: Request): { origin: string; rpID: strin
 export function serviceClient() {
   return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 }
+
+/** The Supabase Auth user behind the request's bearer token, or null for the anon key or no token. */
+async function callerAuthUserId(supabase: ReturnType<typeof serviceClient>, req: Request): Promise<string | null> {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  if (!token) return null
+  try {
+    const { data } = await supabase.auth.getUser(token)
+    return data.user?.id ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Whether this request may add the first passkey to the account, failing closed when a lookup fails. */
+export async function firstPasskeyAllowed(
+  supabase: ReturnType<typeof serviceClient>,
+  req: Request,
+  account: { id: string; created_at: string; auth_user_id: string | null },
+): Promise<boolean> {
+  const { data: links, error } = await supabase.from('user_auth_links').select('auth_user_id').eq('user_id', account.id)
+  if (error) {
+    console.error('Auth link lookup failed', error)
+    return false
+  }
+  return mayAddFirstPasskey({
+    callerAuthUserId: await callerAuthUserId(supabase, req),
+    accountCreatedAt: account.created_at,
+    accountAuthUserId: account.auth_user_id,
+    linkedAuthUserIds: (links ?? []).map((link: { auth_user_id: string }) => link.auth_user_id),
+    now: Date.now(),
+  })
+}
+
+export const FIRST_PASSKEY_REFUSED = 'A passkey can only be added right after creating an account. Sign in another way first.'
 
 export type ChallengeType = 'registration' | 'authentication'
 

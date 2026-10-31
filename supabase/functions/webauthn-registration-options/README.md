@@ -53,21 +53,20 @@ way into that account is a valid WebAuthn assertion against a credential
 physically held on one of their own devices (Face ID, Touch ID, Windows
 Hello, or a security key).
 
-**The one deliberate trade-off**: the *very first* passkey for each of
-this app's existing users is still bootstrapped by email alone (the
-client looks the user up by email via `webauthn-authentication-options`;
-a `no_credentials` response means it's safe to call
-`webauthn-registration-options` for that user's id). That's exactly the
-same trust level the app already had for every sign-in until now -- not
-a regression -- but it does mean there's a one-time window, per existing
-user, before they've set up their own passkey, during which someone who
-knows their email could set one up first. If that matters for this
-friend group, the fix is operational, not code: everyone should set up
-their passkey promptly after this ships. New accounts don't have this
-exposure at all -- a username is chosen and a passkey registered in the
-very same step, atomically from the attacker's perspective (there's no
-account that exists without a passkey for more than the time between
-those two calls).
+**The first passkey is limited too.** Accounts now also exist without a
+passkey for good: the native app creates accounts through email codes
+and Sign in with Apple. So both registration functions (options and
+verify) also run `firstPasskeyAllowed` (`_shared/webauthn.ts`, logic in
+`_shared/passkeyGuard.ts`). The first passkey can only be added by:
+
+- the account's signed-in owner (a Supabase Auth session linked to the
+  account, sent as the bearer token), or
+- an anonymous caller, on an account created in the last 15 minutes that
+  has no login linked yet. This is the normal web sign-up: pick a
+  username, then register a passkey straight away.
+
+An older account without a passkey has to sign in another way first. Any
+failed lookup refuses.
 
 ## Tables
 

@@ -5,6 +5,8 @@ import {
   bytesToBase64Url,
   consumeChallenge,
   CORS_HEADERS,
+  FIRST_PASSKEY_REFUSED,
+  firstPasskeyAllowed,
   jsonResponse,
   resolveRelyingParty,
   serviceClient,
@@ -38,6 +40,19 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to look up account' }, 500)
   }
   if (!user) return jsonResponse({ error: 'Account not found' }, 404)
+  if (!(await firstPasskeyAllowed(supabase, req, user))) return jsonResponse({ error: FIRST_PASSKEY_REFUSED }, 403)
+
+  const { count, error: countError } = await supabase
+    .from('webauthn_credentials')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (countError) {
+    console.error('Credential count failed', countError)
+    return jsonResponse({ error: 'Failed to check existing passkeys' }, 500)
+  }
+  if (count && count > 0) {
+    return jsonResponse({ error: 'This account already has a passkey. Sign in with it instead.' }, 403)
+  }
 
   const challenge = await consumeChallenge(supabase, userId, 'registration')
   if (!challenge) {
