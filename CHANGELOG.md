@@ -301,6 +301,20 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Fixed
 
+- Seasons are numbered the way the streamer numbers them. TMDB lumps some
+  seasons together (Lupin's season 1 is Netflix's Parts 1 and 2), so the
+  app showed three seasons where Netflix has four. Watch history and season
+  ratings for such shows are renumbered to match, and TVmaze air dates now
+  line up with the right episodes.
+- Show and season data refresh every hour instead of only on a full reload,
+  so a new season shows up in a tab left open.
+- The notifications panel and other navbar dropdowns are now readable: they
+  no longer let the page show through unblurred.
+- Opening "Mark season watched" no longer pushes the date picker off the
+  right edge on phones.
+- A missing IMDb or Rotten Tomatoes score now says "Not available" instead
+  of a broken icon or a Rotten Tomatoes link that could 404.
+
 - Activity's new Filters sheet computed its Genre options from the
   *already person-filtered* Now Watching list, so selecting a person
   would immediately shrink (often to zero) the genres available to pick

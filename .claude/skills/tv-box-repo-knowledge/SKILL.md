@@ -31,6 +31,10 @@ Core tables: `users`, `episode_watched` (the per-episode watch log; `show_total_
 
 A show's state is a composition of independent, orthogonal flags, not a single enum: it can be started, have N episodes watched, be on the watchlist, be dismissed from Now Watching, and be dropped, all at once or in various combinations. `src/lib/showActivity.ts`'s `summarizeShowActivity` is where these get merged into one `ShowActivity` row per show, and `nowWatching` / `watchHistory` are the filters that turn that into "what shows on Home" vs. "what shows in History". If you're adding a new per-show status, this is the file to extend, and it already has a `.test.ts` covering all the derived-state edge cases -- use it as a reference for what "finished" logic and Now Watching eligibility currently mean before changing them.
 
+## Season numbering
+
+Screens read TMDB shows and seasons through `src/lib/shows.ts`, never `src/lib/tmdb.ts` directly. It applies the show's rows in `season_splits`, which record TMDB seasons that streamers split (Lupin's TMDB season 1 is Netflix's Parts 1 and 2), so the app shows and stores the streamer's numbering. `useShowDetail` calls `syncSeasonSplits` before reading the watch log; it compares TMDB with TVmaze's season sizes and calls `record_season_splits`, which renumbers everyone's watches and season ratings for that show. A recorded split is never changed. The mapping rules are in `src/lib/seasonSplits.ts`, mirrored in SQL and in `supabase/functions/_shared/seasonSplits.ts`.
+
 ## iOS app
 
 The iOS app is the native SwiftUI app in the separate `tv-box-native` repo, on this same Supabase project; its scope lives in that repo's `docs/FEATURE_PARITY_SPEC.md`. The Expo/React Native app that used to live in `mobile/` was retired and deleted on 2026-10-31 (it is still in git history at `85c0375`), so don't add code, docs, or tests for it. `send-push` still delivers to rows already in `expo_push_tokens`, and `whats-next`/`log-next-episode-watched` remain as personal-access-token endpoints for Shortcuts.
