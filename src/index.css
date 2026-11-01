@@ -65,6 +65,7 @@
      solid panel -- paired with the .glass-surface utility below. */
   --color-glass: rgba(13, 13, 18, 0.46);
   --color-glass-strong: rgba(13, 13, 18, 0.68);
+  --color-glass-panel: rgba(13, 13, 18, 0.94);
 
   --animate-fade-in: fade-in 0.35s ease-out both;
   --animate-rise: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -125,6 +126,7 @@
 
   --color-glass: rgba(255, 255, 255, 0.46);
   --color-glass-strong: rgba(255, 255, 255, 0.68);
+  --color-glass-panel: rgba(255, 255, 255, 0.94);
 
   --glow: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.07), transparent);
 }
@@ -203,7 +205,8 @@ button {
    dropdowns). Falls back to a solid surface under prefers-reduced-transparency,
    for both legibility and the OS accessibility setting's intent. */
 .glass-surface,
-.glass-surface-strong {
+.glass-surface-strong,
+.glass-surface-panel {
   background-color: var(--color-glass);
   /* -webkit- prefix first, standard property last: some CSS minifiers
      (Lightning CSS, used by Tailwind v4's build) dedupe a prefixed +
@@ -220,8 +223,17 @@ button {
   background-color: var(--color-glass-strong);
 }
 
+/* For text-heavy panels that open from inside other glass (the navbar's dropdowns). A
+   backdrop-filter nested in another backdrop-filter only sees its parent, not the page,
+   so the blur does nothing there and the page shows through; a near-opaque tint keeps
+   the text readable either way. */
+.glass-surface-panel {
+  background-color: var(--color-glass-panel);
+}
+
 .glass-surface::before,
-.glass-surface-strong::before {
+.glass-surface-strong::before,
+.glass-surface-panel::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -231,7 +243,8 @@ button {
 }
 
 .light .glass-surface::before,
-.light .glass-surface-strong::before {
+.light .glass-surface-strong::before,
+.light .glass-surface-panel::before {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 40%);
 }
 
@@ -251,26 +264,30 @@ button {
    chrome even when their OS asks apps to avoid it. */
 @media (prefers-reduced-transparency: reduce) {
   :root:not(.transparency-full) .glass-surface,
-  :root:not(.transparency-full) .glass-surface-strong {
+  :root:not(.transparency-full) .glass-surface-strong,
+  :root:not(.transparency-full) .glass-surface-panel {
     background-color: var(--color-base-900);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
   :root:not(.transparency-full) .glass-surface::before,
-  :root:not(.transparency-full) .glass-surface-strong::before {
+  :root:not(.transparency-full) .glass-surface-strong::before,
+  :root:not(.transparency-full) .glass-surface-panel::before {
     display: none;
   }
 }
 
 .transparency-reduced .glass-surface,
-.transparency-reduced .glass-surface-strong {
+.transparency-reduced .glass-surface-strong,
+.transparency-reduced .glass-surface-panel {
   background-color: var(--color-base-900);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
 .transparency-reduced .glass-surface::before,
-.transparency-reduced .glass-surface-strong::before {
+.transparency-reduced .glass-surface-strong::before,
+.transparency-reduced .glass-surface-panel::before {
   display: none;
 }
 
