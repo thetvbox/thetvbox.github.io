@@ -17,6 +17,8 @@ export const isTmdbConfigured = Boolean(API_KEY)
 /** How long show, season, trending, and streaming data is reused before TMDB is asked again, so new seasons show up without a reload. */
 const TMDB_CACHE_TTL_MS = 60 * 60 * 1000
 
+const DISCOVER_PAGE_COUNT = 2
+
 class TmdbError extends Error {}
 
 /** Fetches a TMDB API path with the API key and default query params applied. */
@@ -95,15 +97,49 @@ export function getWatchProviders(showId: number): Promise<TmdbWatchProviders> {
   return getOrLoad(watchProvidersCache, showId, () => tmdbFetch<TmdbWatchProviders>(`/tv/${showId}/watch/providers`))
 }
 
-/** Fetches every streaming provider TMDB knows about for a region. */
-export async function getAllTvProviders(region: string): Promise<TmdbProviderListItem[]> {
-  const data = await tmdbFetch<{ results: TmdbProviderListItem[] }>('/watch/providers/tv', {
-    watch_region: region,
+const tvProvidersCache = new ExpiringCache<string, Promise<TmdbProviderListItem[]>>(TMDB_CACHE_TTL_MS)
+
+/** Fetches every streaming provider TMDB knows about for a region, cached for an hour. */
+export function getAllTvProviders(region: string): Promise<TmdbProviderListItem[]> {
+  return getOrLoad(tvProvidersCache, region, async () => {
+    const data = await tmdbFetch<{ results: TmdbProviderListItem[] }>('/watch/providers/tv', {
+      watch_region: region,
+    })
+    return (data.results ?? []).slice().sort((a, b) => {
+      const ap = a.display_priorities[region] ?? a.display_priority
+      const bp = b.display_priorities[region] ?? b.display_priority
+      return ap - bp
+    })
   })
-  return (data.results ?? []).slice().sort((a, b) => {
-    const ap = a.display_priorities[region] ?? a.display_priority
-    const bp = b.display_priorities[region] ?? b.display_priority
-    return ap - bp
+}
+
+const discoverCache = new ExpiringCache<string, Promise<TmdbShowSummary[]>>(TMDB_CACHE_TTL_MS)
+
+/** The most popular shows streaming free-to-you on any of `providerIds` in `region` and in any of `genreIds`, cached for an hour. */
+export function discoverShows(options: { providerIds: number[]; genreIds: number[]; region: string }): Promise<TmdbShowSummary[]> {
+  const providers = [...options.providerIds].sort((a, b) => a - b).join('|')
+  const genres = [...options.genreIds].sort((a, b) => a - b).join('|')
+  const params: Record<string, string> = { sort_by: 'popularity.desc', include_adult: 'false' }
+  if (providers) {
+    params.with_watch_providers = providers
+    params.watch_region = options.region
+    params.with_watch_monetization_types = 'flatrate|free|ads'
+  }
+  if (genres) params.with_genres = genres
+  return getOrLoad(discoverCache, `${options.region}:${providers}:${genres}`, async () => {
+    const pages = await Promise.all(
+      Array.from({ length: DISCOVER_PAGE_COUNT }, (_, i) =>
+        tmdbFetch<{ results: TmdbShowSummary[] }>('/discover/tv', { ...params, page: String(i + 1) }),
+      ),
+    )
+    const seen = new Set<number>()
+    return pages
+      .flatMap((page) => page.results)
+      .filter((show) => {
+        if (seen.has(show.id)) return false
+        seen.add(show.id)
+        return true
+      })
   })
 }
 

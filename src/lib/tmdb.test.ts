@@ -37,6 +37,34 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     expect(url).toContain('query=star+trek')
   })
 
+  it('discoverShows reads two pages of popular shows for the platforms and genres, deduped and cached', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 1 }, { id: 2 }] }))
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 2 }, { id: 3 }] }))
+    const { discoverShows } = await import('./tmdb')
+    const shows = await discoverShows({ providerIds: [337, 8], genreIds: [18], region: 'US' })
+    expect(shows.map((s) => s.id)).toEqual([1, 2, 3])
+    const url = new URL(vi.mocked(fetch).mock.calls[0][0] as string)
+    expect(url.pathname).toBe('/3/discover/tv')
+    expect(url.searchParams.get('with_watch_providers')).toBe('8|337')
+    expect(url.searchParams.get('watch_region')).toBe('US')
+    expect(url.searchParams.get('with_watch_monetization_types')).toBe('flatrate|free|ads')
+    expect(url.searchParams.get('with_genres')).toBe('18')
+    expect(url.searchParams.get('sort_by')).toBe('popularity.desc')
+    await discoverShows({ providerIds: [8, 337], genreIds: [18], region: 'US' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('discoverShows by genre alone sends no platform or region filter', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ results: [] }))
+    const { discoverShows } = await import('./tmdb')
+    await discoverShows({ providerIds: [], genreIds: [35], region: 'GB' })
+    const url = new URL(vi.mocked(fetch).mock.calls[0][0] as string)
+    expect(url.searchParams.has('with_watch_providers')).toBe(false)
+    expect(url.searchParams.has('watch_region')).toBe(false)
+    expect(url.searchParams.get('with_genres')).toBe('35')
+  })
+
   it('throws a TmdbError when the API responds with a non-ok status', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({}, false, 500))
     const { searchShows } = await import('./tmdb')

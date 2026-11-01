@@ -9,6 +9,7 @@ import { searchShows, getTrendingShows, getTvGenres, isTmdbConfigured } from '..
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useQueryParam } from '../hooks/useQueryParam'
+import { useBrowseShows } from '../hooks/useBrowseShows'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
@@ -28,6 +29,22 @@ import type { SearchFilters } from '../lib/searchFilters'
 import SearchField from '../components/SearchField'
 import type { TmdbShowSummary } from '../types'
 
+/** Each show once, keeping the first occurrence's position. */
+function uniqueShows(shows: TmdbShowSummary[]): TmdbShowSummary[] {
+  const seen = new Set<number>()
+  return shows.filter((show) => {
+    if (seen.has(show.id)) return false
+    seen.add(show.id)
+    return true
+  })
+}
+
+/** "Popular on Netflix", or "Popular shows" when only genres are selected. */
+function browseHeading(filters: SearchFilters): string {
+  const platforms = Array.from(filters.platforms).sort()
+  return platforms.length > 0 ? `Popular on ${platforms.join(', ')}` : 'Popular shows'
+}
+
 export default function Search() {
   useDocumentTitle('Search')
   const [query, setQuery] = useQueryParam('q')
@@ -46,13 +63,22 @@ export default function Search() {
   const resultIds = useMemo(() => posterResults.map((s) => s.id), [posterResults])
   const { platforms, platformNames } = useStreamingPlatforms(resultIds)
 
-  const trendingResults = useMemo(() => trending.filter((s) => s.poster_path), [trending])
-  const trendingIds = useMemo(() => trendingResults.map((s) => s.id), [trendingResults])
-  const { platforms: trendingPlatforms, platformNames: trendingPlatformNames } = useStreamingPlatforms(trendingIds)
-
   const searching = query.trim().length > 0
-  const activeShows = searching ? posterResults : trendingResults
-  const activePlatformNames = searching ? platformNames : trendingPlatformNames
+  const browsing = !searching && isSearchFiltersActive(filters)
+  const browse = useBrowseShows(filters, genreNames, browsing)
+
+  const trendingResults = useMemo(() => trending.filter((s) => s.poster_path), [trending])
+  const browsePool = useMemo(() => uniqueShows([...trendingResults, ...browse.shows]), [trendingResults, browse.shows])
+  const browseIds = useMemo(() => browsePool.map((s) => s.id), [browsePool])
+  const {
+    platforms: browsePlatforms,
+    platformNames: browsePlatformNames,
+    loading: loadingBrowsePlatforms,
+  } = useStreamingPlatforms(browseIds)
+  const browseLoading = browsing && (browse.loading || loadingBrowsePlatforms)
+
+  const activeShows = searching ? posterResults : browsePool
+  const activePlatformNames = searching ? platformNames : browsePlatformNames
 
   const facets = useMemo(
     () => buildSearchFilterFacets(activeShows, genreNames, activePlatformNames),
@@ -220,17 +246,21 @@ export default function Search() {
                 Search for any TV show to mark as now watching, add to watchlist or rate per season.
               </p>
 
-              {trendingResults.length > 0 && (
+              {browsePool.length > 0 && (
                 <div>
-                  <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Trending this week</h2>
+                  <h2 className="mb-4 font-display text-lg font-semibold text-base-100">
+                    {browsing ? browseHeading(filters) : 'Trending this week'}
+                  </h2>
                   {filteredShows.length > 0 ? (
                     <div className={POSTER_GRID_CLASSES}>
                       {filteredShows.map((show, i) => (
-                        <ShowCard key={show.id} show={show} provider={trendingPlatforms.get(show.id)} index={i} />
+                        <ShowCard key={show.id} show={show} provider={browsePlatforms.get(show.id)} index={i} />
                       ))}
                     </div>
+                  ) : browseLoading ? (
+                    <ShowGridSkeleton />
                   ) : (
-                    <p className="text-sm text-base-500">No trending shows match the selected filters.</p>
+                    <p className="text-sm text-base-500">No shows match the selected filters.</p>
                   )}
                 </div>
               )}

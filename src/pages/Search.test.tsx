@@ -8,6 +8,9 @@ vi.mock('../lib/tmdb', () => ({
   searchShows: vi.fn(),
   getTrendingShows: vi.fn(),
   getTvGenres: vi.fn(),
+  getAllTvProviders: vi.fn(),
+  discoverShows: vi.fn(),
+  detectRegion: () => 'US',
   isTmdbConfigured: true,
 }))
 vi.mock('../hooks/useStreamingPlatforms', () => ({ useStreamingPlatforms: vi.fn() }))
@@ -15,7 +18,7 @@ vi.mock('../components/ShowCard', () => ({
   default: ({ show }: { show: { id: number; name: string } }) => <div>{show.name}</div>,
 }))
 
-import { searchShows, getTrendingShows, getTvGenres } from '../lib/tmdb'
+import { discoverShows, getAllTvProviders, searchShows, getTrendingShows, getTvGenres } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import Search from './Search'
 import type { TmdbShowSummary } from '../types'
@@ -58,6 +61,8 @@ function renderSearch(url = '/search') {
 beforeEach(() => {
   vi.mocked(searchShows).mockReset().mockResolvedValue([])
   vi.mocked(getTrendingShows).mockReset().mockResolvedValue([])
+  vi.mocked(discoverShows).mockReset().mockResolvedValue([])
+  vi.mocked(getAllTvProviders).mockReset().mockResolvedValue([])
   vi.mocked(getTvGenres).mockReset().mockResolvedValue([
     { id: 18, name: 'Drama' },
     { id: 35, name: 'Comedy' },
@@ -209,6 +214,34 @@ describe('Search', () => {
     fireEvent.click(within(dialog).getByText('Netflix'))
 
     expect(screen.getByText('Multi-Platform Show')).toBeInTheDocument()
+  })
+
+  it('browses TMDB for more shows on the selected platform when nothing is typed', async () => {
+    vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 1, name: 'Trending Netflix Show', genre_ids: [18] })])
+    vi.mocked(getAllTvProviders).mockResolvedValue([
+      { provider_id: 8, provider_name: 'Netflix', logo_path: null, display_priority: 1, display_priorities: {} },
+    ])
+    vi.mocked(discoverShows).mockResolvedValue([
+      show({ id: 2, name: 'Older Netflix Hit', genre_ids: [18] }),
+      show({ id: 3, name: 'No Poster', poster_path: null }),
+    ])
+    mockPlatforms([
+      [1, { provider_name: 'Netflix', logo_path: null }],
+      [2, { provider_name: 'Netflix', logo_path: null }],
+    ])
+    renderSearch()
+    await waitFor(() => expect(screen.getByText('Trending Netflix Show')).toBeInTheDocument())
+    expect(discoverShows).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' })
+    fireEvent.click(within(dialog).getByText('Netflix'))
+
+    expect(await screen.findByText('Older Netflix Hit')).toBeInTheDocument()
+    expect(screen.getByText('Trending Netflix Show')).toBeInTheDocument()
+    expect(screen.queryByText('No Poster')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Popular on Netflix' })).toBeInTheDocument()
+    expect(discoverShows).toHaveBeenCalledWith({ providerIds: [8], genreIds: [], region: 'US' })
   })
 
   it('counts genre and platform as independent facets in the Filters label, not by chip count', async () => {
