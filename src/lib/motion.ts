@@ -8,7 +8,7 @@ export function scrollBehavior(): ScrollBehavior {
   return prefersReducedMotion() ? 'auto' : 'smooth'
 }
 
-export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const
 
 /** Spring feel matching UIKit/SwiftUI's default interactive spring -- for glass-panel morphs and drag gestures. */
 export const GLASS_SPRING = { type: 'spring', stiffness: 380, damping: 32, mass: 0.9 } as const

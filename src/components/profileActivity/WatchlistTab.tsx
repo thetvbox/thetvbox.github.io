@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { staggerRowMotion } from '../../lib/motion'
-import { offscreenSkipStyle } from '../../lib/layout'
-import { ROW_CARD_BASE_CLASSES } from '../../lib/rowCard'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
-import PosterThumb from '../PosterThumb'
-import { ROUTES, showRoute } from '../../lib/routes'
+import { ROUTES } from '../../lib/routes'
+import ShowRowItem from './ShowRowItem'
 import type { WatchlistItem } from '../../types'
 
 interface WatchlistTabProps {
@@ -38,29 +34,15 @@ export default function WatchlistTab({ items, isMe, onRemove }: WatchlistTabProp
   return (
     <ul className="space-y-2">
       {items.map((w, i) => (
-        <motion.li
+        <ShowRowItem
           key={w.id}
-          {...staggerRowMotion(i, 8)}
-          style={offscreenSkipStyle(72)}
-          className={`flex items-center gap-3 ${ROW_CARD_BASE_CLASSES}`}
-        >
-          <Link to={showRoute(w.show_id)} className="flex min-w-0 flex-1 items-center gap-3">
-            <PosterThumb posterPath={w.show_poster_path} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-base-100">{w.show_name}</p>
-              <p className="text-xs text-base-400">Added {formatShortDate(w.added_at)}</p>
-            </div>
-          </Link>
-          {isMe && (
-            <button
-              type="button"
-              onClick={() => onRemove(w)}
-              className="shrink-0 text-xs text-base-500 hover:text-danger"
-            >
-              Remove
-            </button>
-          )}
-        </motion.li>
+          index={i}
+          showId={w.show_id}
+          showName={w.show_name}
+          posterPath={w.show_poster_path}
+          subtitle={`Added ${formatShortDate(w.added_at)}`}
+          action={isMe ? { label: 'Remove', tone: 'danger', onClick: () => onRemove(w) } : undefined}
+        />
       ))}
     </ul>
   )

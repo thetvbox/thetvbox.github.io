@@ -4,8 +4,8 @@ import { motion } from 'framer-motion'
 import { checkPasscode, markGatePassed } from '../lib/siteGate'
 import { CARD_ENTRANCE_MOTION } from '../lib/motion'
 import { PASSCODE_LENGTH } from '../lib/constants'
-import AppLogo from './AppLogo'
 import PrimaryButton from './PrimaryButton'
+import AuthBrandHeader from './AuthBrandHeader'
 import ErrorText from './ErrorText'
 
 export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
@@ -26,11 +26,7 @@ export default function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
       <motion.div {...CARD_ENTRANCE_MOTION} className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(255,176,32,0.3)]" />
-          <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>
-          <p className="mt-1 text-sm text-base-400">This one&apos;s invite-only.</p>
-        </div>
+        <AuthBrandHeader tagline="This one’s invite-only." />
 
         <form
           onSubmit={handleSubmit}

@@ -22,7 +22,7 @@ export async function hashAccessToken(token: string): Promise<string> {
   return toHex(new Uint8Array(digest))
 }
 
-export interface CreatedPersonalAccessToken {
+interface CreatedPersonalAccessToken {
   token: string
   summary: PersonalAccessTokenSummary
 }

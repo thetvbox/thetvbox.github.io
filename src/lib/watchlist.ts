@@ -26,7 +26,7 @@ export async function fetchWatchlistItem(userId: string, showId: number): Promis
   return (data as WatchlistItem) ?? null
 }
 
-export interface AddToWatchlistInput {
+interface AddToWatchlistInput {
   userId: string
   showId: number
   showName: string

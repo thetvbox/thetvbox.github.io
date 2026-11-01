@@ -16,7 +16,6 @@ import {
   registerPasskey,
   signInWithPasskey,
 } from '../lib/passkey'
-import AppLogo from '../components/AppLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useDesktopAutoFocus } from '../hooks/useDesktopAutoFocus'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -31,6 +30,7 @@ import {
 import { claimAccount, createAccount, endPendingSession, sendEmailCode, verifyEmailCode } from '../lib/accountSetup'
 import { ROUTES } from '../lib/routes'
 import { errorMessage } from '../lib/format'
+import AuthBrandHeader from '../components/AuthBrandHeader'
 import ErrorText from '../components/ErrorText'
 
 type CodePurpose = { kind: 'create'; username: string; inviteCode: string } | { kind: 'claim' }
@@ -187,10 +187,7 @@ export default function Login() {
     return (
       <div className="flex min-h-dvh items-center justify-center px-4">
         <div className="w-full max-w-sm">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(255,176,32,0.3)]" />
-            <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>
-          </div>
+          <AuthBrandHeader />
           <div className="rounded-2xl border border-hairline bg-base-850/70 p-6 text-center shadow-xl shadow-black/10 dark:shadow-black/20">
             <ErrorText className="text-sm">
               This browser doesn&apos;t support passkeys, which TV Box now uses to sign in.
@@ -205,11 +202,7 @@ export default function Login() {
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
       <motion.div {...CARD_ENTRANCE_MOTION} className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <AppLogo size={48} className="mb-4 drop-shadow-[0_6px_20px_rgba(255,176,32,0.3)]" />
-          <h1 className="font-display text-2xl font-semibold text-base-100">TV Box</h1>
-          <p className="mt-1 text-sm text-base-400">Track every show. Rate every episode.</p>
-        </div>
+        <AuthBrandHeader tagline="Track every show. Rate every episode." />
 
         {!isSupabaseConfigured && (
           <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">

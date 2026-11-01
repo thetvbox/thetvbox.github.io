@@ -5,7 +5,7 @@ export type ChangelogBlock =
   | { type: 'paragraph'; text: string }
   | { type: 'list'; items: string[] }
 
-export interface ChangelogRelease {
+interface ChangelogRelease {
   version: string
   date: string | null
   blocks: ChangelogBlock[]

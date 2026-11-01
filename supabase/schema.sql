@@ -1,17 +1,10 @@
 -- TV Box: schema
 -- Run this once in the Supabase SQL Editor (Project -> SQL Editor -> New query).
 --
--- Sign-in is passkeys (WebAuthn), not Supabase Auth -- see
--- supabase/functions/webauthn-registration-options/README.md for the full
--- design, including the one deliberate email-bootstrap tradeoff for a
--- user's very first passkey. Because there's still no Supabase Auth
--- session, most tables below can't key Row Level Security off of
--- auth.uid() and use permissive policies instead (any request with the
--- anon key can read/write). That's an intentional tradeoff for a
--- low-stakes personal project -- the webauthn_credentials/
--- webauthn_challenges tables further down are the one exception, RLS
--- enabled with no policies at all, reachable only by the service-role key
--- the auth Edge Functions use.
+-- This is the app's original schema with open (anon-key) policies. Production has
+-- since moved on: passkey sign-in now starts a real Supabase Auth session, and the
+-- migrations in the tv-box-native repo (supabase/migrations/) add invites and
+-- members-only access on top of this. Read those together with this file.
 
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),

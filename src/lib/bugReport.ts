@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
-export interface BugReportInput {
+interface BugReportInput {
   title: string
   description: string
   username?: string
@@ -10,7 +10,7 @@ export interface BugReportInput {
   userAgent?: string
 }
 
-export interface BugReportResult {
+interface BugReportResult {
   url: string
   number: number
 }

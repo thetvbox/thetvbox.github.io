@@ -37,7 +37,7 @@ export async function fetchRecentRewatches(
   )
 }
 
-export interface LogRewatchInput {
+interface LogRewatchInput {
   userId: string
   showId: number
   showName: string

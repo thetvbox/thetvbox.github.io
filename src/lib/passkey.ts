@@ -55,7 +55,7 @@ async function readFunctionError(error: unknown): Promise<FunctionErrorInfo> {
   return { message: 'Something went wrong. Try again.' }
 }
 
-export type AuthenticationOptionsResult =
+type AuthenticationOptionsResult =
   | { status: 'ready'; options: PublicKeyCredentialRequestOptionsJSON }
   | { status: 'no_user' }
   | { status: 'no_credentials'; user: { id: string; username: string } }

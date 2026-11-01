@@ -1,7 +1,7 @@
 import type { ShowActivity } from './showActivity'
 import type { EpisodeWatched, ShowRating, ShowRewatch } from '../types'
 
-export interface YearRecap {
+interface YearRecap {
   year: number
   showsFinished: number
   episodesWatched: number

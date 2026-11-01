@@ -128,7 +128,7 @@ export function detectRegion(): string {
   }
 }
 
-export type ImageSize =
+type ImageSize =
   | 'w92'
   | 'w154'
   | 'w185'

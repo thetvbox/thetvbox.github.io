@@ -23,7 +23,6 @@ React 19 + TypeScript, Vite, Tailwind CSS 4, react-router v6 (`HashRouter`, sinc
 - `src/test/` -- test-only infrastructure: `setup.ts` (registers RTL's `cleanup()`), `supabaseMock.ts` (chainable Supabase query-builder mock), `framerMotionMock.tsx` (synchronous framer-motion test double -- see Testing below for *why* this exists).
 - `supabase/schema.sql` -- full schema + RLS policies. Idempotent and safe to re-run (`create table if not exists`, `drop policy if exists` before every `create policy`). This is the source of truth for the data model -- read it directly rather than trusting a summary, including this one.
 - `supabase/functions/` -- Edge Functions (passkey sign-in, Web Push, bug reports, the Shortcuts API). Each folder has its own README with deploy instructions; see `DEVELOPMENT.md`'s Edge Functions section for which are required vs. optional.
-- `scripts/backfill-runtime.mjs` -- one-off maintenance script, not run by CI or the app.
 
 ## Data model, at a glance
 

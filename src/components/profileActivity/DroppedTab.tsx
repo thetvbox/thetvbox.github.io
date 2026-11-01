@@ -1,12 +1,6 @@
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { staggerRowMotion } from '../../lib/motion'
-import { offscreenSkipStyle } from '../../lib/layout'
-import { ROW_CARD_BASE_CLASSES } from '../../lib/rowCard'
 import { formatShortDate } from '../../lib/date'
 import EmptyState from '../EmptyState'
-import PosterThumb from '../PosterThumb'
-import { showRoute } from '../../lib/routes'
+import ShowRowItem from './ShowRowItem'
 import type { ShowDropped } from '../../types'
 
 interface DroppedTabProps {
@@ -30,29 +24,15 @@ export default function DroppedTab({ items, isMe, onResume }: DroppedTabProps) {
   return (
     <ul className="space-y-2">
       {items.map((d, i) => (
-        <motion.li
+        <ShowRowItem
           key={d.id}
-          {...staggerRowMotion(i, 8)}
-          style={offscreenSkipStyle(72)}
-          className={`flex items-center gap-3 ${ROW_CARD_BASE_CLASSES}`}
-        >
-          <Link to={showRoute(d.show_id)} className="flex min-w-0 flex-1 items-center gap-3">
-            <PosterThumb posterPath={d.show_poster_path} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-base-100">{d.show_name}</p>
-              <p className="text-xs text-base-400">Dropped {formatShortDate(d.dropped_at)}</p>
-            </div>
-          </Link>
-          {isMe && (
-            <button
-              type="button"
-              onClick={() => onResume(d)}
-              className="shrink-0 text-xs text-base-500 hover:text-accent-400"
-            >
-              Resume
-            </button>
-          )}
-        </motion.li>
+          index={i}
+          showId={d.show_id}
+          showName={d.show_name}
+          posterPath={d.show_poster_path}
+          subtitle={`Dropped ${formatShortDate(d.dropped_at)}`}
+          action={isMe ? { label: 'Resume', tone: 'accent', onClick: () => onResume(d) } : undefined}
+        />
       ))}
     </ul>
   )

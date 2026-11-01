@@ -66,7 +66,7 @@ export async function deleteList(listId: string): Promise<void> {
   if (error) throw error
 }
 
-export interface AddToListInput {
+interface AddToListInput {
   listId: string
   showId: number
   showName: string

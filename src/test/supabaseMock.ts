@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 
-export interface MockResult {
+interface MockResult {
   data?: unknown
   error?: unknown
   count?: number | null
@@ -26,7 +26,7 @@ const CHAIN_METHODS = [
   'maybeSingle',
 ] as const
 
-export type QueryBuilderMock = { [K in (typeof CHAIN_METHODS)[number]]: ReturnType<typeof vi.fn> } & {
+type QueryBuilderMock = { [K in (typeof CHAIN_METHODS)[number]]: ReturnType<typeof vi.fn> } & {
   then: (onFulfilled: (value: Required<MockResult>) => unknown, onRejected?: (reason: unknown) => unknown) => unknown
 }
 

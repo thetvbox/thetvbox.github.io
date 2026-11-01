@@ -41,7 +41,7 @@ export async function fetchDroppedItem(userId: string, showId: number): Promise<
   return (data as ShowDropped) ?? null
 }
 
-export interface DropShowInput {
+interface DropShowInput {
   userId: string
   showId: number
   showName: string

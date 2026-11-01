@@ -1,6 +1,6 @@
 export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'failed'
 
-export interface ShareOptions {
+interface ShareOptions {
   title: string
   text?: string
   url?: string

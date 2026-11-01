@@ -28,7 +28,7 @@ export async function fetchStreamingOverrides(showIds: number[]): Promise<Map<nu
   return map
 }
 
-export interface SetStreamingOverrideInput {
+interface SetStreamingOverrideInput {
   showId: number
   providerId: number | null
   providerName: string

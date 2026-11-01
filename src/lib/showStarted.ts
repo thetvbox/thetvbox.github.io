@@ -37,7 +37,7 @@ export async function fetchStartedItem(userId: string, showId: number): Promise<
   return (data as ShowStarted) ?? null
 }
 
-export interface StartShowInput {
+interface StartShowInput {
   userId: string
   showId: number
   showName: string

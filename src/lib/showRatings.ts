@@ -59,7 +59,7 @@ export async function fetchRecentShowRatingsAllUsers(
   }, limit)
 }
 
-export interface UpsertShowRatingInput {
+interface UpsertShowRatingInput {
   userId: string
   showId: number
   showName: string

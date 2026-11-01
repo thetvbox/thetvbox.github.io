@@ -101,7 +101,7 @@ export async function fetchRecentDatedWatched(
   )
 }
 
-export interface MarkWatchedInput {
+interface MarkWatchedInput {
   userId: string
   showId: number
   showName: string
@@ -140,7 +140,7 @@ export async function markWatched(input: MarkWatchedInput): Promise<EpisodeWatch
   return data as EpisodeWatched
 }
 
-export interface BulkMarkWatchedInput {
+interface BulkMarkWatchedInput {
   userId: string
   showId: number
   showName: string

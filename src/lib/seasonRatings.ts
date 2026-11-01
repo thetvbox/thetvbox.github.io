@@ -29,7 +29,7 @@ export async function fetchRecentSeasonRatingsAllUsers(
   }, limit)
 }
 
-export interface UpsertSeasonRatingInput {
+interface UpsertSeasonRatingInput {
   userId: string
   showId: number
   showName: string
