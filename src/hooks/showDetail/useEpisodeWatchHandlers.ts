@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { getSeasonDetail } from '../../lib/shows'
 import { bulkMarkWatched, bulkUnmarkWatched, markWatched, restoreWatched, unmarkWatched, watchedKey } from '../../lib/watched'
 import { isFutureDate } from '../../lib/date'
-import type { AppUser, EpisodeWatched, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
+import type { AppUser, EpisodeWatched, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
 /** Splits bulk mark-watched targets into ones to snapshot-and-restore vs. ones to delete on undo. */
 function snapshotBulkTargets(
@@ -128,35 +128,13 @@ export function useEpisodeWatchHandlers(
     }
   }
 
-  /** Marks every real-season episode of the show watched in one action. */
-  async function handleMarkAllWatched(input: { watchedAt: string; unknownDate: boolean }) {
-    if (!user || !show) return
-    const realSeasons = show.seasons.filter((s) => s.season_number > 0)
-    const seasonDetails = await Promise.all(
-      realSeasons.map((s) => getSeasonDetail(show.id, s.season_number).catch(() => null)),
-    )
-    const runtimeByKey = new Map<string, number | null>()
-    const nameByKey = new Map<string, string | null>()
-    for (const detail of seasonDetails) {
-      if (!detail) continue
-      for (const ep of detail.episodes) {
-        const key = watchedKey(ep.season_number, ep.episode_number)
-        runtimeByKey.set(key, ep.runtime ?? null)
-        nameByKey.set(key, ep.name ?? null)
-      }
-    }
-    const episodes = realSeasons.flatMap((s) =>
-      Array.from({ length: s.episode_count }, (_, i) => {
-        const episodeNumber = i + 1
-        const key = watchedKey(s.season_number, episodeNumber)
-        return {
-          seasonNumber: s.season_number,
-          episodeNumber,
-          episodeName: nameByKey.get(key) ?? null,
-          runtimeMinutes: runtimeByKey.get(key) ?? null,
-        }
-      }),
-    )
+  /** Marks a batch of episodes watched on one date, with an undo that restores whatever each one had before. */
+  async function markBatchWatched(
+    episodes: { seasonNumber: number; episodeNumber: number; episodeName: string | null; runtimeMinutes: number | null }[],
+    input: { watchedAt: string; unknownDate: boolean },
+    failureMessage: string,
+  ) {
+    if (!user || !show || episodes.length === 0) return
     const { previousRows, addedKeys } = snapshotBulkTargets(watched, episodes)
     try {
       const saved = await bulkMarkWatched({
@@ -182,8 +160,36 @@ export function useEpisodeWatchHandlers(
         () => undoBulkMark(previousRows, addedKeys),
       )
     } catch {
-      showError('Failed to mark episodes watched. Try again.')
+      showError(failureMessage)
     }
+  }
+
+  /** Marks every aired episode of every real season watched in one action. */
+  async function handleMarkAllWatched(input: { watchedAt: string; unknownDate: boolean }) {
+    if (!user || !show) return
+    const realSeasons = show.seasons.filter((s) => s.season_number > 0)
+    const seasonDetails = await Promise.all(
+      realSeasons.map((s) => getSeasonDetail(show.id, s.season_number).catch(() => null)),
+    )
+    const detailByKey = new Map<string, TmdbEpisode>()
+    for (const detail of seasonDetails) {
+      for (const ep of detail?.episodes ?? []) detailByKey.set(watchedKey(ep.season_number, ep.episode_number), ep)
+    }
+    const episodes = realSeasons.flatMap((s) =>
+      Array.from({ length: s.episode_count }, (_, i) => {
+        const episodeNumber = i + 1
+        const ep = detailByKey.get(watchedKey(s.season_number, episodeNumber))
+        return { ep, seasonNumber: s.season_number, episodeNumber }
+      })
+        .filter(({ ep }) => !(ep?.air_date && isFutureDate(ep.air_date)))
+        .map(({ ep, seasonNumber, episodeNumber }) => ({
+          seasonNumber,
+          episodeNumber,
+          episodeName: ep?.name ?? null,
+          runtimeMinutes: ep?.runtime ?? null,
+        })),
+    )
+    await markBatchWatched(episodes, input, 'Failed to mark episodes watched. Try again.')
   }
 
   /** Same idea as handleToggleWatched, but logs a single episode on a specific past date. */
@@ -220,7 +226,7 @@ export function useEpisodeWatchHandlers(
 
   /** Marks every aired episode of the active season watched in one action. */
   async function handleMarkSeasonWatched(input: { watchedAt: string; unknownDate: boolean }) {
-    if (!user || !show || !season) return
+    if (!season) return
     const episodes = season.episodes
       .filter((ep) => !(ep.air_date && isFutureDate(ep.air_date)))
       .map((ep) => ({
@@ -229,33 +235,7 @@ export function useEpisodeWatchHandlers(
         episodeName: ep.name,
         runtimeMinutes: ep.runtime,
       }))
-    const { previousRows, addedKeys } = snapshotBulkTargets(watched, episodes)
-    try {
-      const saved = await bulkMarkWatched({
-        userId: user.id,
-        showId: show.id,
-        showName: show.name,
-        showPosterPath: show.poster_path,
-        showTotalEpisodes: show.number_of_episodes,
-        episodes,
-        watchedAt: input.watchedAt,
-        watchedAtUnknown: input.unknownDate,
-      })
-      setWatched((prev) => {
-        const next = { ...prev }
-        for (const row of saved) next[watchedKey(row.season_number, row.episode_number)] = row
-        return next
-      })
-      onProgress()
-      showUndo(
-        previousRows.length > 0
-          ? `Marked ${saved.length} episodes watched (${previousRows.length} overwritten)`
-          : `Marked ${saved.length} episodes watched`,
-        () => undoBulkMark(previousRows, addedKeys),
-      )
-    } catch {
-      showError('Failed to mark season watched. Try again.')
-    }
+    await markBatchWatched(episodes, input, 'Failed to mark season watched. Try again.')
   }
 
   return {

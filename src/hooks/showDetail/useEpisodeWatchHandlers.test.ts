@@ -235,6 +235,22 @@ describe('useEpisodeWatchHandlers', () => {
     )
   })
 
+  it("handleMarkAllWatched leaves out episodes that haven't aired yet", async () => {
+    const detail = season([
+      { id: 1, episode_number: 1, season_number: 1, name: 'Pilot', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 },
+      { id: 2, episode_number: 2, season_number: 1, name: 'Finale', overview: '', still_path: null, air_date: '2099-01-08', runtime: 45 },
+    ])
+    vi.mocked(getSeasonDetail).mockResolvedValue(detail)
+    vi.mocked(bulkMarkWatched).mockResolvedValue([])
+    const { result } = renderHook(() => useHarness({}))
+
+    await act(() => result.current.handleMarkAllWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+
+    expect(bulkMarkWatched).toHaveBeenCalledWith(
+      expect.objectContaining({ episodes: [{ seasonNumber: 1, episodeNumber: 1, episodeName: 'Pilot', runtimeMinutes: 42 }] }),
+    )
+  })
+
   it('seasonWatchedCount counts only the active season episodes present in watched', () => {
     const aired = { id: 1, episode_number: 1, season_number: 1, name: 'E1', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 }
     const other = { id: 2, episode_number: 2, season_number: 1, name: 'E2', overview: '', still_path: null, air_date: '2020-01-08', runtime: 42 }
