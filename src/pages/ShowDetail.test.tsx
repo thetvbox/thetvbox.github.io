@@ -46,6 +46,7 @@ function baseState(overrides: Partial<ReturnType<typeof useShowDetail>> = {}): R
     activeSeason: null,
     setActiveSeason: vi.fn(),
     loadingShow: false,
+    checkingSeasons: false,
     loadingSeason: false,
     error: null,
     region: 'US',
@@ -151,6 +152,24 @@ describe('ShowDetail', () => {
     vi.mocked(useShowDetail).mockReturnValue(baseState({ show: show(), loadingShow: false }))
     renderShowDetail()
     expect(screen.getByText('QuickActions')).toBeInTheDocument()
+  })
+
+  it('holds back the season and progress controls, with a placeholder, until the season numbering check is done', () => {
+    vi.mocked(useShowDetail).mockReturnValue(
+      baseState({
+        show: show({
+          number_of_episodes: 10,
+          seasons: [{ id: 1, season_number: 1, name: 'Season 1', episode_count: 10, poster_path: null, air_date: '2020-01-01' }],
+        }),
+        activeSeason: 1,
+        checkingSeasons: true,
+      }),
+    )
+    const { container } = renderShowDetail()
+    expect(screen.getByText('QuickActions')).toBeInTheDocument()
+    expect(screen.queryByText('Progress')).not.toBeInTheDocument()
+    expect(screen.queryByText('Seasons')).not.toBeInTheDocument()
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
   })
 
   it('shows progress only when the show has episodes', () => {

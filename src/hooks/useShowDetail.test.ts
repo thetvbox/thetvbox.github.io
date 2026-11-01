@@ -161,19 +161,28 @@ describe('useShowDetail', () => {
     expect(result.current.activeSeason).toBe(1)
   })
 
-  it('loads alongside the season split check, and loads again in the new numbering when a split was just recorded', async () => {
-    vi.mocked(syncSeasonSplits).mockResolvedValue(true)
+  it('shows the show right away and keeps the season controls held until the split check settles', async () => {
+    let finishCheck!: (changed: boolean) => void
+    vi.mocked(syncSeasonSplits).mockReturnValue(new Promise((resolve) => (finishCheck = resolve)))
     const { result } = renderHook(() => useShowDetail(1, user))
     await waitFor(() => expect(result.current.loadingShow).toBe(false))
-    expect(syncSeasonSplits).toHaveBeenCalledWith(1)
-    await waitFor(() => expect(fetchWatchedForShow).toHaveBeenCalledTimes(2))
-    expect(getShowDetail).toHaveBeenCalledTimes(2)
+    expect(result.current.show?.id).toBe(1)
+    expect(result.current.checkingSeasons).toBe(true)
+    finishCheck(false)
+    await waitFor(() => expect(result.current.checkingSeasons).toBe(false))
+    expect(fetchWatchedForShow).toHaveBeenCalledTimes(1)
   })
 
-  it('loads only once when no new split was found', async () => {
+  it('loads again in the new numbering when a split was just recorded, before releasing the season controls', async () => {
+    vi.mocked(syncSeasonSplits).mockResolvedValue(true)
+    vi.mocked(getShowDetail)
+      .mockResolvedValueOnce(makeShow())
+      .mockResolvedValueOnce({ ...makeShow(), number_of_seasons: 4 })
     const { result } = renderHook(() => useShowDetail(1, user))
-    await waitFor(() => expect(result.current.loadingShow).toBe(false))
-    expect(fetchWatchedForShow).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(result.current.checkingSeasons).toBe(false))
+    expect(fetchWatchedForShow).toHaveBeenCalledTimes(2)
+    expect(result.current.show?.number_of_seasons).toBe(4)
+    await waitFor(() => expect(getSeasonDetail).toHaveBeenCalled())
   })
 
   it('still loads the show when the season split check fails', async () => {

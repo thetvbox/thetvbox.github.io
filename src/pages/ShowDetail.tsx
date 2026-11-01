@@ -13,6 +13,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useShowDetail } from '../hooks/useShowDetail'
 import ErrorText from '../components/ErrorText'
+import { EpisodeRowSkeleton } from '../components/Skeletons'
+import { SKELETON_ROWS_COMPACT } from '../lib/constants'
 
 export default function ShowDetail() {
   const { id } = useParams<{ id: string }>()
@@ -86,7 +88,7 @@ export default function ShowDetail() {
           />
         )}
 
-        {d.show && d.totalEpisodes !== null && d.totalEpisodes > 0 && (
+        {d.show && !d.checkingSeasons && d.totalEpisodes !== null && d.totalEpisodes > 0 && (
           <ShowDetailProgress
             watchedCount={d.watchedCount}
             totalEpisodes={d.totalEpisodes}
@@ -122,7 +124,15 @@ export default function ShowDetail() {
           onClearOverride={d.handleClearOverride}
         />
 
-        {d.show && d.show.seasons.length > 0 && d.activeSeason !== null && (
+        {d.show && d.checkingSeasons && d.show.seasons.length > 0 && (
+          <div className="mt-8 space-y-3 border-t border-hairline pt-6" aria-hidden="true">
+            {Array.from({ length: SKELETON_ROWS_COMPACT }).map((_, i) => (
+              <EpisodeRowSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {d.show && !d.checkingSeasons && d.show.seasons.length > 0 && d.activeSeason !== null && (
           <ShowDetailSeasons
             show={d.show}
             activeSeason={d.activeSeason}

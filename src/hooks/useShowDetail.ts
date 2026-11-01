@@ -30,6 +30,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   const [activeSeason, setActiveSeason] = useState<number | null>(null)
   const [watched, setWatched] = useState<WatchedMap>({})
   const [loadingShow, setLoadingShow] = useState(true)
+  const [checkingSeasons, setCheckingSeasons] = useState(true)
   const [loadingSeason, setLoadingSeason] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [listMembership, setListMembership] = useState<Set<string>>(new Set())
@@ -71,6 +72,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
   useEffect(() => {
     let cancelled = false
     setLoadingShow(true)
+    setCheckingSeasons(true)
     setError(null)
 
     async function loadAll() {
@@ -116,18 +118,22 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     }
 
     async function load() {
-      // Runs alongside the first load; only a newly recorded split (rare) costs a second load in the new numbering.
       const splitsChanged = syncSeasonSplits(showId).catch((err) => {
         console.warn('Season numbering check failed', err)
         return false
       })
       try {
         await loadAll()
+        if (cancelled) return
+        setLoadingShow(false)
         if ((await splitsChanged) && !cancelled) await loadAll()
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, 'Failed to load show.'))
       } finally {
-        if (!cancelled) setLoadingShow(false)
+        if (!cancelled) {
+          setLoadingShow(false)
+          setCheckingSeasons(false)
+        }
       }
     }
 
@@ -165,6 +171,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     activeSeason,
     setActiveSeason,
     loadingShow,
+    checkingSeasons,
     loadingSeason,
     error,
     region: streaming.region,
