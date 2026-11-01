@@ -16,7 +16,6 @@ import {
 } from './showActivity'
 import type {
   EpisodeWatched,
-  EpisodeWatchedWithUser,
   Follow,
   ShowDropped,
   ShowRating,
@@ -505,18 +504,17 @@ describe('buildGroupActivity', () => {
     return { ...rating(), users: { username: 'alice' }, ...overrides }
   }
 
-  function watchedWithUser(overrides: Partial<EpisodeWatchedWithUser> = {}): EpisodeWatchedWithUser {
-    return { ...watched(), users: { username: 'alice' }, ...overrides }
-  }
-
-  it('produces a finished event with episode count from a fully-watched show', () => {
-    const rows = [1, 2].map((n) =>
-      watchedWithUser({ id: `w${n}`, episode_number: n, show_total_episodes: 2, watched_at: `2026-01-0${n}T00:00:00Z` }),
-    )
-    const events = buildGroupActivity([], rows)
+  it('produces a finished event with episode count from a fully-watched show, named from the members list', () => {
+    const events = buildGroupActivity([], [watchSummary({ watched_count: 2, total_episodes: 2 })], [], new Map([['u1', 'alice']]))
     expect(events).toHaveLength(1)
     expect(events[0].finished).toBe(true)
     expect(events[0].episodeCount).toBe(2)
+    expect(events[0].username).toBe('alice')
+  })
+
+  it("counts a member's whole history, not just their recent episodes", () => {
+    const events = buildGroupActivity([], [watchSummary({ watched_count: 400, total_episodes: 400 })])
+    expect(events[0].finished).toBe(true)
   })
 
   it('produces a rated event for a show rated without episode tracking', () => {
@@ -561,7 +559,7 @@ describe('buildGroupActivity', () => {
   it('sorts all events reverse-chronologically', () => {
     const events = buildGroupActivity(
       [ratingWithUser({ rated_at: '2026-01-01T00:00:00Z' })],
-      [watchedWithUser({ id: 'w9', show_id: 2, watched_at: '2026-06-01T00:00:00Z', show_total_episodes: 1 })],
+      [watchSummary({ show_id: 2, watched_count: 1, total_episodes: 1, last_watched_at: '2026-06-01T00:00:00Z' })],
     )
     expect(events[0].showId).toBe(2)
   })
@@ -579,11 +577,20 @@ describe('buildFriendsWatching', () => {
   })
 
   it('excludes a finished show', () => {
-    const rows = [1, 2].map((n) =>
-      ({ ...watched({ id: `w${n}`, episode_number: n, show_total_episodes: 2 }), users: { username: 'alice' } }),
-    )
-    const entries = buildFriendsWatching([], rows, [], [], [])
+    const entries = buildFriendsWatching([], [watchSummary({ watched_count: 2, total_episodes: 2 })], [], [], [])
     expect(entries).toHaveLength(0)
+  })
+
+  it('includes a partly watched show, named from the members list', () => {
+    const entries = buildFriendsWatching(
+      [],
+      [watchSummary({ watched_count: 3, total_episodes: 8 })],
+      [],
+      [],
+      [],
+      new Map([['u1', 'alice']]),
+    )
+    expect(entries).toMatchObject([{ showId: 1, username: 'alice', watchedCount: 3 }])
   })
 
   it('excludes a dismissed show', () => {

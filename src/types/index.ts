@@ -178,10 +178,6 @@ export interface EpisodeWatched {
 
 export type WatchedMap = Record<string, EpisodeWatched>
 
-export interface EpisodeWatchedWithUser extends EpisodeWatched {
-  users: { username: string } | null
-}
-
 export interface ShowWatchSummary {
   user_id: string
   show_id: number

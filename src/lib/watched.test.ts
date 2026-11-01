@@ -11,7 +11,6 @@ import {
   bulkUnmarkWatched,
   fetchRecentDatedWatched,
   fetchRecentWatched,
-  fetchRecentWatchedAllUsers,
   fetchWatchedForShow,
   fetchWatchedForUserAndShow,
   markWatched,
@@ -138,14 +137,6 @@ describe('fetchRecentDatedWatched', () => {
     const rows = [row()]
     mockFrom({ data: rows, count: rows.length })
     expect(await fetchRecentDatedWatched('u1')).toEqual(rows)
-  })
-})
-
-describe('fetchRecentWatchedAllUsers', () => {
-  it('returns a single page of results across every user', async () => {
-    const rows = [row()]
-    mockFrom({ data: rows, count: rows.length })
-    expect(await fetchRecentWatchedAllUsers()).toEqual(rows)
   })
 })
 

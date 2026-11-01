@@ -13,6 +13,14 @@ export async function fetchShowWatchSummary(userId: string): Promise<ShowWatchSu
   return (data ?? []) as ShowWatchSummary[]
 }
 
+/** Every member's per-show watch rollup, for the group Activity feed (one row per member and show). */
+export async function fetchShowWatchSummaryAllUsers(): Promise<ShowWatchSummary[]> {
+  const { data, error } = await supabase.from(TABLE_EPISODE_WATCHED_SHOW_SUMMARY).select('*')
+
+  if (error) throw error
+  return (data ?? []) as ShowWatchSummary[]
+}
+
 /** Fetches the per-show rollup of "watched a while ago" rows with no real date. */
 export async function fetchUndatedShowWatchSummary(userId: string): Promise<UndatedShowWatchSummary[]> {
   const { data, error } = await supabase

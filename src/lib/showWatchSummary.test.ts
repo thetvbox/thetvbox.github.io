@@ -4,7 +4,7 @@ import { createQueryBuilder } from '../test/supabaseMock'
 vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
-import { fetchShowWatchSummary, fetchUndatedShowWatchSummary } from './showWatchSummary'
+import { fetchShowWatchSummary, fetchShowWatchSummaryAllUsers, fetchUndatedShowWatchSummary } from './showWatchSummary'
 import type { ShowWatchSummary, UndatedShowWatchSummary } from '../types'
 
 function summary(overrides: Partial<ShowWatchSummary> = {}): ShowWatchSummary {
@@ -45,6 +45,21 @@ function mockFrom(result: Parameters<typeof createQueryBuilder>[0]) {
 
 beforeEach(() => {
   vi.mocked(supabase.from).mockReset()
+})
+
+describe('fetchShowWatchSummaryAllUsers', () => {
+  it("reads every member's rollup without a user filter", async () => {
+    const builder = mockFrom({ data: [summary(), summary({ user_id: 'u2' })] })
+    expect(await fetchShowWatchSummaryAllUsers()).toHaveLength(2)
+    expect(builder.eq).not.toHaveBeenCalled()
+  })
+
+  it('returns an empty array when data is null, and throws on an error', async () => {
+    mockFrom({ data: null })
+    expect(await fetchShowWatchSummaryAllUsers()).toEqual([])
+    mockFrom({ error: new Error('boom') })
+    await expect(fetchShowWatchSummaryAllUsers()).rejects.toThrow('boom')
+  })
 })
 
 describe('fetchShowWatchSummary', () => {

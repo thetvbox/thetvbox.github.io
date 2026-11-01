@@ -1,7 +1,6 @@
 import { dayKey } from './date'
 import type {
   EpisodeWatched,
-  EpisodeWatchedWithUser,
   Follow,
   SeasonRatingWithUser,
   ShowDropped,
@@ -378,36 +377,42 @@ export interface GroupActivityEvent {
   atUnknown: boolean
 }
 
-/** Merges every member's ratings + watched rows into one reverse-chronological "who finished/rated what" feed. */
-export function buildGroupActivity(
-  ratings: ShowRatingWithUser[],
-  watched: EpisodeWatchedWithUser[],
-  seasonRatings: SeasonRatingWithUser[] = [],
-): GroupActivityEvent[] {
-  interface UserBucket {
-    username: string
-    ratings: ShowRating[]
-    watched: EpisodeWatched[]
-  }
-  const byUser = new Map<string, UserBucket>()
-
-  function bucketFor(userId: string, username: string | undefined): UserBucket {
+/** Per-member buckets of activity rows, named from each row's joined username or the members list. */
+function groupByUser<B extends { username: string }>(
+  usernames: Map<string, string>,
+  empty: () => Omit<B, 'username'>,
+): { byUser: Map<string, B>; bucketFor: (userId: string, username?: string) => B } {
+  const byUser = new Map<string, B>()
+  function bucketFor(userId: string, username?: string): B {
     let bucket = byUser.get(userId)
     if (!bucket) {
-      bucket = { username: username ?? 'unknown', ratings: [], watched: [] }
+      bucket = { ...empty(), username: username ?? usernames.get(userId) ?? 'unknown' } as B
       byUser.set(userId, bucket)
     } else if (username) {
       bucket.username = username
     }
     return bucket
   }
+  return { byUser, bucketFor }
+}
 
+/** Merges every member's ratings and per-show watch totals into one reverse-chronological "who finished/rated what" feed. */
+export function buildGroupActivity(
+  ratings: ShowRatingWithUser[],
+  watchSummaries: ShowWatchSummary[],
+  seasonRatings: SeasonRatingWithUser[] = [],
+  usernames: Map<string, string> = new Map(),
+): GroupActivityEvent[] {
+  const { byUser, bucketFor } = groupByUser<{ username: string; ratings: ShowRating[]; summaries: ShowWatchSummary[] }>(
+    usernames,
+    () => ({ ratings: [], summaries: [] }),
+  )
   for (const r of ratings) bucketFor(r.user_id, r.users?.username).ratings.push(r)
-  for (const w of watched) bucketFor(w.user_id, w.users?.username).watched.push(w)
+  for (const w of watchSummaries) bucketFor(w.user_id).summaries.push(w)
 
   const events: GroupActivityEvent[] = []
   for (const [userId, bucket] of byUser) {
-    const history = watchHistory(summarizeShowActivity(bucket.ratings, bucket.watched))
+    const history = watchHistory(summarizeFromWatchSummary(bucket.ratings, bucket.summaries))
     for (const s of history) {
       const at = s.finishedAt ?? s.ratedAt
       if (!at) continue
@@ -459,43 +464,31 @@ export interface FriendWatchingEntry extends ShowActivity {
 /** Merges every member's started/watched/dismissed/dropped rows into "who's watching what right now". */
 export function buildFriendsWatching(
   ratings: ShowRatingWithUser[],
-  watched: EpisodeWatchedWithUser[],
+  watchSummaries: ShowWatchSummary[],
   started: ShowStartedWithUser[],
   dismissed: ShowWatchingDismissedWithUser[],
   dropped: ShowDroppedWithUser[],
+  usernames: Map<string, string> = new Map(),
 ): FriendWatchingEntry[] {
-  interface UserBucket {
+  const { byUser, bucketFor } = groupByUser<{
     username: string
     ratings: ShowRating[]
-    watched: EpisodeWatched[]
+    summaries: ShowWatchSummary[]
     started: ShowStarted[]
     dismissed: ShowWatchingDismissed[]
     dropped: ShowDropped[]
-  }
-  const byUser = new Map<string, UserBucket>()
-
-  function bucketFor(userId: string, username: string | undefined): UserBucket {
-    let bucket = byUser.get(userId)
-    if (!bucket) {
-      bucket = { username: username ?? 'unknown', ratings: [], watched: [], started: [], dismissed: [], dropped: [] }
-      byUser.set(userId, bucket)
-    } else if (username) {
-      bucket.username = username
-    }
-    return bucket
-  }
-
+  }>(usernames, () => ({ ratings: [], summaries: [], started: [], dismissed: [], dropped: [] }))
   for (const r of ratings) bucketFor(r.user_id, r.users?.username).ratings.push(r)
-  for (const w of watched) bucketFor(w.user_id, w.users?.username).watched.push(w)
+  for (const w of watchSummaries) bucketFor(w.user_id).summaries.push(w)
   for (const s of started) bucketFor(s.user_id, s.users?.username).started.push(s)
   for (const d of dismissed) bucketFor(d.user_id, d.users?.username).dismissed.push(d)
   for (const d of dropped) bucketFor(d.user_id, d.users?.username).dropped.push(d)
 
   const entries: FriendWatchingEntry[] = []
   for (const [userId, bucket] of byUser) {
-    const summaries = summarizeShowActivity(
+    const summaries = summarizeFromWatchSummary(
       bucket.ratings,
-      bucket.watched,
+      bucket.summaries,
       bucket.started,
       bucket.dismissed,
       bucket.dropped,

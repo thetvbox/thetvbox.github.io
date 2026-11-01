@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
 import { fetchRecentSeasonRatingsAllUsers } from '../lib/seasonRatings'
-import { fetchRecentWatchedAllUsers } from '../lib/watched'
+import { fetchShowWatchSummaryAllUsers } from '../lib/showWatchSummary'
 import { fetchStartedAllUsers } from '../lib/showStarted'
 import { fetchDismissedAllUsers } from '../lib/showDismissed'
 import { fetchDroppedAllUsers } from '../lib/showDropped'
@@ -17,7 +17,6 @@ import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/
 import { offscreenSkipStyle } from '../lib/layout'
 import {
   GROUP_ACTIVITY_FETCH_LIMIT,
-  GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
   NOW_WATCHING_PREVIEW_LIMIT,
   SKELETON_ROWS_WIDE,
 } from '../lib/constants'
@@ -81,7 +80,7 @@ export default function Activity() {
     setError(null)
     Promise.all([
       fetchRecentShowRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
-      fetchRecentWatchedAllUsers(GROUP_ACTIVITY_WATCHED_FETCH_LIMIT),
+      fetchShowWatchSummaryAllUsers(),
       fetchRecentSeasonRatingsAllUsers(GROUP_ACTIVITY_FETCH_LIMIT),
       fetchStartedAllUsers(),
       fetchDismissedAllUsers(),
@@ -94,7 +93,7 @@ export default function Activity() {
         if (!cancelled) {
           const [
             ratingRows,
-            watchedRows,
+            watchSummaryRows,
             seasonRatingRows,
             startedRows,
             dismissedRows,
@@ -103,11 +102,11 @@ export default function Activity() {
             follows,
             following,
           ] = results
-          const showEvents = buildGroupActivity(ratingRows, watchedRows, seasonRatingRows)
           const usernameById = new Map(users.map((u) => [u.id, u.username]))
+          const showEvents = buildGroupActivity(ratingRows, watchSummaryRows, seasonRatingRows, usernameById)
           const followEvents = buildFollowActivity(follows, usernameById)
           setFeed(mergeActivityFeed(showEvents, followEvents))
-          setWatching(buildFriendsWatching(ratingRows, watchedRows, startedRows, dismissedRows, droppedRows))
+          setWatching(buildFriendsWatching(ratingRows, watchSummaryRows, startedRows, dismissedRows, droppedRows, usernameById))
           setMembers(users)
           setFollowingIds(following)
         }

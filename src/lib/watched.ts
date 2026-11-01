@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { ACTIVITY_FETCH_LIMIT, GROUP_ACTIVITY_WATCHED_FETCH_LIMIT, TABLE_EPISODE_WATCHED } from './constants'
-import type { EpisodeWatched, EpisodeWatchedWithUser, WatchedMap } from '../types'
+import { ACTIVITY_FETCH_LIMIT, TABLE_EPISODE_WATCHED } from './constants'
+import type { EpisodeWatched, WatchedMap } from '../types'
 
 /** Builds the season-episode lookup key used by WatchedMap. */
 export function watchedKey(seasonNumber: number, episodeNumber: number): string {
@@ -99,21 +99,6 @@ export async function fetchRecentDatedWatched(
         .range(from, to),
     limit,
   )
-}
-
-/** Fetches the most recent watched-episode rows across the whole group, for the Activity feed. */
-export async function fetchRecentWatchedAllUsers(
-  limit = GROUP_ACTIVITY_WATCHED_FETCH_LIMIT,
-): Promise<EpisodeWatchedWithUser[]> {
-  return fetchPaginated<EpisodeWatchedWithUser>(async (from, to) => {
-    const { data, error, count } = await supabase
-      .from(TABLE_EPISODE_WATCHED)
-      .select('*, users(username)', { count: 'exact' })
-      .order('watched_at', { ascending: false })
-      .order('id')
-      .range(from, to)
-    return { data: data as unknown as EpisodeWatchedWithUser[] | null, error, count }
-  }, limit)
 }
 
 export interface MarkWatchedInput {

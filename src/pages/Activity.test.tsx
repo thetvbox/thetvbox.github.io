@@ -7,7 +7,7 @@ vi.mock('framer-motion', () => framerMotionMock)
 vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../lib/showRatings', () => ({ fetchRecentShowRatingsAllUsers: vi.fn() }))
 vi.mock('../lib/seasonRatings', () => ({ fetchRecentSeasonRatingsAllUsers: vi.fn() }))
-vi.mock('../lib/watched', () => ({ fetchRecentWatchedAllUsers: vi.fn() }))
+vi.mock('../lib/showWatchSummary', () => ({ fetchShowWatchSummaryAllUsers: vi.fn() }))
 vi.mock('../lib/showStarted', () => ({ fetchStartedAllUsers: vi.fn() }))
 vi.mock('../lib/showDismissed', () => ({ fetchDismissedAllUsers: vi.fn() }))
 vi.mock('../lib/showDropped', () => ({ fetchDroppedAllUsers: vi.fn() }))
@@ -24,7 +24,7 @@ vi.mock('../components/FollowActivityRow', () => ({
 import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatingsAllUsers } from '../lib/showRatings'
 import { fetchRecentSeasonRatingsAllUsers } from '../lib/seasonRatings'
-import { fetchRecentWatchedAllUsers } from '../lib/watched'
+import { fetchShowWatchSummaryAllUsers } from '../lib/showWatchSummary'
 import { fetchStartedAllUsers } from '../lib/showStarted'
 import { fetchDismissedAllUsers } from '../lib/showDismissed'
 import { fetchDroppedAllUsers } from '../lib/showDropped'
@@ -97,7 +97,7 @@ function renderActivity() {
 beforeEach(() => {
   vi.mocked(fetchRecentShowRatingsAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchRecentSeasonRatingsAllUsers).mockReset().mockResolvedValue([])
-  vi.mocked(fetchRecentWatchedAllUsers).mockReset().mockResolvedValue([])
+  vi.mocked(fetchShowWatchSummaryAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchStartedAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchDismissedAllUsers).mockReset().mockResolvedValue([])
   vi.mocked(fetchDroppedAllUsers).mockReset().mockResolvedValue([])
