@@ -1,11 +1,13 @@
 /** A Map whose entries expire after `ttlMs`, so a tab left open for days still picks up new seasons and episodes. */
 export class ExpiringCache<K, V> {
   private readonly entries = new Map<K, { value: V; storedAt: number }>()
+  private readonly ttlMs: number
+  private readonly now: () => number
 
-  constructor(
-    private readonly ttlMs: number,
-    private readonly now: () => number = () => Date.now(),
-  ) {}
+  constructor(ttlMs: number, now: () => number = () => Date.now()) {
+    this.ttlMs = ttlMs
+    this.now = now
+  }
 
   get(key: K): V | undefined {
     const entry = this.entries.get(key)
