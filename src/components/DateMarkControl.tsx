@@ -12,11 +12,14 @@ export default function DateMarkControl({
   label,
   onConfirm,
   className,
+  formClassName,
   confirmSummary,
 }: {
   label: string
   onConfirm: (input: { watchedAt: string; unknownDate: boolean }) => Promise<void>
   className?: string
+  /** Classes for the open form, e.g. `basis-full` so it drops onto its own line inside a flex row. */
+  formClassName?: string
   confirmSummary?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -44,7 +47,7 @@ export default function DateMarkControl({
           {label}
         </motion.button>
       ) : (
-        <motion.div key="form" className="flex flex-col gap-1.5" {...TRIGGER_SWAP_MOTION}>
+        <motion.div key="form" className={`flex min-w-0 flex-col gap-1.5 ${formClassName ?? ''}`} {...TRIGGER_SWAP_MOTION}>
           {confirmSummary && <p className="max-w-xs text-[11px] text-warning">{confirmSummary}</p>}
           <div className="flex flex-wrap items-center gap-1.5">
             <input
@@ -74,12 +77,12 @@ export default function DateMarkControl({
               onCancel={() => setOpen(false)}
             />
           </div>
-          <label className="flex items-center gap-1.5 text-[11px] text-base-500">
+          <label className="flex items-start gap-1.5 text-[11px] text-base-500">
             <input
               type="checkbox"
               checked={unknownDate}
               onChange={(e) => setUnknownDate(e.target.checked)}
-              className="h-3 w-3 rounded border-hairline-strong bg-base-900 accent-accent-500"
+              className="mt-0.5 h-3 w-3 shrink-0 rounded border-hairline-strong bg-base-900 accent-accent-500"
             />
             Don&apos;t remember exactly when — just log it as watched a while ago
           </label>

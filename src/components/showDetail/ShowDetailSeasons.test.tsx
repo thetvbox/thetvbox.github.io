@@ -124,6 +124,14 @@ describe('ShowDetailSeasons', () => {
     expect(screen.getByText('1/2 watched this season')).toBeInTheDocument()
   })
 
+  it('opens the mark-season-watched form on its own wrapping line so it never pushes past the screen edge', () => {
+    renderSeasons({ seasonWatchedCount: 1 })
+    fireEvent.click(screen.getByText('Mark season watched'))
+    const form = screen.getByText('Confirm').closest('.flex-col')
+    expect(form).toHaveClass('basis-full')
+    expect(form?.parentElement).toHaveClass('flex-wrap', 'min-w-0')
+  })
+
   it('shows the mark-season-watched control only when the season is incomplete', () => {
     const { rerender } = renderSeasons({ seasonWatchedCount: 1 })
     expect(screen.getByText('Mark season watched')).toBeInTheDocument()

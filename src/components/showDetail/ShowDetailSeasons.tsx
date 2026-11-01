@@ -107,7 +107,7 @@ export default function ShowDetailSeasons({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <SeasonTabs seasons={show.seasons} active={activeSeason} onSelect={onSelectSeason} segments={seasonSegments} />
         {season && seasonWatchedCount !== null && (
-          <div className="flex shrink-0 items-center gap-2.5 text-xs text-base-400">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2.5 gap-y-2 text-xs text-base-400">
             <div className="w-16 sm:w-24">
               <SeasonProgressBar segments={[{ seasonNumber: activeSeason, watched: seasonWatchedCount, total: season.episodes.length }]} />
             </div>
@@ -119,6 +119,7 @@ export default function ShowDetailSeasons({
                 <DateMarkControl
                   key="mark-season"
                   label="Mark season watched"
+                  formClassName="basis-full"
                   onConfirm={onMarkSeasonWatched}
                   confirmSummary={
                     seasonWatchedCount > 0

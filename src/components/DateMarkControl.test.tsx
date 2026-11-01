@@ -22,6 +22,13 @@ describe('DateMarkControl', () => {
     expect(screen.getByText('Cancel')).toBeInTheDocument()
   })
 
+  it('applies formClassName to the open form so a caller can drop it onto its own line', () => {
+    render(<DateMarkControl label="Mark season watched" formClassName="basis-full" onConfirm={vi.fn()} />)
+    fireEvent.click(screen.getByText('Mark season watched'))
+    const form = screen.getByText('Confirm').closest('.flex-col')
+    expect(form).toHaveClass('basis-full', 'min-w-0')
+  })
+
   it('collapses back to the trigger when Cancel is clicked', () => {
     render(<DateMarkControl label="Watched in the past" onConfirm={vi.fn()} />)
     fireEvent.click(screen.getByText('Watched in the past'))
