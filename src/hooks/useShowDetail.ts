@@ -73,49 +73,57 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     setLoadingShow(true)
     setError(null)
 
+    async function loadAll() {
+      const [
+        showData,
+        watchedMap,
+        ratingRows,
+        seasonRatingRows,
+        watchlistRow,
+        rewatchRows,
+        listMembershipSet,
+        startedRow,
+        dismissedRow,
+        droppedRow,
+      ] = await Promise.all([
+        getShowDetail(showId),
+        user ? fetchWatchedForShow(user.id, showId) : Promise.resolve({} as WatchedMap),
+        fetchAllShowRatings(showId),
+        fetchAllSeasonRatingsForShow(showId),
+        user ? fetchWatchlistItem(user.id, showId) : Promise.resolve(null),
+        user ? fetchRewatchesForShow(user.id, showId) : Promise.resolve([]),
+        user ? fetchListMembershipForShow(user.id, showId) : Promise.resolve(new Set<string>()),
+        user ? fetchStartedItem(user.id, showId) : Promise.resolve(null),
+        user ? fetchDismissedItem(user.id, showId) : Promise.resolve(null),
+        user ? fetchDroppedItem(user.id, showId) : Promise.resolve(null),
+      ])
+      if (cancelled) return
+      setShow(showData)
+      setWatched(watchedMap)
+      ratings.setShowRatings(ratingRows)
+      ratings.setSeasonRatings(seasonRatingRows)
+      watchlist.setWatchlistItem(watchlistRow)
+      rewatchState.setRewatches(rewatchRows)
+      setListMembership(listMembershipSet)
+      nowWatching.setStarted(startedRow)
+      nowWatching.setDismissedItem(dismissedRow)
+      nowWatching.setDroppedItem(droppedRow)
+      const firstRealSeason = showData.seasons.find((s) => s.season_number > 0) ?? showData.seasons[0]
+      const watchedBySeasonCount = countWatchedBySeason(Object.values(watchedMap))
+      const progress = computeSeasonProgress(showData.seasons, watchedBySeasonCount)
+      const defaultSeason = progress?.currentSeasonNumber ?? firstRealSeason?.season_number ?? null
+      setActiveSeason(defaultSeason)
+    }
+
     async function load() {
+      // Runs alongside the first load; only a newly recorded split (rare) costs a second load in the new numbering.
+      const splitsChanged = syncSeasonSplits(showId).catch((err) => {
+        console.warn('Season numbering check failed', err)
+        return false
+      })
       try {
-        // Before anything is read, so a newly found season split renumbers the watch log first.
-        await syncSeasonSplits(showId).catch((err) => console.warn('Season numbering check failed', err))
-        const [
-          showData,
-          watchedMap,
-          ratingRows,
-          seasonRatingRows,
-          watchlistRow,
-          rewatchRows,
-          listMembershipSet,
-          startedRow,
-          dismissedRow,
-          droppedRow,
-        ] = await Promise.all([
-          getShowDetail(showId),
-          user ? fetchWatchedForShow(user.id, showId) : Promise.resolve({} as WatchedMap),
-          fetchAllShowRatings(showId),
-          fetchAllSeasonRatingsForShow(showId),
-          user ? fetchWatchlistItem(user.id, showId) : Promise.resolve(null),
-          user ? fetchRewatchesForShow(user.id, showId) : Promise.resolve([]),
-          user ? fetchListMembershipForShow(user.id, showId) : Promise.resolve(new Set<string>()),
-          user ? fetchStartedItem(user.id, showId) : Promise.resolve(null),
-          user ? fetchDismissedItem(user.id, showId) : Promise.resolve(null),
-          user ? fetchDroppedItem(user.id, showId) : Promise.resolve(null),
-        ])
-        if (cancelled) return
-        setShow(showData)
-        setWatched(watchedMap)
-        ratings.setShowRatings(ratingRows)
-        ratings.setSeasonRatings(seasonRatingRows)
-        watchlist.setWatchlistItem(watchlistRow)
-        rewatchState.setRewatches(rewatchRows)
-        setListMembership(listMembershipSet)
-        nowWatching.setStarted(startedRow)
-        nowWatching.setDismissedItem(dismissedRow)
-        nowWatching.setDroppedItem(droppedRow)
-        const firstRealSeason = showData.seasons.find((s) => s.season_number > 0) ?? showData.seasons[0]
-        const watchedBySeasonCount = countWatchedBySeason(Object.values(watchedMap))
-        const progress = computeSeasonProgress(showData.seasons, watchedBySeasonCount)
-        const defaultSeason = progress?.currentSeasonNumber ?? firstRealSeason?.season_number ?? null
-        setActiveSeason(defaultSeason)
+        await loadAll()
+        if ((await splitsChanged) && !cancelled) await loadAll()
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, 'Failed to load show.'))
       } finally {
@@ -149,7 +157,7 @@ export function useShowDetail(showId: number, user: AppUser | null) {
     return () => {
       cancelled = true
     }
-  }, [showId, activeSeason])
+  }, [showId, activeSeason, show])
 
   return {
     show,

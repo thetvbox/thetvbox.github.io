@@ -161,20 +161,19 @@ describe('useShowDetail', () => {
     expect(result.current.activeSeason).toBe(1)
   })
 
-  it('checks for season splits before reading the watch log, so a renumbering lands first', async () => {
-    const order: string[] = []
-    vi.mocked(syncSeasonSplits).mockImplementation(async () => {
-      order.push('sync')
-      return true
-    })
-    vi.mocked(fetchWatchedForShow).mockImplementation(async () => {
-      order.push('watched')
-      return {}
-    })
+  it('loads alongside the season split check, and loads again in the new numbering when a split was just recorded', async () => {
+    vi.mocked(syncSeasonSplits).mockResolvedValue(true)
     const { result } = renderHook(() => useShowDetail(1, user))
     await waitFor(() => expect(result.current.loadingShow).toBe(false))
-    expect(order).toEqual(['sync', 'watched'])
     expect(syncSeasonSplits).toHaveBeenCalledWith(1)
+    await waitFor(() => expect(fetchWatchedForShow).toHaveBeenCalledTimes(2))
+    expect(getShowDetail).toHaveBeenCalledTimes(2)
+  })
+
+  it('loads only once when no new split was found', async () => {
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+    expect(fetchWatchedForShow).toHaveBeenCalledTimes(1)
   })
 
   it('still loads the show when the season split check fails', async () => {
