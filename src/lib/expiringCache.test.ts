@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { ExpiringCache } from './expiringCache'
+import { describe, expect, it, vi } from 'vitest'
+import { ExpiringCache, getOrLoad } from './expiringCache'
 
 describe('ExpiringCache', () => {
   it('returns a stored value until it expires, then forgets it', () => {
@@ -33,5 +33,32 @@ describe('ExpiringCache', () => {
     cache.set('a', 2)
     now = 150
     expect(cache.get('a')).toBe(2)
+  })
+})
+
+describe('getOrLoad', () => {
+  it('shares one in-flight load between concurrent callers', async () => {
+    const cache = new ExpiringCache<string, Promise<number>>(100)
+    const load = vi.fn(async () => 7)
+    const [a, b] = await Promise.all([getOrLoad(cache, 'k', load), getOrLoad(cache, 'k', load)])
+    expect([a, b]).toEqual([7, 7])
+    expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it('drops a failed load so the next call tries again', async () => {
+    const cache = new ExpiringCache<string, Promise<number>>(100)
+    await expect(getOrLoad(cache, 'k', () => Promise.reject(new Error('offline')))).rejects.toThrow('offline')
+    expect(await getOrLoad(cache, 'k', async () => 3)).toBe(3)
+  })
+
+  it("doesn't drop a newer entry when an older load fails", async () => {
+    const cache = new ExpiringCache<string, Promise<number>>(100)
+    let fail: (err: Error) => void = () => {}
+    const older = getOrLoad(cache, 'k', () => new Promise<number>((_, reject) => (fail = reject)))
+    const newer = Promise.resolve(9)
+    cache.set('k', newer)
+    fail(new Error('late'))
+    await expect(older).rejects.toThrow('late')
+    expect(cache.get('k')).toBe(newer)
   })
 })

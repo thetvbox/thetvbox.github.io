@@ -27,3 +27,15 @@ export class ExpiringCache<K, V> {
     this.entries.delete(key)
   }
 }
+
+/** Returns the cached promise for `key`, or starts `load` and caches its promise so concurrent callers share one request; a rejected load is dropped so the next call retries. */
+export function getOrLoad<K, V>(cache: ExpiringCache<K, Promise<V>>, key: K, load: () => Promise<V>): Promise<V> {
+  const cached = cache.get(key)
+  if (cached) return cached
+  const pending = load()
+  cache.set(key, pending)
+  pending.catch(() => {
+    if (cache.get(key) === pending) cache.delete(key)
+  })
+  return pending
+}

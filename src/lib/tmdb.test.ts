@@ -77,6 +77,16 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
+  it('getShowDetail sends one request for concurrent callers, and retries after a failure', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('offline'))
+    const { getShowDetail } = await import('./tmdb')
+    await expect(getShowDetail(5)).rejects.toThrow('offline')
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ id: 5 }))
+    const [a, b] = await Promise.all([getShowDetail(5), getShowDetail(5)])
+    expect(a).toBe(b)
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('getShowDetail and getSeasonDetail ask TMDB again once the hour-long cache expires, so new seasons appear', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     try {

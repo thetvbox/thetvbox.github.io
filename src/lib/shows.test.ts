@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./tmdb', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
-vi.mock('./seasonSplitData', () => ({ fetchSeasonSplits: vi.fn() }))
+vi.mock('./seasonSplitData', () => ({ fetchSeasonSplits: vi.fn(), prefetchSeasonSplits: vi.fn() }))
 
 import { getSeasonDetail as getTmdbSeasonDetail, getShowDetail as getTmdbShowDetail } from './tmdb'
-import { fetchSeasonSplits } from './seasonSplitData'
+import { fetchSeasonSplits, prefetchSeasonSplits } from './seasonSplitData'
 import { getSeasonDetail, getShowDetail, getShowDetailsBulk } from './shows'
 import type { TmdbSeasonDetail, TmdbShowDetail } from '../types'
 
@@ -49,6 +49,7 @@ beforeEach(() => {
   vi.mocked(getTmdbShowDetail).mockReset()
   vi.mocked(getTmdbSeasonDetail).mockReset()
   vi.mocked(fetchSeasonSplits).mockReset()
+  vi.mocked(prefetchSeasonSplits).mockReset().mockResolvedValue(undefined)
 })
 
 describe('getShowDetail', () => {
@@ -77,6 +78,7 @@ describe('getShowDetailsBulk', () => {
     const result = await getShowDetailsBulk([1, 2, 1])
     expect([...result.keys()]).toEqual([1])
     expect(getTmdbShowDetail).toHaveBeenCalledTimes(2)
+    expect(prefetchSeasonSplits).toHaveBeenCalledWith([1, 2])
   })
 })
 

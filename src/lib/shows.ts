@@ -1,7 +1,7 @@
 // TMDB show and season data in the numbering the app shows and stores: the streamer's, with any
 // season splits applied (see seasonSplits.ts). Screens read shows through here, not tmdb.ts.
 import { getSeasonDetail as getTmdbSeasonDetail, getShowDetail as getTmdbShowDetail } from './tmdb'
-import { fetchSeasonSplits } from './seasonSplitData'
+import { fetchSeasonSplits, prefetchSeasonSplits } from './seasonSplitData'
 import { splitSeasonDetail, splitShowDetail, tmdbSeasonPart } from './seasonSplits'
 import type { TmdbSeasonDetail, TmdbShowDetail } from '../types'
 
@@ -14,6 +14,7 @@ export async function getShowDetail(showId: number): Promise<TmdbShowDetail> {
 /** Batched getShowDetail for lists; a failed show is just missing from the map. */
 export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number, TmdbShowDetail>> {
   const uniqueIds = [...new Set(showIds)]
+  await prefetchSeasonSplits(uniqueIds)
   const results = await Promise.all(
     uniqueIds.map(async (id): Promise<[number, TmdbShowDetail | null]> => {
       try {

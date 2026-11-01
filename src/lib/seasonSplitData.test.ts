@@ -8,7 +8,7 @@ vi.mock('./tvmaze', () => ({ getTvmazeSeasonSizes: vi.fn() }))
 import { supabase } from './supabase'
 import { getShowDetail } from './tmdb'
 import { getTvmazeSeasonSizes } from './tvmaze'
-import { fetchSeasonSplits, syncSeasonSplits } from './seasonSplitData'
+import { fetchSeasonSplits, prefetchSeasonSplits, syncSeasonSplits } from './seasonSplitData'
 import type { TmdbShowDetail } from '../types'
 
 function tmdbShow(id: number, counts: number[]): TmdbShowDetail {
@@ -27,7 +27,7 @@ function tmdbShow(id: number, counts: number[]): TmdbShowDetail {
   } as TmdbShowDetail
 }
 
-function mockSplitRows(rows: { tmdb_season: number; part_sizes: number[] }[] | null, error: unknown = null) {
+function mockSplitRows(rows: { show_id?: number; tmdb_season: number; part_sizes: number[] }[] | null, error: unknown = null) {
   const builder = createQueryBuilder({ data: rows, error })
   vi.mocked(supabase.from).mockReturnValue(builder as never)
   return builder
@@ -55,6 +55,32 @@ describe('fetchSeasonSplits', () => {
     await expect(fetchSeasonSplits(2)).rejects.toThrow('offline')
     mockSplitRows([])
     expect(await fetchSeasonSplits(2)).toEqual([])
+  })
+})
+
+describe('prefetchSeasonSplits', () => {
+  it('reads many shows in one query and serves each from the cache afterwards', async () => {
+    const builder = mockSplitRows([{ show_id: 11, tmdb_season: 1, part_sizes: [5, 5] }])
+    await prefetchSeasonSplits([11, 12, 11])
+    expect(builder.in).toHaveBeenCalledWith('show_id', [11, 12])
+    expect(await fetchSeasonSplits(11)).toEqual([{ tmdbSeason: 1, partSizes: [5, 5] }])
+    expect(await fetchSeasonSplits(12)).toEqual([])
+    expect(supabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips shows already cached, and sends no query when all are', async () => {
+    mockSplitRows([])
+    await prefetchSeasonSplits([13])
+    await prefetchSeasonSplits([13])
+    expect(supabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it("doesn't throw on a read error, and leaves each show to be asked for again", async () => {
+    mockSplitRows(null, new Error('offline'))
+    await expect(prefetchSeasonSplits([14])).resolves.toBeUndefined()
+    await Promise.resolve()
+    mockSplitRows([{ show_id: 14, tmdb_season: 2, part_sizes: [4, 4] }])
+    expect(await fetchSeasonSplits(14)).toEqual([{ tmdbSeason: 2, partSizes: [4, 4] }])
   })
 })
 
