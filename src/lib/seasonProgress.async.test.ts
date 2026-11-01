@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('./tmdb', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
+vi.mock('./shows', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
 vi.mock('./tvmaze', async () => {
   const actual = await vi.importActual<typeof import('./tvmaze')>('./tvmaze')
   return { ...actual, getCorrectedAirDates: vi.fn() }
 })
 
-import { getSeasonDetail, getShowDetail } from './tmdb'
+import { getSeasonDetail, getShowDetail } from './shows'
 import { getCorrectedAirDates } from './tvmaze'
 import { fetchNextEpisode, fetchSeasonBreakdowns } from './seasonProgress'
 import type { TmdbSeasonSummary } from '../types'

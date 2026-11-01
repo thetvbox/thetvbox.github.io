@@ -1,4 +1,4 @@
-import { getSeasonDetail, getShowDetail } from './tmdb'
+import { getSeasonDetail, getShowDetail } from './shows'
 import { effectiveAirDate, findNextUpcomingEpisode, getCorrectedAirDates } from './tvmaze'
 import type { TmdbSeasonSummary } from '../types'
 

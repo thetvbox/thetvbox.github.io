@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import { getSeasonDetail } from '../../lib/tmdb'
+import { getSeasonDetail } from '../../lib/shows'
 import { bulkMarkWatched, bulkUnmarkWatched, markWatched, restoreWatched, unmarkWatched, watchedKey } from '../../lib/watched'
 import { isFutureDate } from '../../lib/date'
 import type { AppUser, EpisodeWatched, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'

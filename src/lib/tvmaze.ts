@@ -17,7 +17,7 @@ interface TvmazeShow {
 
 interface TvmazeEpisode {
   season: number
-  number: number
+  number: number | null
   airdate: string
 }
 
@@ -26,7 +26,7 @@ export function tvmazeEpisodeKey(seasonNumber: number, episodeNumber: number): s
 }
 
 const showIdByImdbId = new Map<string, number | null>()
-const airDatesByTvmazeShowId = new Map<number, Map<string, string>>()
+const episodesByTvmazeShowId = new Map<number, Promise<TvmazeEpisode[] | null>>()
 
 /** Resolves a show's TVmaze id from its IMDb id, session-cached. */
 async function findTvmazeShowId(imdbId: string): Promise<number | null> {
@@ -43,21 +43,40 @@ async function findTvmazeShowId(imdbId: string): Promise<number | null> {
   return result
 }
 
-/** Fetches all of a show's episode air dates from TVmaze, session-cached. */
-async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, string>> {
-  const cached = airDatesByTvmazeShowId.get(tvmazeShowId)
-  if (cached) return cached
-  const map = new Map<string, string>()
-  try {
-    const episodes = await tvmazeFetch<TvmazeEpisode[]>(`/shows/${tvmazeShowId}/episodes`)
-    for (const ep of episodes ?? []) {
-      if (ep.airdate) map.set(tvmazeEpisodeKey(ep.season, ep.number), ep.airdate)
-    }
-  } catch {
-    return map
+/** Fetches a show's regular (non-special) episodes from TVmaze once per session; null when the lookup fails. */
+function fetchTvmazeEpisodes(tvmazeShowId: number): Promise<TvmazeEpisode[] | null> {
+  let episodes = episodesByTvmazeShowId.get(tvmazeShowId)
+  if (!episodes) {
+    episodes = tvmazeFetch<TvmazeEpisode[]>(`/shows/${tvmazeShowId}/episodes`).catch(() => {
+      episodesByTvmazeShowId.delete(tvmazeShowId)
+      return null
+    })
+    episodesByTvmazeShowId.set(tvmazeShowId, episodes)
   }
-  airDatesByTvmazeShowId.set(tvmazeShowId, map)
+  return episodes
+}
+
+/** All of a show's episode air dates from TVmaze, keyed by tvmazeEpisodeKey. */
+async function fetchTvmazeAirDates(tvmazeShowId: number): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  for (const ep of (await fetchTvmazeEpisodes(tvmazeShowId)) ?? []) {
+    if (ep.airdate && ep.number !== null) map.set(tvmazeEpisodeKey(ep.season, ep.number), ep.airdate)
+  }
   return map
+}
+
+/** How many episodes each of a show's seasons has on TVmaze, which numbers seasons the way streamers do; null when unknown. */
+export async function getTvmazeSeasonSizes(imdbId: string | null | undefined): Promise<number[] | null> {
+  if (!imdbId) return null
+  const tvmazeShowId = await findTvmazeShowId(imdbId)
+  if (tvmazeShowId === null) return null
+  const episodes = await fetchTvmazeEpisodes(tvmazeShowId)
+  if (!episodes || episodes.length === 0) return null
+  const counts = new Map<number, number>()
+  for (const ep of episodes) {
+    if (ep.season > 0 && ep.number !== null) counts.set(ep.season, (counts.get(ep.season) ?? 0) + 1)
+  }
+  return [...counts.entries()].sort(([a], [b]) => a - b).map(([, count]) => count)
 }
 
 /** Fetches TVmaze's corrected air dates for one show, keyed by tvmazeEpisodeKey. */

@@ -11,10 +11,7 @@ vi.mock('../lib/watched', () => ({ fetchRecentWatchedAllUsers: vi.fn() }))
 vi.mock('../lib/showStarted', () => ({ fetchStartedAllUsers: vi.fn() }))
 vi.mock('../lib/showDismissed', () => ({ fetchDismissedAllUsers: vi.fn() }))
 vi.mock('../lib/showDropped', () => ({ fetchDroppedAllUsers: vi.fn() }))
-vi.mock('../lib/tmdb', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../lib/tmdb')>()),
-  getShowDetailsBulk: vi.fn(),
-}))
+vi.mock('../lib/shows', () => ({ getShowDetailsBulk: vi.fn() }))
 vi.mock('../lib/users', () => ({ fetchAllUsers: vi.fn() }))
 vi.mock('../lib/follows', () => ({ fetchAllFollows: vi.fn(), fetchFollowingIds: vi.fn() }))
 vi.mock('../components/ActivityRow', () => ({
@@ -31,7 +28,7 @@ import { fetchRecentWatchedAllUsers } from '../lib/watched'
 import { fetchStartedAllUsers } from '../lib/showStarted'
 import { fetchDismissedAllUsers } from '../lib/showDismissed'
 import { fetchDroppedAllUsers } from '../lib/showDropped'
-import { getShowDetailsBulk } from '../lib/tmdb'
+import { getShowDetailsBulk } from '../lib/shows'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
 import { NOW_WATCHING_PREVIEW_LIMIT } from '../lib/constants'

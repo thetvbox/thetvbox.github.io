@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { getSeasonDetail, getShowDetail } from '../lib/tmdb'
+import { getSeasonDetail, getShowDetail } from '../lib/shows'
+import { syncSeasonSplits } from '../lib/seasonSplitData'
 import { fetchAllShowRatings } from '../lib/showRatings'
 import { fetchAllSeasonRatingsForShow } from '../lib/seasonRatings'
 import { fetchWatchedForShow } from '../lib/watched'
@@ -74,6 +75,8 @@ export function useShowDetail(showId: number, user: AppUser | null) {
 
     async function load() {
       try {
+        // Before anything is read, so a newly found season split renumbers the watch log first.
+        await syncSeasonSplits(showId).catch((err) => console.warn('Season numbering check failed', err))
         const [
           showData,
           watchedMap,

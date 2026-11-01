@@ -82,25 +82,6 @@ export async function getShowDetail(showId: number): Promise<TmdbShowDetail> {
   return detail
 }
 
-/** Batched, cached getShowDetail for History filters; a failed fetch is just missing from the map. */
-export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number, TmdbShowDetail>> {
-  const uniqueIds = [...new Set(showIds)]
-  const results = await Promise.all(
-    uniqueIds.map(async (id): Promise<[number, TmdbShowDetail | null]> => {
-      try {
-        return [id, await getShowDetail(id)]
-      } catch {
-        return [id, null]
-      }
-    }),
-  )
-  const map = new Map<number, TmdbShowDetail>()
-  for (const [id, detail] of results) {
-    if (detail) map.set(id, detail)
-  }
-  return map
-}
-
 const seasonDetailCache = new ExpiringCache<string, TmdbSeasonDetail>(TMDB_CACHE_TTL_MS)
 
 /** Fetches a season's full episode list, cached for an hour like getShowDetail. */

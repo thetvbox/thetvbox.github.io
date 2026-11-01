@@ -22,4 +22,8 @@ export class ExpiringCache<K, V> {
   set(key: K, value: V): void {
     this.entries.set(key, { value, storedAt: this.now() })
   }
+
+  delete(key: K): void {
+    this.entries.delete(key)
+  }
 }

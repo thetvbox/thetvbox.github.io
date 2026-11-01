@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../lib/tmdb', () => ({ getSeasonDetail: vi.fn() }))
+vi.mock('../../lib/shows', () => ({ getSeasonDetail: vi.fn() }))
 vi.mock('../../lib/watched', async () => {
   const actual = await vi.importActual<typeof import('../../lib/watched')>('../../lib/watched')
   return {
@@ -16,7 +16,7 @@ vi.mock('../../lib/watched', async () => {
 })
 
 import { bulkMarkWatched, bulkUnmarkWatched, markWatched, restoreWatched, unmarkWatched } from '../../lib/watched'
-import { getSeasonDetail } from '../../lib/tmdb'
+import { getSeasonDetail } from '../../lib/shows'
 import { useEpisodeWatchHandlers } from './useEpisodeWatchHandlers'
 import type { AppUser, EpisodeWatched, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 

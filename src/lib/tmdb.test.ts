@@ -98,19 +98,6 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     }
   })
 
-  it('getShowDetailsBulk resolves each id independently, dropping failures', async () => {
-    vi.mocked(fetch).mockImplementation(async (input) => {
-      const url = String(input)
-      if (url.includes('/tv/2')) return jsonResponse({}, false, 404)
-      return jsonResponse({ id: 1, name: 'Show One' })
-    })
-    const { getShowDetailsBulk } = await import('./tmdb')
-    const map = await getShowDetailsBulk([1, 2, 1])
-    expect(map.get(1)).toEqual({ id: 1, name: 'Show One' })
-    expect(map.has(2)).toBe(false)
-    expect(fetch).toHaveBeenCalledTimes(2)
-  })
-
   it('getSeasonDetail fetches the season path', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ id: 1, season_number: 1, episodes: [] }))
     const { getSeasonDetail } = await import('./tmdb')

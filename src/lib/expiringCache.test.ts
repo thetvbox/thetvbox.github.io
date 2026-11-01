@@ -18,6 +18,13 @@ describe('ExpiringCache', () => {
     expect(new ExpiringCache<string, number>(100).get('missing')).toBeUndefined()
   })
 
+  it('forgets a deleted key', () => {
+    const cache = new ExpiringCache<string, number>(100)
+    cache.set('a', 1)
+    cache.delete('a')
+    expect(cache.get('a')).toBeUndefined()
+  })
+
   it('restarts the clock when a key is stored again', () => {
     let now = 0
     const cache = new ExpiringCache<string, number>(100, () => now)

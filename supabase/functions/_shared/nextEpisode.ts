@@ -1,4 +1,5 @@
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
+import { applySeasonSplits, type SeasonSplitRow } from './seasonSplits.ts'
 
 const TMDB_API_BASE = 'https://api.themoviedb.org/3'
 
@@ -25,7 +26,7 @@ export interface NextEpisodeResult {
   episodeNumber: number
 }
 
-/** Works out a user's next unwatched episode of a show: the first season TMDB lists that isn't fully watched yet, at watched-count + 1 -- the same rule the app's season progress bar uses. Null when every real season is fully watched. */
+/** Works out a user's next unwatched episode of a show, in the app's (streamer's) season numbering: the first season that isn't fully watched yet, at watched-count + 1 -- the same rule the app's season progress bar uses. Null when every real season is fully watched. */
 export async function resolveNextEpisode(
   supabase: SupabaseClient,
   userId: string,
@@ -43,9 +44,14 @@ export async function resolveNextEpisode(
     watchedBySeason.set(row.season_number, (watchedBySeason.get(row.season_number) ?? 0) + 1)
   }
 
-  const seasons = (await fetchTmdbSeasons(showId))
-    .filter((s) => s.season_number > 0 && s.episode_count > 0)
-    .sort((a, b) => a.season_number - b.season_number)
+  const { data: splitRows, error: splitError } = await supabase
+    .from('season_splits')
+    .select('tmdb_season, part_sizes')
+    .eq('show_id', showId)
+  if (splitError) throw splitError
+
+  const seasons = applySeasonSplits(await fetchTmdbSeasons(showId), (splitRows ?? []) as SeasonSplitRow[])
+    .filter((s) => s.episode_count > 0)
 
   for (const season of seasons) {
     const watched = Math.min(watchedBySeason.get(season.season_number) ?? 0, season.episode_count)

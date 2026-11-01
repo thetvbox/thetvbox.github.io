@@ -69,6 +69,8 @@ export const TABLE_PUSH_SUBSCRIPTIONS = 'push_subscriptions'
 export const RPC_REDEEM_INVITE = 'redeem_invite'
 export const RPC_CLAIM_ACCOUNT = 'claim_account_by_email'
 export const RPC_REGISTER_PUSH_SUBSCRIPTION = 'register_push_subscription'
+export const RPC_RECORD_SEASON_SPLITS = 'record_season_splits'
+export const TABLE_SEASON_SPLITS = 'season_splits'
 
 export const BUG_REPORT_TITLE_MAX_LENGTH = 200
 export const BUG_REPORT_DESCRIPTION_MAX_LENGTH = 4000

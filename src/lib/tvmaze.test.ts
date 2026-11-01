@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { effectiveAirDate, findNextUpcomingEpisode, getCorrectedAirDates, tvmazeEpisodeKey } from './tvmaze'
+import { effectiveAirDate, findNextUpcomingEpisode, getCorrectedAirDates, getTvmazeSeasonSizes, tvmazeEpisodeKey } from './tvmaze'
 import type { TmdbEpisode } from '../types'
 
 function episode(overrides: Partial<TmdbEpisode> = {}): TmdbEpisode {
@@ -31,6 +31,46 @@ afterEach(() => {
 describe('tvmazeEpisodeKey', () => {
   it('joins season and episode number with a dash', () => {
     expect(tvmazeEpisodeKey(2, 5)).toBe('2-5')
+  })
+})
+
+describe('getTvmazeSeasonSizes', () => {
+  it('counts regular episodes per season in season order, skipping specials and unnumbered episodes', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ id: 50701 }))
+      .mockResolvedValueOnce(
+        jsonResponse([
+          { season: 2, number: 1, airdate: '' },
+          { season: 1, number: 1, airdate: '' },
+          { season: 1, number: 2, airdate: '' },
+          { season: 1, number: null, airdate: '' },
+          { season: 0, number: 1, airdate: '' },
+          { season: 2, number: 2, airdate: '' },
+          { season: 2, number: 3, airdate: '' },
+        ]),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await getTvmazeSeasonSizes('tt-sizes')).toEqual([2, 3])
+  })
+
+  it('returns null without an IMDb id, without a TVmaze match, or without episodes', async () => {
+    expect(await getTvmazeSeasonSizes(null)).toBeNull()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(null, 404)))
+    expect(await getTvmazeSeasonSizes('tt-sizes-missing')).toBeNull()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(jsonResponse({ id: 42 })).mockResolvedValueOnce(jsonResponse([])))
+    expect(await getTvmazeSeasonSizes('tt-sizes-empty')).toBeNull()
+  })
+
+  it('shares one episodes request with the air-date corrections', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ id: 4321 }))
+      .mockResolvedValueOnce(jsonResponse([{ season: 1, number: 1, airdate: '2021-01-08' }]))
+    vi.stubGlobal('fetch', fetchMock)
+    await getTvmazeSeasonSizes('tt-shared')
+    await getCorrectedAirDates('tt-shared')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
 

@@ -1009,3 +1009,207 @@ drop policy if exists "Anyone can delete expo push tokens" on public.expo_push_t
 create policy "Anyone can delete expo push tokens"
   on public.expo_push_tokens for delete
   using (true);
+
+-- ---------------------------------------------------------------------------
+-- Season splits (2026-11-01): TMDB seasons that streamers split (Lupin's TMDB season 1 is Netflix's Parts 1
+-- and 2). The app shows and stores the streamer's numbering; this is the shared, permanent record of each
+-- split. Needs public.current_app_user_id(), which production already has.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.season_splits (
+  show_id integer not null,
+  tmdb_season integer not null check (tmdb_season > 0),
+  part_sizes integer[] not null check (cardinality(part_sizes) between 2 and 20 and 0 < all (part_sizes)),
+  created_at timestamptz not null default now(),
+  primary key (show_id, tmdb_season)
+);
+alter table public.season_splits enable row level security;
+revoke all on public.season_splits from anon, authenticated;
+grant select on public.season_splits to authenticated;
+drop policy if exists "Members read season splits" on public.season_splits;
+create policy "Members read season splits" on public.season_splits
+  for select to authenticated using ((select public.current_app_user_id()) is not null);
+
+-- A show's splits as [{tmdb_season, part_sizes}], oldest season first.
+create or replace function public.season_splits_for(p_show_id integer)
+returns jsonb
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(
+    jsonb_agg(jsonb_build_object('tmdb_season', tmdb_season, 'part_sizes', to_jsonb(part_sizes)) order by tmdb_season),
+    '[]'::jsonb
+  )
+  from public.season_splits where show_id = p_show_id
+$$;
+
+-- Maps a TMDB season/episode to the streamer's numbering under the given splits.
+create or replace function public.season_split_to_display(p_splits jsonb, p_season integer, p_episode integer, out season integer, out episode integer)
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  split jsonb;
+  split_season integer;
+  sizes integer[];
+  shift integer := 0;
+  preceding integer;
+begin
+  for split in select value from jsonb_array_elements(coalesce(p_splits, '[]'::jsonb)) order by (value->>'tmdb_season')::integer loop
+    split_season := (split->>'tmdb_season')::integer;
+    exit when split_season > p_season;
+    sizes := array(select jsonb_array_elements_text(split->'part_sizes')::integer);
+    if split_season = p_season then
+      preceding := 0;
+      for part in 1..cardinality(sizes) loop
+        if p_episode <= preceding + sizes[part] or part = cardinality(sizes) then
+          season := p_season + shift + part - 1;
+          episode := p_episode - preceding;
+          return;
+        end if;
+        preceding := preceding + sizes[part];
+      end loop;
+    end if;
+    shift := shift + cardinality(sizes) - 1;
+  end loop;
+  season := p_season + shift;
+  episode := p_episode;
+end;
+$$;
+
+-- The inverse of season_split_to_display: the streamer's season/episode back to TMDB's.
+create or replace function public.season_split_to_tmdb(p_splits jsonb, p_season integer, p_episode integer, out season integer, out episode integer)
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  split jsonb;
+  split_season integer;
+  sizes integer[];
+  shift integer := 0;
+  part integer;
+begin
+  for split in select value from jsonb_array_elements(coalesce(p_splits, '[]'::jsonb)) order by (value->>'tmdb_season')::integer loop
+    split_season := (split->>'tmdb_season')::integer;
+    sizes := array(select jsonb_array_elements_text(split->'part_sizes')::integer);
+    exit when p_season < split_season + shift;
+    if p_season <= split_season + shift + cardinality(sizes) - 1 then
+      part := p_season - split_season - shift + 1;
+      season := split_season;
+      episode := p_episode + coalesce((select sum(s) from unnest(sizes[1:part - 1]) s), 0);
+      return;
+    end if;
+    shift := shift + cardinality(sizes) - 1;
+  end loop;
+  season := p_season - shift;
+  episode := p_episode;
+end;
+$$;
+
+-- Lets the finished-show notification skip rows that are only being renumbered.
+create or replace function public.notify_on_show_finished()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  watched_count integer;
+  already_notified boolean;
+begin
+  if current_setting('app.renumbering_seasons', true) = 'on' then
+    return new;
+  end if;
+  if new.show_total_episodes is null or new.show_total_episodes <= 0 then
+    return new;
+  end if;
+
+  select count(*) into watched_count
+  from public.episode_watched
+  where user_id = new.user_id and show_id = new.show_id;
+
+  if watched_count < new.show_total_episodes then
+    return new;
+  end if;
+
+  select exists(
+    select 1 from public.notifications
+    where actor_id = new.user_id and show_id = new.show_id and type = 'show_finished'
+  ) into already_notified;
+
+  if already_notified then
+    return new;
+  end if;
+
+  insert into public.notifications (user_id, actor_id, actor_username, type, show_id, show_name, show_poster_path, episode_count)
+  select f.follower_id, new.user_id, u.username, 'show_finished', new.show_id, new.show_name, new.show_poster_path, new.show_total_episodes
+  from public.follows f
+  join public.users u on u.id = new.user_id
+  where f.followed_id = new.user_id
+    and f.follower_id <> new.user_id;
+
+  return new;
+end;
+$function$;
+
+-- Records newly found splits for a show (never removing one) and renumbers everyone's watch log and season ratings to match.
+create or replace function public.record_season_splits(p_show_id integer, p_splits jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  old_splits jsonb;
+  new_splits jsonb;
+  temp_offset constant integer := 100000;
+begin
+  if public.current_app_user_id() is null then
+    raise exception 'Sign in to update season numbering.' using errcode = '42501';
+  end if;
+  if jsonb_typeof(p_splits) is distinct from 'array' then
+    raise exception 'Splits must be a list.' using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('season_splits'), p_show_id);
+  old_splits := public.season_splits_for(p_show_id);
+
+  insert into public.season_splits (show_id, tmdb_season, part_sizes)
+  select p_show_id, (s->>'tmdb_season')::integer, array(select jsonb_array_elements_text(s->'part_sizes')::integer)
+  from jsonb_array_elements(p_splits) s
+  on conflict (show_id, tmdb_season) do nothing;
+
+  new_splits := public.season_splits_for(p_show_id);
+  if new_splits = old_splits then
+    return;
+  end if;
+
+  perform set_config('app.renumbering_seasons', 'on', true);
+
+  -- Two steps through a high temporary season number so no row collides with one not yet moved.
+  update public.episode_watched w
+  set season_number = d.season + temp_offset, episode_number = d.episode
+  from public.episode_watched src
+  cross join lateral public.season_split_to_tmdb(old_splits, src.season_number, src.episode_number) t
+  cross join lateral public.season_split_to_display(new_splits, t.season, t.episode) d
+  where w.id = src.id and src.show_id = p_show_id;
+  update public.episode_watched set season_number = season_number - temp_offset
+  where show_id = p_show_id and season_number >= temp_offset;
+
+  update public.season_ratings r
+  set season_number = d.season + temp_offset, season_name = 'Season ' || d.season
+  from public.season_ratings src
+  cross join lateral public.season_split_to_tmdb(old_splits, src.season_number, 1) t
+  cross join lateral public.season_split_to_display(new_splits, t.season, t.episode) d
+  where r.id = src.id and src.show_id = p_show_id;
+  update public.season_ratings set season_number = season_number - temp_offset
+  where show_id = p_show_id and season_number >= temp_offset;
+
+  perform set_config('app.renumbering_seasons', 'off', true);
+end;
+$$;
+revoke all on function public.record_season_splits(integer, jsonb) from public, anon;
+grant execute on function public.record_season_splits(integer, jsonb) to authenticated;

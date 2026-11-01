@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useShowDetail } from './useShowDetail'
 import type { AppUser, TmdbShowDetail } from '../types'
 
+vi.mock('../lib/shows', () => ({ getShowDetail: vi.fn(), getSeasonDetail: vi.fn() }))
+vi.mock('../lib/seasonSplitData', () => ({ syncSeasonSplits: vi.fn(() => Promise.resolve(false)) }))
 vi.mock('../lib/tmdb', () => ({
-  getShowDetail: vi.fn(),
-  getSeasonDetail: vi.fn(),
   getWatchProviders: vi.fn(() => Promise.resolve(null)),
   detectRegion: vi.fn(() => 'US'),
 }))
@@ -74,7 +74,8 @@ vi.mock('../lib/omdb', () => ({
   getExternalRatings: vi.fn(() => Promise.resolve(null)),
 }))
 
-import { getShowDetail, getSeasonDetail } from '../lib/tmdb'
+import { getShowDetail, getSeasonDetail } from '../lib/shows'
+import { syncSeasonSplits } from '../lib/seasonSplitData'
 import { fetchAllSeasonRatingsForShow } from '../lib/seasonRatings'
 import { fetchDismissedItem, undismissShow } from '../lib/showDismissed'
 import { fetchDroppedItem, undropShow } from '../lib/showDropped'
@@ -141,6 +142,7 @@ beforeEach(() => {
     episodes: [{ id: 1, season_number: 1, episode_number: 1, name: 'Pilot', overview: '', air_date: '2020-01-01', runtime: 30, still_path: null }],
   })
   vi.mocked(fetchWatchedForShow).mockResolvedValue({})
+  vi.mocked(syncSeasonSplits).mockResolvedValue(false)
   vi.mocked(fetchDismissedItem).mockResolvedValue(null)
   vi.mocked(fetchDroppedItem).mockResolvedValue(null)
   vi.mocked(fetchWatchlistItem).mockResolvedValue(null)
@@ -157,6 +159,32 @@ describe('useShowDetail', () => {
     await waitFor(() => expect(result.current.loadingShow).toBe(false))
     expect(result.current.show?.id).toBe(1)
     expect(result.current.activeSeason).toBe(1)
+  })
+
+  it('checks for season splits before reading the watch log, so a renumbering lands first', async () => {
+    const order: string[] = []
+    vi.mocked(syncSeasonSplits).mockImplementation(async () => {
+      order.push('sync')
+      return true
+    })
+    vi.mocked(fetchWatchedForShow).mockImplementation(async () => {
+      order.push('watched')
+      return {}
+    })
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+    expect(order).toEqual(['sync', 'watched'])
+    expect(syncSeasonSplits).toHaveBeenCalledWith(1)
+  })
+
+  it('still loads the show when the season split check fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.mocked(syncSeasonSplits).mockRejectedValue(new Error('TVmaze down'))
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.loadingShow).toBe(false))
+    expect(result.current.show?.id).toBe(1)
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
   })
 
   it('marking an episode watched resumes a dismissed, dropped, and watchlisted show', async () => {

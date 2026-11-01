@@ -1,9 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../lib/tmdb', () => ({ getShowDetailsBulk: vi.fn() }))
+vi.mock('../lib/shows', () => ({ getShowDetailsBulk: vi.fn() }))
 
-import { getShowDetailsBulk } from '../lib/tmdb'
+import { getShowDetailsBulk } from '../lib/shows'
 import { useShowDetails } from './useShowDetails'
 import type { TmdbShowDetail } from '../types'
 

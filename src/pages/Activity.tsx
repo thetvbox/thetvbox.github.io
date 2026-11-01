@@ -11,7 +11,7 @@ import { buildFollowActivity, buildFriendsWatching, buildGroupActivity, mergeAct
 import type { ActivityFeedItem, FriendWatchingEntry } from '../lib/showActivity'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
-import { getShowDetailsBulk } from '../lib/tmdb'
+import { getShowDetailsBulk } from '../lib/shows'
 import { groupByDay } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
 import { offscreenSkipStyle } from '../lib/layout'

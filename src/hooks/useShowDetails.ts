@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getShowDetailsBulk } from '../lib/tmdb'
+import { getShowDetailsBulk } from '../lib/shows'
 import type { TmdbShowDetail } from '../types'
 
 /** Fetches bulk TMDB show details for the History filters, gated by `enabled`. */
