@@ -105,7 +105,6 @@ create table if not exists public.show_ratings (
   unique (user_id, show_id)
 );
 
-create index if not exists show_ratings_user_id_idx on public.show_ratings (user_id);
 create index if not exists show_ratings_rated_at_idx on public.show_ratings (user_id, rated_at desc);
 
 alter table public.show_ratings enable row level security;
@@ -152,8 +151,6 @@ create table if not exists public.season_ratings (
   unique (user_id, show_id, season_number)
 );
 
-create index if not exists season_ratings_user_id_idx on public.season_ratings (user_id);
-create index if not exists season_ratings_user_show_idx on public.season_ratings (user_id, show_id);
 
 alter table public.season_ratings enable row level security;
 
@@ -208,8 +205,6 @@ create table if not exists public.episode_watched (
 alter table public.episode_watched
   add column if not exists watched_at_unknown boolean not null default false;
 
-create index if not exists episode_watched_user_id_idx on public.episode_watched (user_id);
-create index if not exists episode_watched_user_show_idx on public.episode_watched (user_id, show_id);
 create index if not exists episode_watched_watched_at_idx on public.episode_watched (user_id, watched_at desc);
 
 alter table public.episode_watched enable row level security;
@@ -488,7 +483,6 @@ create table if not exists public.show_started (
   unique (user_id, show_id)
 );
 
-create index if not exists show_started_user_id_idx on public.show_started (user_id);
 
 alter table public.show_started enable row level security;
 
@@ -568,7 +562,6 @@ create table if not exists public.show_dropped (
   unique (user_id, show_id)
 );
 
-create index if not exists show_dropped_user_id_idx on public.show_dropped (user_id);
 
 alter table public.show_dropped enable row level security;
 
@@ -636,7 +629,6 @@ create table if not exists public.follows (
   check (follower_id != followed_id)
 );
 
-create index if not exists follows_follower_id_idx on public.follows (follower_id);
 create index if not exists follows_followed_id_idx on public.follows (followed_id, created_at desc);
 
 alter table public.follows enable row level security;
@@ -1206,3 +1198,27 @@ end;
 $$;
 revoke all on function public.record_season_splits(integer, jsonb) from public, anon;
 grant execute on function public.record_season_splits(integer, jsonb) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Performance (2026-11-01): drop indexes that a unique index already covers on databases built
+-- from an older copy of this file (each one slowed every write for no read benefit), and evaluate auth.uid() once per query in the auth-links
+-- policy (user_auth_links comes from the tv-box-native migrations).
+-- ---------------------------------------------------------------------------
+
+drop index if exists public.episode_watched_user_id_idx;
+drop index if exists public.episode_watched_user_show_idx;
+drop index if exists public.season_ratings_user_id_idx;
+drop index if exists public.season_ratings_user_show_idx;
+drop index if exists public.show_ratings_user_id_idx;
+drop index if exists public.show_dropped_user_id_idx;
+drop index if exists public.show_started_user_id_idx;
+drop index if exists public.follows_follower_id_idx;
+
+do $$
+begin
+  if to_regclass('public.user_auth_links') is not null then
+    drop policy if exists "Users can read their own auth links" on public.user_auth_links;
+    create policy "Users can read their own auth links" on public.user_auth_links
+      for select to authenticated using (auth_user_id = (select auth.uid()));
+  end if;
+end $$;

@@ -117,6 +117,20 @@ describe('ProfileActivity', () => {
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
   })
 
+  it("shows the stats and other tabs while the diary's episodes are still loading", async () => {
+    vi.mocked(fetchRecentDatedWatched).mockReturnValue(new Promise(() => {}))
+    vi.mocked(fetchRecentShowRatings).mockResolvedValue([rating({ rating: 4 })])
+    const { container } = renderActivity()
+    await waitFor(() => expect(screen.getByText('Shows rated')).toBeInTheDocument())
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+  })
+
+  it('shows an error when the diary fails to load', async () => {
+    vi.mocked(fetchRecentDatedWatched).mockRejectedValue(new Error('offline'))
+    renderActivity()
+    await waitFor(() => expect(screen.getByText(/offline|Failed to load the diary/)).toBeInTheDocument())
+  })
+
   it('shows stat cards computed from the fetched data', async () => {
     vi.mocked(fetchRecentShowRatings).mockResolvedValue([rating({ rating: 4 }), rating({ id: 'r2', rating: 2 })])
     renderActivity()

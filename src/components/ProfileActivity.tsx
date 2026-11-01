@@ -80,6 +80,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
   const [newListName, setNewListName] = useState('')
   const [savingList, setSavingList] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadingDiary, setLoadingDiary] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast, showUndo, showError, dismiss } = useToast()
 
@@ -92,7 +93,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     setError(null)
     Promise.all([
       fetchRecentShowRatings(userId, ACTIVITY_FETCH_LIMIT),
-      fetchRecentDatedWatched(userId, ACTIVITY_FETCH_LIMIT),
       fetchShowWatchSummary(userId),
       fetchUndatedShowWatchSummary(userId),
       fetchRecentRewatches(userId, ACTIVITY_FETCH_LIMIT),
@@ -103,7 +103,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
       .then(
         ([
           ratingRows,
-          datedWatchedRows,
           showSummaryRows,
           undatedSummaryRows,
           rewatchRows,
@@ -113,7 +112,6 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
         ]) => {
           if (!cancelled) {
             setRatings(ratingRows)
-            setDatedWatched(datedWatchedRows)
             setShowSummaries(showSummaryRows)
             setUndatedSummaries(undatedSummaryRows)
             setRewatches(rewatchRows)
@@ -128,6 +126,26 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  // Every dated episode is by far the biggest read, so the rest of the profile doesn't wait for it.
+  useEffect(() => {
+    let cancelled = false
+    // oxlint-disable-next-line react/set-state-in-effect
+    setLoadingDiary(true)
+    fetchRecentDatedWatched(userId, ACTIVITY_FETCH_LIMIT)
+      .then((rows) => {
+        if (!cancelled) setDatedWatched(rows)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(errorMessage(err, 'Failed to load the diary.'))
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDiary(false)
       })
     return () => {
       cancelled = true
@@ -257,7 +275,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
-      {loading ? (
+      {loading || (tab === 'diary' && loadingDiary) ? (
         <RowListSkeleton />
       ) : tab === 'diary' ? (
         <DiaryTab groups={diaryGroups} undatedEntries={undatedDiaryEntries} username={username} />
