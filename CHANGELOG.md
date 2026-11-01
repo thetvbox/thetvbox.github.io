@@ -129,6 +129,14 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Changed
 
+- Faster loading. Home reads per-show watch totals instead of every
+  watched episode, Profile shows everything but the Diary without waiting
+  for it, the same TMDB show requested by two screens at once is fetched
+  once, a list of shows reads its season splits in one query, and the
+  Activity feed renders at most its newest 500 events.
+- The show page holds back its season list and progress bar until it has
+  checked the show's season numbering, so a watch can't be filed under a
+  season number that's about to change.
 - Redesigned the app icon (favicon, home-screen/PWA icon, and the in-app
   TV Box mark in the top bar/Login/passcode screen) to drop the purple
   brand-color background in favor of a neutral slate-glass gradient that
@@ -314,6 +322,16 @@ All notable changes to TV Box are documented here. Format loosely follows
   right edge on phones.
 - A missing IMDb or Rotten Tomatoes score now says "Not available" instead
   of a broken icon or a Rotten Tomatoes link that could 404.
+- Activity's group feed and Now Watching used only the most recent 1,500
+  watched episodes across everyone, so a member's older finished shows
+  looked unfinished or still in progress. They now use every member's full
+  watch totals, and Now Watching respects every started, hidden and dropped
+  show instead of the newest 500.
+- "Mark it all watched" no longer risks marking unaired episodes when a
+  season's episode list fails to load; it asks you to try again. Both bulk
+  actions now say so when nothing has aired yet.
+- Opening another member's profile no longer briefly keeps the previous
+  person's diary.
 
 - Activity's new Filters sheet computed its Genre options from the
   *already person-filtered* Now Watching list, so selecting a person

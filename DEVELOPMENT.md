@@ -10,7 +10,7 @@
    - `VITE_TMDB_API_KEY` — a TMDB v3 API key.
    - `VITE_OMDB_API_KEY` — optional; a free omdbapi.com key. Powers the IMDb/Rotten Tomatoes badges on Show Detail. Leave unset to just hide those.
    - `VITE_SITE_PASSCODE` — optional; leave unset to disable the passcode gate.
-3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables. Later changes to the shared production database (real Supabase Auth sessions, invites, members-only access) are migrations in the `tv-box-native` repo's `supabase/migrations/`; `schema.sql` covers this app's own tables plus the season splits section at its end.
+3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables. Database changes for this app's own tables, views, functions and indexes go in `schema.sql` (written to be safe to re-run) and are applied to production by hand. Changes to the shared auth layer (real Supabase Auth sessions, invites, members-only access) are migrations in the `tv-box-native` repo's `supabase/migrations/`.
 4. Deploy the Edge Functions sign-in and push notifications depend on — see [Edge Functions](#edge-functions) below. Without these, the app loads but no one can sign in (passkeys are the only auth mechanism).
 5. `npm run dev`
 
