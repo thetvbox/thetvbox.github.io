@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_DROPPED } from './constants'
+import { ACTIVITY_FETCH_LIMIT, TABLE_SHOW_DROPPED } from './constants'
 import type { ShowDropped, ShowDroppedWithUser } from '../types'
 
 /** Fetches all shows one user has dropped. */
@@ -16,7 +16,7 @@ export async function fetchDroppedForUser(userId: string): Promise<ShowDropped[]
 }
 
 /** Every dropped-show row across the whole group, joined with usernames, for a group "now watching" view. */
-export async function fetchDroppedAllUsers(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<ShowDroppedWithUser[]> {
+export async function fetchDroppedAllUsers(limit = ACTIVITY_FETCH_LIMIT): Promise<ShowDroppedWithUser[]> {
   return fetchPaginated<ShowDroppedWithUser>(async (from, to) => {
     const { data, error, count } = await supabase
       .from(TABLE_SHOW_DROPPED)

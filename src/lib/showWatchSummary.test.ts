@@ -54,6 +54,15 @@ describe('fetchShowWatchSummaryAllUsers', () => {
     expect(builder.eq).not.toHaveBeenCalled()
   })
 
+  it('pages past the per-request row cap in a stable order', async () => {
+    const builder = mockFrom({ data: [summary()], count: 2500 })
+    await fetchShowWatchSummaryAllUsers()
+    expect(builder.order).toHaveBeenCalledWith('user_id')
+    expect(builder.order).toHaveBeenCalledWith('show_id')
+    expect(builder.range).toHaveBeenCalledWith(0, 999)
+    expect(builder.range).toHaveBeenCalledWith(2000, 2999)
+  })
+
   it('returns an empty array when data is null, and throws on an error', async () => {
     mockFrom({ data: null })
     expect(await fetchShowWatchSummaryAllUsers()).toEqual([])

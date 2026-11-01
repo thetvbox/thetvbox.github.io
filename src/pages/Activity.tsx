@@ -16,6 +16,7 @@ import { groupByDay } from '../lib/date'
 import { PAGE_HEADER_MOTION, staggerRowMotion, staggerTileMotion } from '../lib/motion'
 import { offscreenSkipStyle } from '../lib/layout'
 import {
+  ACTIVITY_FEED_LIMIT,
   GROUP_ACTIVITY_FETCH_LIMIT,
   NOW_WATCHING_PREVIEW_LIMIT,
   SKELETON_ROWS_WIDE,
@@ -270,7 +271,11 @@ export default function Activity() {
   }, [filtersOpen, filtersAvailable])
 
   const filtered = useMemo(
-    () => (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped),
+    () =>
+      (filterUsername ? scoped.filter((item) => actorUsername(item) === filterUsername) : scoped).slice(
+        0,
+        ACTIVITY_FEED_LIMIT,
+      ),
     [scoped, filterUsername],
   )
 

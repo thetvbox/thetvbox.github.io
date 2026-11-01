@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_WATCHING_DISMISSED } from './constants'
+import { ACTIVITY_FETCH_LIMIT, TABLE_SHOW_WATCHING_DISMISSED } from './constants'
 import type { ShowWatchingDismissed, ShowWatchingDismissedWithUser } from '../types'
 
 /** Fetches all shows one user has hidden from Now Watching. */
@@ -13,7 +13,7 @@ export async function fetchDismissedForUser(userId: string): Promise<ShowWatchin
 
 /** Every dismissed-show row across the whole group, joined with usernames, for a group "now watching" view. */
 export async function fetchDismissedAllUsers(
-  limit = GROUP_ACTIVITY_FETCH_LIMIT,
+  limit = ACTIVITY_FETCH_LIMIT,
 ): Promise<ShowWatchingDismissedWithUser[]> {
   return fetchPaginated<ShowWatchingDismissedWithUser>(async (from, to) => {
     const { data, error, count } = await supabase

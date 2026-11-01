@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaginated } from './pagination'
-import { GROUP_ACTIVITY_FETCH_LIMIT, TABLE_SHOW_STARTED } from './constants'
+import { ACTIVITY_FETCH_LIMIT, TABLE_SHOW_STARTED } from './constants'
 import type { ShowStarted, ShowStartedWithUser } from '../types'
 
 /** Fetches all shows one user has explicitly started. */
@@ -12,7 +12,7 @@ export async function fetchStartedForUser(userId: string): Promise<ShowStarted[]
 }
 
 /** Every started-show row across the whole group, joined with usernames, for a group "now watching" view. */
-export async function fetchStartedAllUsers(limit = GROUP_ACTIVITY_FETCH_LIMIT): Promise<ShowStartedWithUser[]> {
+export async function fetchStartedAllUsers(limit = ACTIVITY_FETCH_LIMIT): Promise<ShowStartedWithUser[]> {
   return fetchPaginated<ShowStartedWithUser>(async (from, to) => {
     const { data, error, count } = await supabase
       .from(TABLE_SHOW_STARTED)

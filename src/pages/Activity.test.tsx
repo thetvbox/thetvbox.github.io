@@ -31,7 +31,7 @@ import { fetchDroppedAllUsers } from '../lib/showDropped'
 import { getShowDetailsBulk } from '../lib/shows'
 import { fetchAllUsers } from '../lib/users'
 import { fetchAllFollows, fetchFollowingIds } from '../lib/follows'
-import { NOW_WATCHING_PREVIEW_LIMIT } from '../lib/constants'
+import { ACTIVITY_FEED_LIMIT, NOW_WATCHING_PREVIEW_LIMIT } from '../lib/constants'
 import Activity from './Activity'
 import type { AppUser, Follow, ShowRatingWithUser, ShowStartedWithUser, TmdbShowDetail } from '../types'
 
@@ -135,6 +135,22 @@ describe('Activity', () => {
     vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue([ratingFor(friend)])
     renderActivity()
     await waitFor(() => expect(screen.getByText('Rated Show One')).toBeInTheDocument())
+  })
+
+  it('shows at most the feed limit of the newest events', async () => {
+    const ratings = Array.from({ length: ACTIVITY_FEED_LIMIT + 5 }, (_, i) =>
+      ratingFor(friend, {
+        id: `r-${i}`,
+        show_id: i + 1,
+        show_name: `Show ${i + 1}`,
+        rated_at: new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString(),
+      }),
+    )
+    vi.mocked(fetchRecentShowRatingsAllUsers).mockResolvedValue(ratings)
+    renderActivity()
+    await waitFor(() => expect(screen.getByText(`Rated Show ${ACTIVITY_FEED_LIMIT + 5}`)).toBeInTheDocument())
+    expect(screen.getAllByText(/^Rated Show/)).toHaveLength(ACTIVITY_FEED_LIMIT)
+    expect(screen.queryByText('Rated Show 1')).not.toBeInTheDocument()
   })
 
   it('filters the feed to people you follow when Following is active', async () => {
