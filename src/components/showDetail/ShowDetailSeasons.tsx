@@ -9,8 +9,8 @@ import { EpisodeRowSkeleton } from '../Skeletons'
 import { formatShortDate, isFutureDate } from '../../lib/date'
 import { pluralSuffix } from '../../lib/format'
 import { scrollBehavior } from '../../lib/motion'
-import { computeSeasonProgress, countWatchedBySeason } from '../../lib/seasonProgress'
-import { watchedKey } from '../../lib/watched'
+import { computeSeasonProgress } from '../../lib/seasonProgress'
+import { countWatchedBySeason, watchedKey } from '../../lib/watched'
 import type { SeasonRatingWithUser, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
 interface ShowDetailSeasonsProps {

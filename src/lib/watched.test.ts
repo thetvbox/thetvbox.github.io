@@ -11,6 +11,7 @@ import {
   bulkUnmarkWatched,
   fetchRecentDatedWatched,
   fetchRecentWatched,
+  countWatchedBySeason,
   fetchWatchedForShow,
   fetchWatchedForUserAndShow,
   markWatched,
@@ -295,5 +296,16 @@ describe('bulkUnmarkWatched', () => {
     await expect(bulkUnmarkWatched('u1', 1, [{ seasonNumber: 1, episodeNumber: 1 }])).rejects.toEqual({
       message: 'fail',
     })
+  })
+})
+
+describe('countWatchedBySeason', () => {
+  it('tallies rows per season', () => {
+    const rows = [{ season_number: 1 }, { season_number: 1 }, { season_number: 2 }]
+    expect(countWatchedBySeason(rows)).toEqual({ 1: 2, 2: 1 })
+  })
+
+  it('returns an empty object for no rows', () => {
+    expect(countWatchedBySeason([])).toEqual({})
   })
 })

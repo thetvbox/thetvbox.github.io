@@ -1,21 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { computeSeasonProgress, countWatchedBySeason } from './seasonProgress'
+import { computeSeasonProgress } from './seasonProgress'
 import type { TmdbSeasonSummary } from '../types'
 
 function season(seasonNumber: number, episodeCount: number): TmdbSeasonSummary {
   return { id: seasonNumber, season_number: seasonNumber, name: `Season ${seasonNumber}`, episode_count: episodeCount, poster_path: null, air_date: null }
 }
-
-describe('countWatchedBySeason', () => {
-  it('tallies rows per season', () => {
-    const rows = [{ season_number: 1 }, { season_number: 1 }, { season_number: 2 }]
-    expect(countWatchedBySeason(rows)).toEqual({ 1: 2, 2: 1 })
-  })
-
-  it('returns an empty object for no rows', () => {
-    expect(countWatchedBySeason([])).toEqual({})
-  })
-})
 
 describe('computeSeasonProgress', () => {
   it('returns null when there are no real seasons (specials only)', () => {

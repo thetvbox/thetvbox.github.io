@@ -31,7 +31,7 @@ import Avatar from '../components/Avatar'
 import SegmentedControl from '../components/SegmentedControl'
 import { PILL_ACTIVE_CLASSES, PILL_INACTIVE_CLASSES, PILL_SIZE_CLASSES } from '../components/Chip'
 import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
-import { ShowGridSkeleton } from '../components/Skeletons'
+import { RowListSkeleton, ShowGridSkeleton } from '../components/Skeletons'
 import { useAuth } from '../contexts/AuthContext'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
@@ -397,11 +397,7 @@ export default function Activity() {
       <h2 className="mb-4 font-display text-lg font-semibold text-base-100">Recent Activity</h2>
 
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS_WIDE }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
+        <RowListSkeleton count={SKELETON_ROWS_WIDE} />
       ) : dayGroups.length === 0 ? (
         <EmptyState icon="👋">
           <p className="max-w-xs text-sm text-base-500">{emptyMessage}</p>

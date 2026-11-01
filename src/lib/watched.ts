@@ -31,6 +31,13 @@ export async function fetchWatchedForUserAndShow(
   )
 }
 
+/** Tallies watched-episode counts per season from a flat list of watched rows. */
+export function countWatchedBySeason(rows: { season_number: number }[]): Record<number, number> {
+  const counts: Record<number, number> = {}
+  for (const row of rows) counts[row.season_number] = (counts[row.season_number] ?? 0) + 1
+  return counts
+}
+
 /** How many episodes of each season one user has watched, for just the given shows, read as two narrow columns. */
 export async function fetchWatchedSeasonCounts(
   userId: string,
@@ -49,11 +56,13 @@ export async function fetchWatchedSeasonCounts(
         .range(from, to),
     ACTIVITY_FETCH_LIMIT,
   )
+  const rowsByShow = new Map<number, { season_number: number }[]>()
   for (const row of rows) {
-    const bySeason = counts.get(row.show_id) ?? {}
-    bySeason[row.season_number] = (bySeason[row.season_number] ?? 0) + 1
-    counts.set(row.show_id, bySeason)
+    const showRows = rowsByShow.get(row.show_id)
+    if (showRows) showRows.push(row)
+    else rowsByShow.set(row.show_id, [row])
   }
+  for (const [showId, showRows] of rowsByShow) counts.set(showId, countWatchedBySeason(showRows))
   return counts
 }
 

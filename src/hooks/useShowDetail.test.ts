@@ -19,7 +19,8 @@ vi.mock('../lib/seasonRatings', () => ({
   upsertSeasonRating: vi.fn(),
   deleteSeasonRating: vi.fn(),
 }))
-vi.mock('../lib/watched', () => ({
+vi.mock('../lib/watched', async () => ({
+  countWatchedBySeason: (await vi.importActual<typeof import('../lib/watched')>('../lib/watched')).countWatchedBySeason,
   fetchWatchedForShow: vi.fn(() => Promise.resolve({})),
   markWatched: vi.fn(),
   unmarkWatched: vi.fn(),
