@@ -43,9 +43,9 @@ this function deletes that subscription row so it stops being retried.
 
 ## Native mobile devices
 
-The mobile app registers its `expo-notifications` push token into
-`public.expo_push_tokens` via `mobile/src/lib/pushNotifications.ts`,
-same open RLS convention. Sending is a single unauthenticated POST to
+The retired Expo app registered `expo-notifications` push tokens in
+`public.expo_push_tokens` (through the `register_expo_push_token` RPC);
+rows already there still get pushes. Sending is a single unauthenticated POST to
 `https://exp.host/--/api/v2/push/send` with an array of `{ to, title,
 body, data }` messages -- no push-service credentials to hold here at
 all. When Expo's response reports a ticket's `details.error` as

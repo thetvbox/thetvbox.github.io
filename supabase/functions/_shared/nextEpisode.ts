@@ -25,7 +25,7 @@ export interface NextEpisodeResult {
   episodeNumber: number
 }
 
-/** Works out a user's next unwatched episode of a show: the first season TMDB lists that isn't fully watched yet, at watched-count + 1 -- the same rule mobile/src/lib/seasonProgress.ts's progress bar uses. Null when every real season is fully watched. */
+/** Works out a user's next unwatched episode of a show: the first season TMDB lists that isn't fully watched yet, at watched-count + 1 -- the same rule the app's season progress bar uses. Null when every real season is fully watched. */
 export async function resolveNextEpisode(
   supabase: SupabaseClient,
   userId: string,

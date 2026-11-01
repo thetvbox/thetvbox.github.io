@@ -1,14 +1,14 @@
 // Supabase Edge Function: logs the next unwatched episode of a show as
 // watched, resolving the show by name against the user's own watch
 // history. Built for the "Log that I watched the next episode of..." Siri
-// App Intent (mobile/modules/siri-app-intents) -- unlike log-episode-watched,
+// App Intent (first built for the retired Expo app) -- unlike log-episode-watched,
 // the caller here only has a spoken show name, not an exact episode, so the
 // resolution that a Shortcut used to do by hand happens server-side instead.
 // PAT-authenticated the same way as log-episode-watched; see that
 // function's README for how a user gets a token.
 //
 // Needs a TMDB_API_KEY function secret (the same v3 API key the app itself
-// uses client-side, see mobile/.env.example) to look up season lengths --
+// uses client-side) to look up season lengths --
 // unlike log-episode-watched and send-push, this one won't work until that
 // secret is set.
 

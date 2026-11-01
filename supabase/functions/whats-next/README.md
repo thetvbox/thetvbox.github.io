@@ -1,14 +1,12 @@
 # whats-next Edge Function
 
 Suggests one show to watch next, for the "What should I watch next" Siri
-App Intent (`mobile/modules/siri-app-intents`). Same personal-access-token
+App Intent (first built for the retired Expo app). Same personal-access-token
 auth as `log-episode-watched` -- see that function's README for how a user
 gets a token.
 
-**Not deployed yet**, for the same reason as `log-next-episode-watched`
-(blocked by the environment's "Production Deploy" auto-mode classifier),
-and it needs the same `TMDB_API_KEY` function secret -- see that function's
-README for both.
+Deployed to production (verify_jwt on). It needs the same `TMDB_API_KEY`
+function secret as `log-next-episode-watched` -- see that function's README.
 
 ## How it picks
 

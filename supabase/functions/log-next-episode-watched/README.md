@@ -3,24 +3,19 @@
 Logs the next unwatched episode of a show as watched, given just the show's
 name -- the counterpart to `log-episode-watched` for the "Log that I
 watched the next episode of [show]" Siri App Intent
-(`mobile/modules/siri-app-intents`), where the caller only knows a spoken
+(first built for the retired Expo app), where the caller only knows a spoken
 show name, not an exact episode. Same personal-access-token auth as
 `log-episode-watched` -- see that function's README for how a user gets a
 token (Profile -> Shortcuts & Siri in the app).
 
-**Not deployed yet.** This was written and gated on the mobile/TypeScript
-side, but applying it needs the Supabase MCP `deploy_edge_function` call,
-which this environment's auto-mode classifier blocks as a "Production
-Deploy" action -- the same restriction that blocked the `expo_push_tokens`
-migration and the `send-push` update earlier in this phase.
+Deployed to production (verify_jwt on).
 
 ## Needs a secret this project doesn't have yet
 
 Unlike every other function in this app, this one calls TMDB to know how
 many episodes are in a show's current season (so "next episode" rolls over
 into the next season correctly). It needs a `TMDB_API_KEY` function secret
--- the same v3 API key the app itself already uses client-side (see
-`mobile/.env.example`). Set it with:
+-- the same v3 API key the app itself already uses client-side (`VITE_TMDB_API_KEY`). Set it with:
 
 ```sh
 supabase secrets set TMDB_API_KEY=<your key> --project-ref fuitioxkdagmfnvpteys

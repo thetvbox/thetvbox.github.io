@@ -1,5 +1,5 @@
 // Supabase Edge Function: suggests which show to watch next, for the
-// "What should I watch next" Siri App Intent (mobile/modules/siri-app-intents).
+// "What should I watch next" Siri App Intent (personal access token; first built for the retired Expo app's Siri module).
 // Walks the user's own shows by most recent activity (skipping ones they've
 // dropped or dismissed from Home's now-watching section) and returns the
 // first one that still has an unwatched episode per TMDB -- this sidesteps
