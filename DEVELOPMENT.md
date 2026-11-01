@@ -10,7 +10,7 @@
    - `VITE_TMDB_API_KEY` — a TMDB v3 API key.
    - `VITE_OMDB_API_KEY` — optional; a free omdbapi.com key. Powers the IMDb/Rotten Tomatoes badges on Show Detail. Leave unset to just hide those.
    - `VITE_SITE_PASSCODE` — optional; leave unset to disable the passcode gate.
-3. Run `supabase/schema.sql` once in your Supabase project's SQL Editor to create the tables. Database changes for this app's own tables, views, functions and indexes go in `schema.sql` (written to be safe to re-run) and are applied to production by hand. Changes to the shared auth layer (real Supabase Auth sessions, invites, members-only access) are migrations in the `tv-box-native` repo's `supabase/migrations/`.
+3. Set up the database: apply the migrations in the `tv-box-native` repo's `supabase/migrations/` (they start from a full baseline of this app's schema and add Supabase Auth sessions, invites and the members-only access rules), then run `supabase/schema.sql` in the SQL Editor. `schema.sql` holds this app's own tables, views, functions and indexes, matches production and is safe to re-run; changes to them go there. Changes to who can read or write what go in a new `tv-box-native` migration. Set the Vault secret `send_push_url` to your `send-push` function URL to turn on push notifications.
 4. Deploy the Edge Functions sign-in and push notifications depend on — see [Edge Functions](#edge-functions) below. Without these, the app loads but no one can sign in (passkeys are the only auth mechanism).
 5. `npm run dev`
 
@@ -29,7 +29,7 @@
 Edge Functions live in `supabase/functions/`; each folder has a README with deploy notes. Required for the app to work:
 
 - `webauthn-registration-options`, `webauthn-registration-verify`, `webauthn-authentication-options`, `webauthn-authentication-verify` — passkey sign-in; the verify functions also start the Supabase session the app sends with every request. Shared design: [webauthn-registration-options/README.md](./supabase/functions/webauthn-registration-options/README.md).
-- `send-push` — sends Web Push for new `notifications` rows, called by a database trigger with just the row id. Needs `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` function secrets ([send-push/README.md](./supabase/functions/send-push/README.md)); the public key also goes in `src/lib/constants.ts`.
+- `send-push` — sends Web Push for new `notifications` rows, called by a database trigger (at the Vault secret `send_push_url`) with just the row id. Needs `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` function secrets ([send-push/README.md](./supabase/functions/send-push/README.md)); the public key also goes in `src/lib/constants.ts`.
 
 Optional:
 

@@ -1,4 +1,4 @@
-// Supabase Edge Function: sends a push notification for a new notifications row to its recipient's devices. See README.md next to this file for the full design notes.
+// Supabase Edge Function: sends a Web Push notification for a new notifications row to its recipient's browsers. See README.md next to this file for the full design notes.
 
 import webpush from 'npm:web-push@3.6.7'
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2'
@@ -10,7 +10,6 @@ const CORS_HEADERS = {
 }
 
 const SITE_ORIGIN = 'https://thetvbox.github.io'
-const EXPO_PUSH_API_URL = 'https://exp.host/--/api/v2/push/send'
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -68,63 +67,6 @@ async function claimNotification(supabase: SupabaseClient, id: string): Promise<
     .maybeSingle()
   if (error) console.error('Notification claim failed', error)
   return (data as NotificationRow | null) ?? null
-}
-
-interface ExpoPushTicket {
-  status: 'ok' | 'error'
-  id?: string
-  message?: string
-  details?: { error?: string }
-}
-
-/** Sends to every Expo push token on file for the notification's user, and removes any Expo reports as no longer registered. */
-async function sendExpoPush(
-  supabase: SupabaseClient,
-  userId: string,
-  content: { title: string; body: string; url: string },
-): Promise<{ sent: number; removed: number }> {
-  const { data: tokens, error } = await supabase.from('expo_push_tokens').select('id, token').eq('user_id', userId)
-  if (error) {
-    console.error('Expo push token lookup failed', error)
-    return { sent: 0, removed: 0 }
-  }
-  if (!tokens || tokens.length === 0) return { sent: 0, removed: 0 }
-
-  const messages = tokens.map((t) => ({
-    to: t.token,
-    title: content.title,
-    body: content.body,
-    data: { url: content.url },
-  }))
-
-  const response = await fetch(EXPO_PUSH_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(messages),
-  })
-  if (!response.ok) {
-    console.error('Expo push send failed', response.status, await response.text())
-    return { sent: 0, removed: 0 }
-  }
-
-  const { data: tickets } = (await response.json()) as { data?: ExpoPushTicket[] }
-  let sent = 0
-  const deadIds: string[] = []
-  ;(tickets ?? []).forEach((ticket, i) => {
-    if (ticket.status === 'ok') {
-      sent++
-    } else if (ticket.details?.error === 'DeviceNotRegistered') {
-      deadIds.push(tokens[i].id)
-    } else {
-      console.error('Expo push ticket error', tokens[i].id, ticket)
-    }
-  })
-
-  if (deadIds.length > 0) {
-    await supabase.from('expo_push_tokens').delete().in('id', deadIds)
-  }
-
-  return { sent, removed: deadIds.length }
 }
 
 /** Sends to every Web Push subscription on file for the notification's user, and removes any the push service reports as gone. */
@@ -196,16 +138,11 @@ Deno.serve(async (req) => {
 
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    console.error('VAPID keys are not set; no push sent')
+    return jsonResponse({ sent: 0, removed: 0 }, 200)
+  }
 
-  const [web, expo] = await Promise.all([
-    vapidPublicKey && vapidPrivateKey
-      ? sendWebPush(supabase, n.user_id, content, vapidPublicKey, vapidPrivateKey)
-      : Promise.resolve({ sent: 0, removed: 0 }),
-    sendExpoPush(supabase, n.user_id, content),
-  ])
-
-  return jsonResponse(
-    { sent: web.sent + expo.sent, removed: web.removed + expo.removed, web, expo },
-    200,
-  )
+  const result = await sendWebPush(supabase, n.user_id, content, vapidPublicKey, vapidPrivateKey)
+  return jsonResponse(result, 200)
 })

@@ -1,10 +1,9 @@
--- TV Box: schema
--- Run this once in the Supabase SQL Editor (Project -> SQL Editor -> New query).
+-- TV Box: this app's tables, views, functions and indexes, matching production and safe to re-run.
 --
--- This is the app's original schema with open (anon-key) policies. Production has
--- since moved on: passkey sign-in now starts a real Supabase Auth session, and the
--- migrations in the tv-box-native repo (supabase/migrations/) add invites and
--- members-only access on top of this. Read those together with this file.
+-- Who can read and write each table (members-only access, owner-only writes), Supabase Auth
+-- sessions and invites come from the migrations in the tv-box-native repo (supabase/migrations/),
+-- which start from a full baseline of this schema. For a new project, apply those migrations
+-- first, then run this file in the SQL Editor.
 
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
@@ -14,16 +13,6 @@ create table if not exists public.users (
 );
 
 alter table public.users enable row level security;
-
-drop policy if exists "Anyone can read users" on public.users;
-create policy "Anyone can read users"
-  on public.users for select
-  using (true);
-
-drop policy if exists "Anyone can register a user" on public.users;
-create policy "Anyone can register a user"
-  on public.users for insert
-  with check (true);
 
 -- When this person last opened their notifications -- powers the unread
 -- "new follower" count/dot (see lib/follows.ts fetchNewFollowerCount).
@@ -51,32 +40,9 @@ create table if not exists public.episode_ratings (
   unique (user_id, show_id, season_number, episode_number)
 );
 
-create index if not exists episode_ratings_user_id_idx on public.episode_ratings (user_id);
-create index if not exists episode_ratings_user_show_idx on public.episode_ratings (user_id, show_id);
 create index if not exists episode_ratings_rated_at_idx on public.episode_ratings (user_id, rated_at desc);
 
 alter table public.episode_ratings enable row level security;
-
-drop policy if exists "Anyone can read ratings" on public.episode_ratings;
-create policy "Anyone can read ratings"
-  on public.episode_ratings for select
-  using (true);
-
-drop policy if exists "Anyone can insert ratings" on public.episode_ratings;
-create policy "Anyone can insert ratings"
-  on public.episode_ratings for insert
-  with check (true);
-
-drop policy if exists "Anyone can update ratings" on public.episode_ratings;
-create policy "Anyone can update ratings"
-  on public.episode_ratings for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete ratings" on public.episode_ratings;
-create policy "Anyone can delete ratings"
-  on public.episode_ratings for delete
-  using (true);
 
 -- Reactions on episode ratings were removed (episode-level rating/social was
 -- too granular in practice -- see show_ratings below). Drops cleanly since
@@ -109,27 +75,6 @@ create index if not exists show_ratings_rated_at_idx on public.show_ratings (use
 
 alter table public.show_ratings enable row level security;
 
-drop policy if exists "Anyone can read show ratings" on public.show_ratings;
-create policy "Anyone can read show ratings"
-  on public.show_ratings for select
-  using (true);
-
-drop policy if exists "Anyone can insert show ratings" on public.show_ratings;
-create policy "Anyone can insert show ratings"
-  on public.show_ratings for insert
-  with check (true);
-
-drop policy if exists "Anyone can update show ratings" on public.show_ratings;
-create policy "Anyone can update show ratings"
-  on public.show_ratings for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete show ratings" on public.show_ratings;
-create policy "Anyone can delete show ratings"
-  on public.show_ratings for delete
-  using (true);
-
 -- One rating per person per *season*, independent of show_ratings above --
 -- lets "the show's a 4 overall but season 2 was rough" be expressed, the
 -- way IMDb/Rotten Tomatoes surface season-level scores alongside a show's
@@ -153,27 +98,6 @@ create table if not exists public.season_ratings (
 
 
 alter table public.season_ratings enable row level security;
-
-drop policy if exists "Anyone can read season ratings" on public.season_ratings;
-create policy "Anyone can read season ratings"
-  on public.season_ratings for select
-  using (true);
-
-drop policy if exists "Anyone can insert season ratings" on public.season_ratings;
-create policy "Anyone can insert season ratings"
-  on public.season_ratings for insert
-  with check (true);
-
-drop policy if exists "Anyone can update season ratings" on public.season_ratings;
-create policy "Anyone can update season ratings"
-  on public.season_ratings for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete season ratings" on public.season_ratings;
-create policy "Anyone can delete season ratings"
-  on public.season_ratings for delete
-  using (true);
 
 -- One row per episode a person has marked watched -- powers per-show "12/24
 -- watched" progress and (soon) a Now Watching home view. show_total_episodes
@@ -209,27 +133,6 @@ create index if not exists episode_watched_watched_at_idx on public.episode_watc
 
 alter table public.episode_watched enable row level security;
 
-drop policy if exists "Anyone can read watched episodes" on public.episode_watched;
-create policy "Anyone can read watched episodes"
-  on public.episode_watched for select
-  using (true);
-
-drop policy if exists "Anyone can insert watched episodes" on public.episode_watched;
-create policy "Anyone can insert watched episodes"
-  on public.episode_watched for insert
-  with check (true);
-
-drop policy if exists "Anyone can update watched episodes" on public.episode_watched;
-create policy "Anyone can update watched episodes"
-  on public.episode_watched for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete watched episodes" on public.episode_watched;
-create policy "Anyone can delete watched episodes"
-  on public.episode_watched for delete
-  using (true);
-
 -- Manual correction for "where to watch", shared across the whole group (not
 -- per-user) -- streaming availability is an objective regional fact, not a
 -- matter of taste, so one correction should fix it for everyone rather than
@@ -252,27 +155,6 @@ create index if not exists show_streaming_overrides_updated_by_idx on public.sho
 
 alter table public.show_streaming_overrides enable row level security;
 
-drop policy if exists "Anyone can read streaming overrides" on public.show_streaming_overrides;
-create policy "Anyone can read streaming overrides"
-  on public.show_streaming_overrides for select
-  using (true);
-
-drop policy if exists "Anyone can insert streaming overrides" on public.show_streaming_overrides;
-create policy "Anyone can insert streaming overrides"
-  on public.show_streaming_overrides for insert
-  with check (true);
-
-drop policy if exists "Anyone can update streaming overrides" on public.show_streaming_overrides;
-create policy "Anyone can update streaming overrides"
-  on public.show_streaming_overrides for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete streaming overrides" on public.show_streaming_overrides;
-create policy "Anyone can delete streaming overrides"
-  on public.show_streaming_overrides for delete
-  using (true);
-
 -- "Want to watch" -- shows saved before starting, independent of
 -- episode_watched (which only tracks progress on shows you've actually
 -- started). No update policy: you either have a show on your watchlist or
@@ -290,25 +172,9 @@ create table if not exists public.watchlist (
   unique (user_id, show_id)
 );
 
-create index if not exists watchlist_user_id_idx on public.watchlist (user_id);
 create index if not exists watchlist_added_at_idx on public.watchlist (user_id, added_at desc);
 
 alter table public.watchlist enable row level security;
-
-drop policy if exists "Anyone can read watchlist" on public.watchlist;
-create policy "Anyone can read watchlist"
-  on public.watchlist for select
-  using (true);
-
-drop policy if exists "Anyone can insert watchlist" on public.watchlist;
-create policy "Anyone can insert watchlist"
-  on public.watchlist for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete watchlist" on public.watchlist;
-create policy "Anyone can delete watchlist"
-  on public.watchlist for delete
-  using (true);
 
 -- A simple, append-only log of "I rewatched this show" events -- separate
 -- from episode_watched (which tracks first-watch progress: "N/M watched",
@@ -327,25 +193,9 @@ create table if not exists public.show_rewatches (
   rewatched_at timestamptz not null default now()
 );
 
-create index if not exists show_rewatches_user_id_idx on public.show_rewatches (user_id);
 create index if not exists show_rewatches_user_show_idx on public.show_rewatches (user_id, show_id);
 
 alter table public.show_rewatches enable row level security;
-
-drop policy if exists "Anyone can read rewatches" on public.show_rewatches;
-create policy "Anyone can read rewatches"
-  on public.show_rewatches for select
-  using (true);
-
-drop policy if exists "Anyone can insert rewatches" on public.show_rewatches;
-create policy "Anyone can insert rewatches"
-  on public.show_rewatches for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete rewatches" on public.show_rewatches;
-create policy "Anyone can delete rewatches"
-  on public.show_rewatches for delete
-  using (true);
 
 -- Total watch-time: runtime (minutes) as of when each episode was marked
 -- watched, denormalized from TMDB the same way show_total_episodes already
@@ -389,12 +239,10 @@ select
 from public.episode_watched
 group by user_id, show_id;
 
--- Views run with the view owner's privileges, not the querying role's,
--- unless told otherwise -- harmless here since the underlying table's RLS
--- policy already grants full read to anon/authenticated anyway, but this
--- is what the Supabase security linter expects to see.
+-- Runs as the caller, so the underlying table's members-only policy applies.
 alter view public.episode_watched_show_summary set (security_invoker = true);
-grant select on public.episode_watched_show_summary to anon, authenticated;
+revoke all on public.episode_watched_show_summary from anon;
+grant select on public.episode_watched_show_summary to authenticated;
 
 -- Per-show rollup of just the undated ("watched a while ago") rows -- the
 -- bucket a bulk "mark whole show watched" import lands in, and the one that
@@ -419,7 +267,8 @@ group by user_id, show_id;
 
 -- Same reasoning as episode_watched_show_summary above.
 alter view public.episode_watched_undated_summary set (security_invoker = true);
-grant select on public.episode_watched_undated_summary to anon, authenticated;
+revoke all on public.episode_watched_undated_summary from anon;
+grant select on public.episode_watched_undated_summary to authenticated;
 
 -- User-curated lists of shows (e.g. "Comfort shows"). "Shareable" is close
 -- to free here since every table in this app is already fully readable by
@@ -439,27 +288,6 @@ create table if not exists public.show_lists (
 create index if not exists show_lists_user_id_idx on public.show_lists (user_id);
 
 alter table public.show_lists enable row level security;
-
-drop policy if exists "Anyone can read lists" on public.show_lists;
-create policy "Anyone can read lists"
-  on public.show_lists for select
-  using (true);
-
-drop policy if exists "Anyone can insert lists" on public.show_lists;
-create policy "Anyone can insert lists"
-  on public.show_lists for insert
-  with check (true);
-
-drop policy if exists "Anyone can update lists" on public.show_lists;
-create policy "Anyone can update lists"
-  on public.show_lists for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete lists" on public.show_lists;
-create policy "Anyone can delete lists"
-  on public.show_lists for delete
-  using (true);
 
 -- Explicit "in progress" marker for a show you've declared you're starting
 -- but haven't logged any episodes for yet. Now Watching used to be purely
@@ -486,21 +314,6 @@ create table if not exists public.show_started (
 
 alter table public.show_started enable row level security;
 
-drop policy if exists "Anyone can read started shows" on public.show_started;
-create policy "Anyone can read started shows"
-  on public.show_started for select
-  using (true);
-
-drop policy if exists "Anyone can insert started shows" on public.show_started;
-create policy "Anyone can insert started shows"
-  on public.show_started for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete started shows" on public.show_started;
-create policy "Anyone can delete started shows"
-  on public.show_started for delete
-  using (true);
-
 -- Explicit "hide this from Now Watching" marker -- lets someone clear a show
 -- off the Home page without touching anything real (episode_watched rows,
 -- ratings, and show_started all stay exactly as they were). Deliberately not
@@ -524,21 +337,6 @@ create table if not exists public.show_watching_dismissed (
 create index if not exists show_watching_dismissed_user_id_idx on public.show_watching_dismissed (user_id);
 
 alter table public.show_watching_dismissed enable row level security;
-
-drop policy if exists "Anyone can read dismissed now-watching" on public.show_watching_dismissed;
-create policy "Anyone can read dismissed now-watching"
-  on public.show_watching_dismissed for select
-  using (true);
-
-drop policy if exists "Anyone can insert dismissed now-watching" on public.show_watching_dismissed;
-create policy "Anyone can insert dismissed now-watching"
-  on public.show_watching_dismissed for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete dismissed now-watching" on public.show_watching_dismissed;
-create policy "Anyone can delete dismissed now-watching"
-  on public.show_watching_dismissed for delete
-  using (true);
 
 -- Explicit "I stopped watching this" status -- distinct from
 -- show_watching_dismissed above (a soft "hide this from Now Watching for
@@ -565,21 +363,6 @@ create table if not exists public.show_dropped (
 
 alter table public.show_dropped enable row level security;
 
-drop policy if exists "Anyone can read dropped shows" on public.show_dropped;
-create policy "Anyone can read dropped shows"
-  on public.show_dropped for select
-  using (true);
-
-drop policy if exists "Anyone can insert dropped shows" on public.show_dropped;
-create policy "Anyone can insert dropped shows"
-  on public.show_dropped for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete dropped shows" on public.show_dropped;
-create policy "Anyone can delete dropped shows"
-  on public.show_dropped for delete
-  using (true);
-
 create table if not exists public.show_list_items (
   id uuid primary key default gen_random_uuid(),
   list_id uuid not null references public.show_lists(id) on delete cascade,
@@ -596,21 +379,6 @@ create table if not exists public.show_list_items (
 create index if not exists show_list_items_list_id_idx on public.show_list_items (list_id);
 
 alter table public.show_list_items enable row level security;
-
-drop policy if exists "Anyone can read list items" on public.show_list_items;
-create policy "Anyone can read list items"
-  on public.show_list_items for select
-  using (true);
-
-drop policy if exists "Anyone can insert list items" on public.show_list_items;
-create policy "Anyone can insert list items"
-  on public.show_list_items for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete list items" on public.show_list_items;
-create policy "Anyone can delete list items"
-  on public.show_list_items for delete
-  using (true);
 
 -- Replaces the old flat "Members" directory with a real social graph.
 -- follower_id follows followed_id -- e.g. "Activity, scoped to Following"
@@ -632,21 +400,6 @@ create table if not exists public.follows (
 create index if not exists follows_followed_id_idx on public.follows (followed_id, created_at desc);
 
 alter table public.follows enable row level security;
-
-drop policy if exists "Anyone can read follows" on public.follows;
-create policy "Anyone can read follows"
-  on public.follows for select
-  using (true);
-
-drop policy if exists "Anyone can insert follows" on public.follows;
-create policy "Anyone can insert follows"
-  on public.follows for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete follows" on public.follows;
-create policy "Anyone can delete follows"
-  on public.follows for delete
-  using (true);
 
 -- Unified notification feed: follows, show finishes, and show ratings, all
 -- fanned out to the relevant recipient(s) at write-time via the triggers
@@ -680,27 +433,6 @@ create index if not exists notifications_user_unseen_idx on public.notifications
 create index if not exists notifications_actor_id_idx on public.notifications (actor_id);
 
 alter table public.notifications enable row level security;
-
-drop policy if exists "Anyone can read notifications" on public.notifications;
-create policy "Anyone can read notifications"
-  on public.notifications for select
-  using (true);
-
-drop policy if exists "Anyone can insert notifications" on public.notifications;
-create policy "Anyone can insert notifications"
-  on public.notifications for insert
-  with check (true);
-
-drop policy if exists "Anyone can update notifications" on public.notifications;
-create policy "Anyone can update notifications"
-  on public.notifications for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete notifications" on public.notifications;
-create policy "Anyone can delete notifications"
-  on public.notifications for delete
-  using (true);
 
 -- Follow: notify the person being followed.
 create or replace function public.notify_on_follow()
@@ -815,10 +547,10 @@ create trigger trg_notify_on_show_finished
 revoke execute on function public.notify_on_show_finished() from public, anon, authenticated;
 
 -- One row per browser/device subscribed to Web Push
--- (src/lib/pushNotifications.ts registers these). RLS is open like most
--- tables above -- the actual send-capable secret is the VAPID private key,
--- which only lives in the send-push Edge Function's secrets (see
--- supabase/functions/send-push/README.md).
+-- (src/lib/pushNotifications.ts registers these through the
+-- register_push_subscription RPC). The secret that can actually send is the
+-- VAPID private key, which only lives in the send-push Edge Function's
+-- secrets (see supabase/functions/send-push/README.md).
 create table if not exists public.push_subscriptions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
@@ -832,34 +564,10 @@ create index if not exists push_subscriptions_user_id_idx on public.push_subscri
 
 alter table public.push_subscriptions enable row level security;
 
-drop policy if exists "Anyone can read push_subscriptions" on public.push_subscriptions;
-create policy "Anyone can read push_subscriptions"
-  on public.push_subscriptions for select
-  using (true);
-
-drop policy if exists "Anyone can insert push_subscriptions" on public.push_subscriptions;
-create policy "Anyone can insert push_subscriptions"
-  on public.push_subscriptions for insert
-  with check (true);
-
-drop policy if exists "Anyone can update push_subscriptions" on public.push_subscriptions;
-create policy "Anyone can update push_subscriptions"
-  on public.push_subscriptions for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete push_subscriptions" on public.push_subscriptions;
-create policy "Anyone can delete push_subscriptions"
-  on public.push_subscriptions for delete
-  using (true);
-
--- Fires the send-push Edge Function after every new notification row, so a
--- push follows the exact same events the in-app bell already shows -- see
--- supabase/functions/send-push/README.md. Needs the pg_net extension to
--- reach the function over HTTP from inside a trigger. Replace the url/
--- Authorization placeholders below with your own project's Edge Function
--- URL and anon/publishable key before running this.
-create extension if not exists pg_net;
+-- Sends each new notification's id to the send-push Edge Function, at the URL in the Vault secret
+-- send_push_url, so a push follows the same events the in-app bell shows (see
+-- supabase/functions/send-push/README.md). Without that secret, no push is attempted.
+create extension if not exists pg_net with schema extensions;
 
 create or replace function public.send_push_on_notification()
 returns trigger
@@ -867,14 +575,17 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  push_url text;
 begin
+  select decrypted_secret into push_url from vault.decrypted_secrets where name = 'send_push_url';
+  if push_url is null or new.pushed_at is not null then
+    return new;
+  end if;
   perform net.http_post(
-    url := 'https://YOUR-PROJECT-REF.supabase.co/functions/v1/send-push',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR-ANON-OR-PUBLISHABLE-KEY'
-    ),
-    body := to_jsonb(new)
+    url := push_url,
+    headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := jsonb_build_object('id', new.id)
   );
   return new;
 end;
@@ -890,11 +601,8 @@ revoke execute on function public.send_push_on_notification() from public, anon,
 
 -- WebAuthn passkey sign-in (see
 -- supabase/functions/webauthn-registration-options/README.md for the full
--- design). RLS is enabled but has no policies on either table below --
--- unlike the permissive tables above, a stored public key and signature
--- counter, or a live challenge, has no legitimate reason to be readable by
--- the anon key. Only the four webauthn-* Edge Functions' service-role key
--- can touch these.
+-- design). Only the webauthn-* Edge Functions' service-role key can touch
+-- the two tables below.
 create table if not exists public.webauthn_credentials (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
@@ -942,63 +650,14 @@ create index if not exists personal_access_tokens_user_id_idx on public.personal
 
 alter table public.personal_access_tokens enable row level security;
 
-drop policy if exists "Anyone can read personal access tokens" on public.personal_access_tokens;
-create policy "Anyone can read personal access tokens"
-  on public.personal_access_tokens for select
-  using (true);
-
-drop policy if exists "Anyone can create a personal access token" on public.personal_access_tokens;
-create policy "Anyone can create a personal access token"
-  on public.personal_access_tokens for insert
-  with check (true);
-
-drop policy if exists "Anyone can delete personal access tokens" on public.personal_access_tokens;
-create policy "Anyone can delete personal access tokens"
-  on public.personal_access_tokens for delete
-  using (true);
-
--- Native push tokens registered by the iOS/Android mobile app via
--- expo-notifications, one row per device -- see
--- supabase/functions/send-push/index.ts, which delivers to these
--- through Expo's push API alongside the existing Web Push channel above.
-create table if not exists public.expo_push_tokens (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
-  token text not null unique,
-  platform text not null default 'ios',
-  created_at timestamptz not null default now(),
-  last_used_at timestamptz
-);
-
-create index if not exists expo_push_tokens_user_id_idx on public.expo_push_tokens (user_id);
-
-alter table public.expo_push_tokens enable row level security;
-
-drop policy if exists "Anyone can read expo push tokens" on public.expo_push_tokens;
-create policy "Anyone can read expo push tokens"
-  on public.expo_push_tokens for select
-  using (true);
-
-drop policy if exists "Anyone can insert expo push tokens" on public.expo_push_tokens;
-create policy "Anyone can insert expo push tokens"
-  on public.expo_push_tokens for insert
-  with check (true);
-
-drop policy if exists "Anyone can update expo push tokens" on public.expo_push_tokens;
-create policy "Anyone can update expo push tokens"
-  on public.expo_push_tokens for update
-  using (true)
-  with check (true);
-
-drop policy if exists "Anyone can delete expo push tokens" on public.expo_push_tokens;
-create policy "Anyone can delete expo push tokens"
-  on public.expo_push_tokens for delete
-  using (true);
+-- The retired Expo app's push tokens.
+drop function if exists public.register_expo_push_token(text, text);
+drop table if exists public.expo_push_tokens;
 
 -- ---------------------------------------------------------------------------
 -- Season splits (2026-11-01): TMDB seasons that streamers split (Lupin's TMDB season 1 is Netflix's Parts 1
 -- and 2). The app shows and stores the streamer's numbering; this is the shared, permanent record of each
--- split. Needs public.current_app_user_id(), which production already has.
+-- split. Needs private.current_app_user_id() from the tv-box-native migrations.
 -- ---------------------------------------------------------------------------
 
 create table if not exists public.season_splits (
@@ -1013,7 +672,7 @@ revoke all on public.season_splits from anon, authenticated;
 grant select on public.season_splits to authenticated;
 drop policy if exists "Members read season splits" on public.season_splits;
 create policy "Members read season splits" on public.season_splits
-  for select to authenticated using ((select public.current_app_user_id()) is not null);
+  for select to authenticated using ((select private.current_app_user_id()) is not null);
 
 -- A show's splits as [{tmdb_season, part_sizes}], oldest season first.
 create or replace function public.season_splits_for(p_show_id integer)
@@ -1141,7 +800,9 @@ end;
 $function$;
 
 -- Records newly found splits for a show (never removing one) and renumbers everyone's watch log and season ratings to match.
-create or replace function public.record_season_splits(p_show_id integer, p_splits jsonb)
+-- It changes other members' rows, so it runs as its owner from the private schema the API doesn't serve.
+create schema if not exists private;
+create or replace function private.record_season_splits(p_show_id integer, p_splits jsonb)
 returns void
 language plpgsql
 security definer
@@ -1152,7 +813,7 @@ declare
   new_splits jsonb;
   temp_offset constant integer := 100000;
 begin
-  if public.current_app_user_id() is null then
+  if private.current_app_user_id() is null then
     raise exception 'Sign in to update season numbering.' using errcode = '42501';
   end if;
   if jsonb_typeof(p_splits) is distinct from 'array' then
@@ -1196,8 +857,18 @@ begin
   perform set_config('app.renumbering_seasons', 'off', true);
 end;
 $$;
+revoke all on function private.record_season_splits(integer, jsonb) from public, anon;
+grant execute on function private.record_season_splits(integer, jsonb) to authenticated, service_role;
+
+-- The API name the app calls, running as the caller.
+create or replace function public.record_season_splits(p_show_id integer, p_splits jsonb)
+returns void
+language sql
+security invoker
+set search_path = ''
+as $$ select private.record_season_splits(p_show_id, p_splits) $$;
 revoke all on function public.record_season_splits(integer, jsonb) from public, anon;
-grant execute on function public.record_season_splits(integer, jsonb) to authenticated;
+grant execute on function public.record_season_splits(integer, jsonb) to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Performance (2026-11-01): drop indexes that a unique index already covers on databases built
@@ -1213,6 +884,10 @@ drop index if exists public.show_ratings_user_id_idx;
 drop index if exists public.show_dropped_user_id_idx;
 drop index if exists public.show_started_user_id_idx;
 drop index if exists public.follows_follower_id_idx;
+drop index if exists public.episode_ratings_user_id_idx;
+drop index if exists public.episode_ratings_user_show_idx;
+drop index if exists public.watchlist_user_id_idx;
+drop index if exists public.show_rewatches_user_id_idx;
 
 do $$
 begin
