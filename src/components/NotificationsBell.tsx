@@ -79,7 +79,7 @@ export default function NotificationsBell({ open, onOpenChange }: NotificationsB
         onClick={() => onOpenChange(!open)}
         aria-label={unseen > 0 ? `Notifications, ${unseen} new` : 'Notifications'}
         aria-expanded={open}
-        aria-haspopup="true"
+        aria-haspopup="dialog"
         title="Notifications"
         className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base-400 transition duration-200 hover:bg-hover hover:text-base-100 active:scale-90"
       >

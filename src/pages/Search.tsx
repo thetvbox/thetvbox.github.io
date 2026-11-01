@@ -8,6 +8,7 @@ import SearchFiltersPanel from '../components/SearchFiltersPanel'
 import { searchShows, getTrendingShows, getTvGenres, isTmdbConfigured } from '../lib/tmdb'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useQueryParam } from '../hooks/useQueryParam'
 import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { PAGE_HEADER_MOTION } from '../lib/motion'
 import { errorMessage } from '../lib/format'
@@ -29,7 +30,7 @@ import type { TmdbShowSummary } from '../types'
 
 export default function Search() {
   useDocumentTitle('Search')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useQueryParam('q')
   const [results, setResults] = useState<TmdbShowSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

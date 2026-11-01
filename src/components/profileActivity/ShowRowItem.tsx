@@ -41,7 +41,8 @@ export default function ShowRowItem({
         <button
           type="button"
           onClick={action.onClick}
-          className={`shrink-0 text-xs text-base-500 ${ACTION_TONE_CLASSES[action.tone]}`}
+          aria-label={`${action.label} ${showName}`}
+          className={`-mr-2 flex min-h-11 shrink-0 items-center rounded-lg px-3 text-xs text-base-500 transition-colors duration-200 ${ACTION_TONE_CLASSES[action.tone]}`}
         >
           {action.label}
         </button>

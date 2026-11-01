@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as framerMotionMock from '../test/framerMotionMock'
 
@@ -46,6 +47,14 @@ function mockPlatforms(entries: [number, ResolvedProvider][]) {
   }))
 }
 
+function renderSearch(url = '/search') {
+  return render(
+    <MemoryRouter initialEntries={[url]}>
+      <Search />
+    </MemoryRouter>,
+  )
+}
+
 beforeEach(() => {
   vi.mocked(searchShows).mockReset().mockResolvedValue([])
   vi.mocked(getTrendingShows).mockReset().mockResolvedValue([])
@@ -59,20 +68,28 @@ beforeEach(() => {
 })
 
 describe('Search', () => {
+  it('restores the search from the URL, so Back from a show keeps the results', async () => {
+    vi.mocked(searchShows).mockResolvedValue([show({ name: 'Lupin' })])
+    renderSearch('/search?q=lupin')
+    expect(screen.getByDisplayValue('lupin')).toBeInTheDocument()
+    await waitFor(() => expect(searchShows).toHaveBeenCalledWith('lupin'))
+    expect(await screen.findByText('Lupin')).toBeInTheDocument()
+  })
+
   it('shows an initial prompt before any search', () => {
-    render(<Search />)
+    renderSearch()
     expect(screen.getByText(/Search for any TV show/)).toBeInTheDocument()
   })
 
   it('does not search for an empty query', () => {
-    render(<Search />)
+    renderSearch()
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: '   ' } })
     expect(searchShows).not.toHaveBeenCalled()
   })
 
   it('debounces and searches for a typed query', async () => {
     vi.mocked(searchShows).mockResolvedValue([show()])
-    render(<Search />)
+    renderSearch()
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'star trek' } })
     await waitFor(() => expect(searchShows).toHaveBeenCalledWith('star trek'))
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
@@ -80,28 +97,28 @@ describe('Search', () => {
 
   it('filters out results with no poster', async () => {
     vi.mocked(searchShows).mockResolvedValue([show({ id: 1, name: 'Has Poster' }), show({ id: 2, name: 'No Poster', poster_path: null })])
-    render(<Search />)
+    renderSearch()
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'query' } })
     await waitFor(() => expect(screen.getByText('Has Poster')).toBeInTheDocument())
     expect(screen.queryByText('No Poster')).not.toBeInTheDocument()
   })
 
   it('shows a no-results message after an empty search', async () => {
-    render(<Search />)
+    renderSearch()
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'nothing' } })
     await waitFor(() => expect(screen.getByText(/No shows found for/)).toBeInTheDocument())
   })
 
   it('shows an error message when the search fails', async () => {
     vi.mocked(searchShows).mockRejectedValue(new Error('search failed'))
-    render(<Search />)
+    renderSearch()
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'query' } })
     await waitFor(() => expect(screen.getByText('search failed')).toBeInTheDocument())
   })
 
   it('clears results when the query is cleared', async () => {
     vi.mocked(searchShows).mockResolvedValue([show()])
-    render(<Search />)
+    renderSearch()
     const input = screen.getByPlaceholderText('Search for a TV show…')
     fireEvent.change(input, { target: { value: 'star trek' } })
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
@@ -111,20 +128,20 @@ describe('Search', () => {
 
   it('offers trending shows to browse before any search', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 9, name: 'Trending Show' })])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Trending this week')).toBeInTheDocument())
     expect(screen.getByText('Trending Show')).toBeInTheDocument()
   })
 
   it('does not show a trending section while there are no trending shows yet', () => {
-    render(<Search />)
+    renderSearch()
     expect(screen.queryByText('Trending this week')).not.toBeInTheDocument()
   })
 
   it('hides trending shows once the person starts typing a query', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 9, name: 'Trending Show' })])
     vi.mocked(searchShows).mockResolvedValue([show({ id: 1, name: 'Star Trek' })])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Trending Show')).toBeInTheDocument())
 
     fireEvent.change(screen.getByPlaceholderText('Search for a TV show…'), { target: { value: 'star trek' } })
@@ -134,7 +151,7 @@ describe('Search', () => {
 
   it('does not show the Filters trigger when trending has no resolvable genre or platform facets', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 9, name: 'Trending Show', genre_ids: [] })])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Trending Show')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: /Filters/ })).not.toBeInTheDocument()
   })
@@ -144,7 +161,7 @@ describe('Search', () => {
       show({ id: 1, name: 'Drama Show', genre_ids: [18] }),
       show({ id: 2, name: 'Comedy Show', genre_ids: [35] }),
     ])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     const trigger = screen.getByRole('button', { name: 'Filters' })
@@ -166,7 +183,7 @@ describe('Search', () => {
       [1, { provider_name: 'Netflix', logo_path: null }],
       [2, { provider_name: 'Hulu', logo_path: null }],
     ])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Netflix Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -184,7 +201,7 @@ describe('Search', () => {
       platformNames: new Map([[1, new Set(['Hulu', 'Netflix'])]]),
       loading: false,
     })
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Multi-Platform Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -199,7 +216,7 @@ describe('Search', () => {
       show({ id: 1, name: 'Drama Netflix Show', genre_ids: [18, 35] }),
     ])
     mockPlatforms([[1, { provider_name: 'Netflix', logo_path: null }]])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Netflix Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -217,7 +234,7 @@ describe('Search', () => {
       show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
     ])
     mockPlatforms([[2, { provider_name: 'Hulu', logo_path: null }]])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -233,7 +250,7 @@ describe('Search', () => {
       show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
     ])
     mockPlatforms([[2, { provider_name: 'Hulu', logo_path: null }]])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -257,7 +274,7 @@ describe('Search', () => {
       show({ id: 2, name: 'Hulu Comedy Show', genre_ids: [35] }),
     ])
     mockPlatforms([[2, { provider_name: 'Hulu', logo_path: null }]])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -274,7 +291,7 @@ describe('Search', () => {
 
   it('closes the Filters sheet on Escape', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 1, name: 'Drama Show', genre_ids: [18] })])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -285,7 +302,7 @@ describe('Search', () => {
 
   it('applies an active genre filter to live search results as well', async () => {
     vi.mocked(getTrendingShows).mockResolvedValue([show({ id: 1, name: 'Drama Show', genre_ids: [18] })])
-    render(<Search />)
+    renderSearch()
     await waitFor(() => expect(screen.getByText('Drama Show')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))

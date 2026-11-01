@@ -51,7 +51,7 @@ describe('WatchlistTab', () => {
     const onRemove = vi.fn()
     const show = item()
     renderTab({ items: [show], isMe: true, onRemove })
-    fireEvent.click(screen.getByText('Remove'))
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Show One' }))
     expect(onRemove).toHaveBeenCalledWith(show)
   })
 

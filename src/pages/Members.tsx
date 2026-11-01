@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
@@ -7,6 +7,7 @@ import { fetchFollowerIds, fetchFollowingIds } from '../lib/follows'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
 import { profileRoute } from '../lib/routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useQueryParam } from '../hooks/useQueryParam'
 import { useFollowToggles } from '../hooks/useFollowToggles'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
@@ -24,25 +25,12 @@ export default function Members() {
   useDocumentTitle('People')
   const [users, setUsers] = useState<AppUser[]>([])
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())
-  const [searchParams, setSearchParams] = useSearchParams()
-  const query = searchParams.get('q') ?? ''
+  const [query, setQuery] = useQueryParam('q')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { followingIds, setFollowingIds, savingIds, handleFollow, handleUnfollow, toast, dismiss } = useFollowToggles(
     (id) => users.find((u) => u.id === id)?.username,
   )
-
-  function setQuery(next: string) {
-    setSearchParams(
-      (prev) => {
-        const nextParams = new URLSearchParams(prev)
-        if (next) nextParams.set('q', next)
-        else nextParams.delete('q')
-        return nextParams
-      },
-      { replace: true },
-    )
-  }
 
   useEffect(() => {
     let cancelled = false

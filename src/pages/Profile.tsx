@@ -74,7 +74,7 @@ export default function Profile() {
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
-            aria-haspopup="true"
+            aria-haspopup="dialog"
             className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
               menuOpen
                 ? 'border-accent-500/40 bg-accent-500/15 text-accent-300'
