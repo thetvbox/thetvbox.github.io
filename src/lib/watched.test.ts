@@ -5,6 +5,7 @@ vi.mock('./supabase', () => ({ supabase: { from: vi.fn() } }))
 
 import { supabase } from './supabase'
 import {
+  fetchWatchedSeasonCounts,
   UNKNOWN_WATCHED_AT,
   bulkMarkWatched,
   bulkUnmarkWatched,
@@ -83,6 +84,36 @@ describe('fetchWatchedForUserAndShow', () => {
     const builder = mockFrom({ data: [row()], error: null, count: 1 })
     await fetchWatchedForUserAndShow('u1', 1)
     expect(builder.range).toHaveBeenCalledWith(0, 999)
+  })
+})
+
+describe('fetchWatchedSeasonCounts', () => {
+  it('counts watched episodes per season for just the requested shows, reading two columns', async () => {
+    const builder = mockFrom({
+      data: [
+        { show_id: 1, season_number: 1 },
+        { show_id: 1, season_number: 1 },
+        { show_id: 1, season_number: 2 },
+        { show_id: 7, season_number: 3 },
+      ],
+      error: null,
+      count: 4,
+    })
+    const counts = await fetchWatchedSeasonCounts('u1', [1, 7])
+    expect(counts.get(1)).toEqual({ 1: 2, 2: 1 })
+    expect(counts.get(7)).toEqual({ 3: 1 })
+    expect(builder.select).toHaveBeenCalledWith('show_id, season_number', { count: 'exact' })
+    expect(builder.in).toHaveBeenCalledWith('show_id', [1, 7])
+  })
+
+  it('makes no request when there are no shows', async () => {
+    expect(await fetchWatchedSeasonCounts('u1', [])).toEqual(new Map())
+    expect(supabase.from).not.toHaveBeenCalled()
+  })
+
+  it('throws on a read error', async () => {
+    mockFrom({ data: null, error: new Error('offline') })
+    await expect(fetchWatchedSeasonCounts('u1', [1])).rejects.toThrow('offline')
   })
 })
 

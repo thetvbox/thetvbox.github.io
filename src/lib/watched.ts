@@ -31,6 +31,32 @@ export async function fetchWatchedForUserAndShow(
   )
 }
 
+/** How many episodes of each season one user has watched, for just the given shows, read as two narrow columns. */
+export async function fetchWatchedSeasonCounts(
+  userId: string,
+  showIds: number[],
+): Promise<Map<number, Record<number, number>>> {
+  const counts = new Map<number, Record<number, number>>()
+  if (showIds.length === 0) return counts
+  const rows = await fetchPaginated<{ show_id: number; season_number: number }>(
+    (from, to) =>
+      supabase
+        .from(TABLE_EPISODE_WATCHED)
+        .select('show_id, season_number', { count: 'exact' })
+        .eq('user_id', userId)
+        .in('show_id', showIds)
+        .order('id')
+        .range(from, to),
+    ACTIVITY_FETCH_LIMIT,
+  )
+  for (const row of rows) {
+    const bySeason = counts.get(row.show_id) ?? {}
+    bySeason[row.season_number] = (bySeason[row.season_number] ?? 0) + 1
+    counts.set(row.show_id, bySeason)
+  }
+  return counts
+}
+
 /** Same rows as fetchWatchedForUserAndShow, keyed by season/episode for quick lookup. */
 export async function fetchWatchedForShow(userId: string, showId: number): Promise<WatchedMap> {
   const rows = await fetchWatchedForUserAndShow(userId, showId)

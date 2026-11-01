@@ -60,13 +60,66 @@ function emptyShowActivity(showId: number, showName: string, showPosterPath: str
   }
 }
 
-/** Merges show_ratings + episode_watched (+ optional started/dismissed/dropped) rows for one user into one summary per show. */
-export function summarizeShowActivity(
+/** One show's watch totals, from raw episode rows or the server-side summary view. */
+interface WatchTotals {
+  showId: number
+  showName: string
+  showPosterPath: string | null
+  watchedCount: number
+  totalEpisodes: number | null
+  lastWatchedAt: string | null
+  lastWatchedAtUnknown: boolean
+}
+
+/** Rolls raw episode_watched rows up into per-show totals. */
+function totalsFromRows(watched: EpisodeWatched[]): WatchTotals[] {
+  const byShow = new Map<number, WatchTotals>()
+  for (const w of watched) {
+    let totals = byShow.get(w.show_id)
+    if (!totals) {
+      totals = {
+        showId: w.show_id,
+        showName: w.show_name,
+        showPosterPath: w.show_poster_path,
+        watchedCount: 0,
+        totalEpisodes: null,
+        lastWatchedAt: null,
+        lastWatchedAtUnknown: false,
+      }
+      byShow.set(w.show_id, totals)
+    }
+    totals.watchedCount += 1
+    if (w.show_total_episodes != null) {
+      totals.totalEpisodes = Math.max(totals.totalEpisodes ?? 0, w.show_total_episodes)
+    }
+    if (!totals.lastWatchedAt || w.watched_at > totals.lastWatchedAt) {
+      totals.lastWatchedAt = w.watched_at
+      totals.lastWatchedAtUnknown = w.watched_at_unknown
+    }
+  }
+  return Array.from(byShow.values())
+}
+
+/** Maps rows of the episode_watched_show_summary view onto per-show totals. */
+function totalsFromSummaries(summaries: ShowWatchSummary[]): WatchTotals[] {
+  return summaries.map((s) => ({
+    showId: s.show_id,
+    showName: s.show_name,
+    showPosterPath: s.show_poster_path,
+    watchedCount: s.watched_count,
+    totalEpisodes: s.total_episodes,
+    lastWatchedAt: s.last_watched_at,
+    lastWatchedAtUnknown: s.last_watched_at_unknown,
+  }))
+}
+
+/** Merges ratings, watch totals, and started/dismissed/dropped rows for one user into one summary per show. */
+function buildShowActivity(
   ratings: ShowRating[],
-  watched: EpisodeWatched[],
-  started: ShowStarted[] = [],
-  dismissed: ShowWatchingDismissed[] = [],
-  dropped: ShowDropped[] = [],
+  totals: WatchTotals[],
+  started: ShowStarted[],
+  dismissed: ShowWatchingDismissed[],
+  dropped: ShowDropped[],
 ): ShowActivity[] {
   const map = new Map<number, ShowActivity>()
 
@@ -92,26 +145,12 @@ export function summarizeShowActivity(
     entry.totalEpisodes = s.show_total_episodes
   }
 
-  const watchedByShow = new Map<number, EpisodeWatched[]>()
-  for (const w of watched) {
-    const list = watchedByShow.get(w.show_id)
-    if (list) list.push(w)
-    else watchedByShow.set(w.show_id, [w])
-  }
-
-  for (const [showId, rows] of watchedByShow) {
-    const entry = entryFor(showId, rows[0].show_name, rows[0].show_poster_path)
-    entry.watchedCount = rows.length
-    entry.totalEpisodes = rows.reduce<number | null>((max, r) => {
-      if (r.show_total_episodes == null) return max
-      return max === null ? r.show_total_episodes : Math.max(max, r.show_total_episodes)
-    }, entry.totalEpisodes)
-    for (const r of rows) {
-      if (!entry.lastWatchedAt || r.watched_at > entry.lastWatchedAt) {
-        entry.lastWatchedAt = r.watched_at
-        entry.lastWatchedAtUnknown = r.watched_at_unknown
-      }
-    }
+  for (const t of totals) {
+    const entry = entryFor(t.showId, t.showName, t.showPosterPath)
+    entry.watchedCount = t.watchedCount
+    if (t.totalEpisodes !== null) entry.totalEpisodes = Math.max(entry.totalEpisodes ?? 0, t.totalEpisodes)
+    entry.lastWatchedAt = t.lastWatchedAt
+    entry.lastWatchedAtUnknown = t.lastWatchedAtUnknown
     entry.finished = entry.totalEpisodes !== null && entry.watchedCount >= entry.totalEpisodes
     entry.finishedAt = entry.finished ? entry.lastWatchedAt : null
     entry.finishedAtUnknown = entry.finished ? entry.lastWatchedAtUnknown : false
@@ -133,37 +172,26 @@ export function summarizeShowActivity(
   return Array.from(map.values())
 }
 
-/** Same output shape as summarizeShowActivity, built from pre-aggregated per-show totals instead of raw episode rows. */
-export function summarizeFromWatchSummary(ratings: ShowRating[], summaries: ShowWatchSummary[]): ShowActivity[] {
-  const map = new Map<number, ShowActivity>()
+/** Merges show_ratings + episode_watched (+ optional started/dismissed/dropped) rows for one user into one summary per show. */
+export function summarizeShowActivity(
+  ratings: ShowRating[],
+  watched: EpisodeWatched[],
+  started: ShowStarted[] = [],
+  dismissed: ShowWatchingDismissed[] = [],
+  dropped: ShowDropped[] = [],
+): ShowActivity[] {
+  return buildShowActivity(ratings, totalsFromRows(watched), started, dismissed, dropped)
+}
 
-  function entryFor(showId: number, showName: string, showPosterPath: string | null): ShowActivity {
-    let entry = map.get(showId)
-    if (!entry) {
-      entry = emptyShowActivity(showId, showName, showPosterPath)
-      map.set(showId, entry)
-    }
-    return entry
-  }
-
-  for (const r of ratings) {
-    const entry = entryFor(r.show_id, r.show_name, r.show_poster_path)
-    entry.rating = r.rating
-    entry.ratedAt = r.rated_at
-  }
-
-  for (const s of summaries) {
-    const entry = entryFor(s.show_id, s.show_name, s.show_poster_path)
-    entry.watchedCount = s.watched_count
-    entry.totalEpisodes = s.total_episodes
-    entry.lastWatchedAt = s.last_watched_at
-    entry.lastWatchedAtUnknown = s.last_watched_at_unknown
-    entry.finished = entry.totalEpisodes !== null && entry.watchedCount >= entry.totalEpisodes
-    entry.finishedAt = entry.finished ? entry.lastWatchedAt : null
-    entry.finishedAtUnknown = entry.finished ? entry.lastWatchedAtUnknown : false
-  }
-
-  return Array.from(map.values())
+/** Same output as summarizeShowActivity, built from the server's per-show totals instead of every episode row. */
+export function summarizeFromWatchSummary(
+  ratings: ShowRating[],
+  summaries: ShowWatchSummary[],
+  started: ShowStarted[] = [],
+  dismissed: ShowWatchingDismissed[] = [],
+  dropped: ShowDropped[] = [],
+): ShowActivity[] {
+  return buildShowActivity(ratings, totalsFromSummaries(summaries), started, dismissed, dropped)
 }
 
 /** Returns in-progress shows, most recently watched or started first. */

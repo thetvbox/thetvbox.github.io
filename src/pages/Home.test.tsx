@@ -6,7 +6,8 @@ import * as framerMotionMock from '../test/framerMotionMock'
 vi.mock('framer-motion', () => framerMotionMock)
 vi.mock('../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../lib/showRatings', () => ({ fetchRecentShowRatings: vi.fn() }))
-vi.mock('../lib/watched', () => ({ fetchRecentWatched: vi.fn() }))
+vi.mock('../lib/watched', () => ({ fetchWatchedSeasonCounts: vi.fn() }))
+vi.mock('../lib/showWatchSummary', () => ({ fetchShowWatchSummary: vi.fn() }))
 vi.mock('../lib/showStarted', () => ({ fetchStartedForUser: vi.fn() }))
 vi.mock('../lib/showDismissed', () => ({ fetchDismissedForUser: vi.fn() }))
 vi.mock('../lib/showDropped', () => ({ fetchDroppedForUser: vi.fn() }))
@@ -24,7 +25,8 @@ vi.mock('../lib/seasonProgress', async () => {
 
 import { useAuth } from '../contexts/AuthContext'
 import { fetchRecentShowRatings } from '../lib/showRatings'
-import { fetchRecentWatched } from '../lib/watched'
+import { fetchWatchedSeasonCounts } from '../lib/watched'
+import { fetchShowWatchSummary } from '../lib/showWatchSummary'
 import { fetchStartedForUser } from '../lib/showStarted'
 import { fetchDismissedForUser } from '../lib/showDismissed'
 import { fetchDroppedForUser } from '../lib/showDropped'
@@ -34,26 +36,22 @@ import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { fetchSeasonBreakdowns, fetchNextEpisode } from '../lib/seasonProgress'
 import { HOME_PREVIEW_LIMIT } from '../lib/constants'
 import Home from './Home'
-import type { AppUser, EpisodeWatched, ShowListWithCount, WatchlistItem } from '../types'
+import type { AppUser, ShowListWithCount, ShowWatchSummary, WatchlistItem } from '../types'
 import type { TmdbSeasonSummary } from '../types'
 
 const me: AppUser = { id: 'u1', email: 'me@example.com', username: 'me', created_at: '2026-01-01T00:00:00Z' }
 
-function watchedRow(overrides: Partial<EpisodeWatched> = {}): EpisodeWatched {
+function summaryRow(overrides: Partial<ShowWatchSummary> = {}): ShowWatchSummary {
   return {
-    id: 'w1',
     user_id: 'u1',
     show_id: 1,
     show_name: 'Show One',
     show_poster_path: '/poster1.jpg',
-    show_total_episodes: null,
-    season_number: 1,
-    episode_number: 1,
-    episode_name: 'Pilot',
-    watched_at: '2026-01-01T00:00:00Z',
-    watched_at_unknown: false,
-    runtime_minutes: 42,
-    created_at: '2026-01-01T00:00:00Z',
+    watched_count: 1,
+    total_episodes: null,
+    last_watched_at: '2026-01-01T00:00:00Z',
+    last_watched_at_unknown: false,
+    runtime_minutes_sum: 42,
     ...overrides,
   }
 }
@@ -105,7 +103,8 @@ function renderHome() {
 
 beforeEach(() => {
   vi.mocked(fetchRecentShowRatings).mockReset().mockResolvedValue([])
-  vi.mocked(fetchRecentWatched).mockReset().mockResolvedValue([])
+  vi.mocked(fetchShowWatchSummary).mockReset().mockResolvedValue([])
+  vi.mocked(fetchWatchedSeasonCounts).mockReset().mockResolvedValue(new Map([[1, { 1: 1 }]]))
   vi.mocked(fetchStartedForUser).mockReset().mockResolvedValue([])
   vi.mocked(fetchDismissedForUser).mockReset().mockResolvedValue([])
   vi.mocked(fetchDroppedForUser).mockReset().mockResolvedValue([])
@@ -140,13 +139,13 @@ describe('Home', () => {
   })
 
   it('renders a show that is currently being watched', async () => {
-    vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([summaryRow()])
     renderHome()
     await waitFor(() => expect(screen.getByText('Show One')).toBeInTheDocument())
   })
 
   it('keeps the skeleton up until season-progress enrichment finishes, avoiding a partial-content flash', async () => {
-    vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([summaryRow()])
     let resolveBreakdowns!: (value: Map<number, TmdbSeasonSummary[]>) => void
     vi.mocked(fetchSeasonBreakdowns).mockReturnValue(
       new Promise((resolve) => {
@@ -167,7 +166,7 @@ describe('Home', () => {
   })
 
   it('shows the "New episode" badge as a progressive enhancement once TVmaze-backed enrichment resolves, without blocking the tile itself', async () => {
-    vi.mocked(fetchRecentWatched).mockResolvedValue([watchedRow()])
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([summaryRow()])
     vi.mocked(fetchSeasonBreakdowns).mockResolvedValue(
       new Map([[1, [season({ season_number: 1, episode_count: 10 })]]]),
     )

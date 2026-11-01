@@ -4,19 +4,15 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchRecentShowRatings } from '../lib/showRatings'
-import { fetchRecentWatched } from '../lib/watched'
+import { fetchWatchedSeasonCounts } from '../lib/watched'
+import { fetchShowWatchSummary } from '../lib/showWatchSummary'
 import { fetchStartedForUser } from '../lib/showStarted'
 import { fetchDismissedForUser } from '../lib/showDismissed'
 import { fetchDroppedForUser } from '../lib/showDropped'
 import { fetchWatchlist } from '../lib/watchlist'
 import { fetchListsForUser } from '../lib/lists'
-import { summarizeShowActivity, nowWatching } from '../lib/showActivity'
-import {
-  computeSeasonProgress,
-  countWatchedBySeason,
-  fetchNextEpisode,
-  fetchSeasonBreakdowns,
-} from '../lib/seasonProgress'
+import { summarizeFromWatchSummary, nowWatching } from '../lib/showActivity'
+import { computeSeasonProgress, fetchNextEpisode, fetchSeasonBreakdowns } from '../lib/seasonProgress'
 import type { NextEpisode, SeasonProgress } from '../lib/seasonProgress'
 import { useStreamingPlatforms } from '../hooks/useStreamingPlatforms'
 import { formatShortDate } from '../lib/date'
@@ -38,12 +34,12 @@ import PosterTile, { POSTER_GRID_CLASSES } from '../components/PosterTile'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
 import type {
-  EpisodeWatched,
   ShowDropped,
   ShowListWithCount,
   ShowRating,
   ShowStarted,
   ShowWatchingDismissed,
+  ShowWatchSummary,
   WatchlistItem,
 } from '../types'
 
@@ -62,7 +58,7 @@ export default function Home() {
   const { user } = useAuth()
   useDocumentTitle('Home')
   const [ratings, setRatings] = useState<ShowRating[]>([])
-  const [watched, setWatched] = useState<EpisodeWatched[]>([])
+  const [watchSummary, setWatchSummary] = useState<ShowWatchSummary[]>([])
   const [started, setStarted] = useState<ShowStarted[]>([])
   const [dismissed, setDismissed] = useState<ShowWatchingDismissed[]>([])
   const [dropped, setDropped] = useState<ShowDropped[]>([])
@@ -79,17 +75,17 @@ export default function Home() {
     setError(null)
     Promise.all([
       fetchRecentShowRatings(user.id, ACTIVITY_FETCH_LIMIT),
-      fetchRecentWatched(user.id, ACTIVITY_FETCH_LIMIT),
+      fetchShowWatchSummary(user.id),
       fetchStartedForUser(user.id),
       fetchDismissedForUser(user.id),
       fetchDroppedForUser(user.id),
       fetchWatchlist(user.id),
       fetchListsForUser(user.id),
     ])
-      .then(([ratingRows, watchedRows, startedRows, dismissedRows, droppedRows, watchlistRows, listRows]) => {
+      .then(([ratingRows, summaryRows, startedRows, dismissedRows, droppedRows, watchlistRows, listRows]) => {
         if (!cancelled) {
           setRatings(ratingRows)
-          setWatched(watchedRows)
+          setWatchSummary(summaryRows)
           setStarted(startedRows)
           setDismissed(dismissedRows)
           setDropped(droppedRows)
@@ -109,20 +105,10 @@ export default function Home() {
   }, [user])
 
   const activity = useMemo(
-    () => summarizeShowActivity(ratings, watched, started, dismissed, dropped),
-    [ratings, watched, started, dismissed, dropped],
+    () => summarizeFromWatchSummary(ratings, watchSummary, started, dismissed, dropped),
+    [ratings, watchSummary, started, dismissed, dropped],
   )
   const watching = useMemo(() => nowWatching(activity), [activity])
-
-  const watchedBySeasonByShow = useMemo(() => {
-    const byShow = new Map<number, EpisodeWatched[]>()
-    for (const w of watched) {
-      const rows = byShow.get(w.show_id)
-      if (rows) rows.push(w)
-      else byShow.set(w.show_id, [w])
-    }
-    return new Map(Array.from(byShow, ([showId, rows]) => [showId, countWatchedBySeason(rows)]))
-  }, [watched])
 
   const [seasonProgress, setSeasonProgress] = useState<Map<number, SeasonProgress>>(new Map())
   const [nextEpisodes, setNextEpisodes] = useState<Map<number, NextEpisode>>(new Map())
@@ -141,8 +127,8 @@ export default function Home() {
     }
     let cancelled = false
     const showIds = watchingKey.split(',').map(Number)
-    fetchSeasonBreakdowns(showIds)
-      .then((breakdowns) => {
+    Promise.all([fetchSeasonBreakdowns(showIds), user ? fetchWatchedSeasonCounts(user.id, showIds) : new Map()])
+      .then(([breakdowns, watchedBySeasonByShow]) => {
         if (cancelled) return
         const progressByShow = new Map<number, SeasonProgress>()
         for (const id of showIds) {
@@ -176,7 +162,7 @@ export default function Home() {
     return () => {
       cancelled = true
     }
-  }, [watchingKey, watchedBySeasonByShow])
+  }, [watchingKey, user])
 
   const showWatchingSkeleton = loading || (watchingIds.length > 0 && enrichedKey !== watchingKey)
 
