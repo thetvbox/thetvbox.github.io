@@ -192,9 +192,6 @@ export default function Activity() {
     return Array.from(genres).sort()
   }, [scopedWatching, showDetails])
 
-  // Live per-option counts for the Filters sheet -- combined with the OTHER facet's current
-  // selection, but never with this facet's own other selections, so picking one genre never
-  // changes another genre's own displayed count (standard multi-select facet-count semantics).
   const genreCounts = useMemo(() => {
     const counts = new Map<string, number>(watchingGenres.map((g) => [g, 0]))
     for (const w of personFilteredWatching) {

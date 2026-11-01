@@ -63,8 +63,6 @@ export default function ShowDetailSeasons({
   const nextUpRef = useRef<HTMLDivElement>(null)
   const hasJumpedRef = useRef(false)
 
-  // Recomputed only when the season or the TVmaze corrections change (not on every
-  // watch toggle), so EpisodeRow's memoization below actually has something stable to compare.
   const episodesWithEffectiveDates = useMemo(
     () => season?.episodes.map((ep) => (ep.air_date ? { ...ep, air_date: effectiveAirDate(ep) } : ep)) ?? null,
     [season, effectiveAirDate],

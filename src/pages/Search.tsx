@@ -51,9 +51,6 @@ export default function Search() {
 
   const searching = query.trim().length > 0
   const activeShows = searching ? posterResults : trendingResults
-  // Facets/filtering match against every service a show streams on, not just its single badge pick used for
-  // the ShowCard provider prop below, so a show doesn't get silently dropped from e.g. a Netflix filter just
-  // because some other service outranks Netflix for the one-line "where to watch" badge.
   const activePlatformNames = searching ? platformNames : trendingPlatformNames
 
   const facets = useMemo(

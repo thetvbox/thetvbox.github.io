@@ -186,6 +186,32 @@ describe('Home', () => {
     await waitFor(() => expect(screen.getByText(/New episode/)).toBeInTheDocument())
   })
 
+  it("shows the current season's progress from the signed-in member's per-season watch counts", async () => {
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([summaryRow({ watched_count: 13, total_episodes: 20 })])
+    vi.mocked(fetchWatchedSeasonCounts).mockResolvedValue(new Map([[1, { 1: 10, 2: 3 }]]))
+    vi.mocked(fetchSeasonBreakdowns).mockResolvedValue(
+      new Map([[1, [season({ season_number: 1, episode_count: 10 }), season({ season_number: 2, episode_count: 10 })]]]),
+    )
+    renderHome()
+
+    await waitFor(() => expect(screen.getByText(/Season 2 · 3\/10/)).toBeInTheDocument())
+    expect(fetchWatchedSeasonCounts).toHaveBeenCalledWith('u1', [1])
+  })
+
+  it('still shows the tile with overall progress when the per-season counts fail to load', async () => {
+    vi.mocked(fetchShowWatchSummary).mockResolvedValue([summaryRow({ watched_count: 13, total_episodes: 20 })])
+    vi.mocked(fetchWatchedSeasonCounts).mockRejectedValue(new Error('offline'))
+    vi.mocked(fetchSeasonBreakdowns).mockResolvedValue(
+      new Map([[1, [season({ season_number: 1, episode_count: 10 }), season({ season_number: 2, episode_count: 10 })]]]),
+    )
+    const { container } = renderHome()
+
+    await waitFor(() => expect(screen.getByText(/13\/20/)).toBeInTheDocument())
+    expect(screen.queryByText(/Season 2/)).not.toBeInTheDocument()
+    expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument()
+    expect(fetchNextEpisode).not.toHaveBeenCalled()
+  })
+
   it('renders the watchlist section', async () => {
     vi.mocked(fetchWatchlist).mockResolvedValue([watchlistItem()])
     renderHome()

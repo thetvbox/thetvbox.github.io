@@ -48,7 +48,6 @@ export interface ResolvedProvider {
   logo_path: string | null
 }
 
-/** One show's full resolution: the single "best guess" badge pick, plus every provider it actually streams on. */
 interface CachedProviderResolution {
   best: ResolvedProvider | null
   names: Set<string>

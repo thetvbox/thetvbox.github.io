@@ -132,11 +132,11 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
     }
   }, [userId])
 
-  // Every dated episode is by far the biggest read, so the rest of the profile doesn't wait for it.
   useEffect(() => {
     let cancelled = false
     // oxlint-disable-next-line react/set-state-in-effect
     setLoadingDiary(true)
+    setDatedWatched([])
     fetchRecentDatedWatched(userId, ACTIVITY_FETCH_LIMIT)
       .then((rows) => {
         if (!cancelled) setDatedWatched(rows)

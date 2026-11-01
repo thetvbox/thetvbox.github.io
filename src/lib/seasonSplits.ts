@@ -1,9 +1,5 @@
-// Seasons that TMDB lumps together but streamers split, e.g. Lupin's TMDB season 1 is Netflix's Parts 1 and 2.
-// The app shows (and stores) the streamer's numbering; these pure helpers convert between the two.
-// The same rules live in SQL (season_split_to_display/to_tmdb) and in supabase/functions/_shared/seasonSplits.ts.
 import type { TmdbSeasonDetail, TmdbShowDetail } from '../types'
 
-/** One TMDB season that is really several streamer seasons, with each part's episode count. */
 export interface SeasonSplit {
   tmdbSeason: number
   partSizes: number[]

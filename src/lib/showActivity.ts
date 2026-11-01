@@ -59,7 +59,6 @@ function emptyShowActivity(showId: number, showName: string, showPosterPath: str
   }
 }
 
-/** One show's watch totals, from raw episode rows or the server-side summary view. */
 interface WatchTotals {
   showId: number
   showName: string

@@ -1,5 +1,3 @@
-// TMDB show and season data in the numbering the app shows and stores: the streamer's, with any
-// season splits applied (see seasonSplits.ts). Screens read shows through here, not tmdb.ts.
 import { getSeasonDetail as getTmdbSeasonDetail, getShowDetail as getTmdbShowDetail } from './tmdb'
 import { fetchSeasonSplits, prefetchSeasonSplits } from './seasonSplitData'
 import { splitSeasonDetail, splitShowDetail, tmdbSeasonPart } from './seasonSplits'
