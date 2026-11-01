@@ -185,9 +185,27 @@ describe('ShowDetailSeasons', () => {
   })
 
   it('shows an "Airs" badge instead of the rating control for a season that has not started airing yet', () => {
-    renderSeasons({ activeSeason: 3, season: season({ air_date: '2099-06-15' }) })
-    expect(screen.getByText(/Airs/)).toBeInTheDocument()
+    renderSeasons({
+      activeSeason: 3,
+      season: season({ air_date: '2099-06-15', episodes: [episode({ air_date: '2099-06-15' })] }),
+    })
+    expect(screen.getAllByText('Airs Jun 15')).toHaveLength(2)
     expect(screen.queryByRole('radiogroup', { name: 'Rate Season 3' })).not.toBeInTheDocument()
+  })
+
+  it("can't rate an announced season that has no air date or aired episodes yet", () => {
+    renderSeasons({ activeSeason: 3, season: season({ air_date: null, episodes: [episode({ air_date: null })] }) })
+    expect(screen.getByText('Not aired yet')).toBeInTheDocument()
+    expect(screen.queryByRole('radiogroup', { name: 'Rate Season 3' })).not.toBeInTheDocument()
+  })
+
+  it('can rate a season once its first episode has aired, even with no season-level date', () => {
+    renderSeasons({
+      activeSeason: 3,
+      season: season({ air_date: null, episodes: [episode({ air_date: '2020-01-01' }), episode({ id: 2, episode_number: 2, air_date: '2099-01-01' })] }),
+    })
+    expect(screen.queryByText('Not aired yet')).not.toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Rate Season 3' })).toBeInTheDocument()
   })
 
   it('picks "up next" using the TVmaze-corrected air date, not episode 1\'s raw (already-past) TMDB date', () => {

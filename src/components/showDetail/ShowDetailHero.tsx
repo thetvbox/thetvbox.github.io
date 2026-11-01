@@ -5,6 +5,8 @@ import { pluralSuffix } from '../../lib/format'
 import RatingSummary from '../RatingSummary'
 import EstimatedShowRating from '../EstimatedShowRating'
 import ExternalRatings from '../ExternalRatings'
+import NotAiredBadge from '../NotAiredBadge'
+import { hasAired } from '../../lib/date'
 import type { ExternalRatings as ExternalRatingsData, SeasonRatingWithUser, ShowRatingWithUser, TmdbShowDetail } from '../../types'
 
 interface ShowDetailHeroProps {
@@ -20,6 +22,13 @@ interface ShowDetailHeroProps {
 }
 
 /** Poster, title/meta, and the show-level rating summary. */
+const STATUSES_WITH_AIRED_EPISODES = new Set(['Returning Series', 'Ended', 'Canceled'])
+
+/** True once a show has premiered; a show TMDB has no premiere date for counts as aired if its status says it has episodes out. */
+function showHasAired(show: TmdbShowDetail): boolean {
+  return show.first_air_date ? hasAired(show.first_air_date) : STATUSES_WITH_AIRED_EPISODES.has(show.status)
+}
+
 export default function ShowDetailHero({
   show,
   loadingShow,
@@ -73,7 +82,13 @@ export default function ShowDetailHero({
         </motion.div>
       </div>
 
-      {show && !loadingShow && (
+      {show && !loadingShow && !showHasAired(show) && (
+        <div className="mt-5">
+          <NotAiredBadge airDate={show.first_air_date} />
+        </div>
+      )}
+
+      {show && !loadingShow && showHasAired(show) && (
         <div className="mt-5">
           <RatingSummary
             ratings={showRatings}

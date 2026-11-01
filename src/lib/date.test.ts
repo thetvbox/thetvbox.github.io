@@ -4,6 +4,7 @@ import {
   dayKey,
   formatDiaryHeading,
   formatShortDate,
+  hasAired,
   isFutureDate,
   todayLocalDateInput,
 } from './date'
@@ -83,6 +84,15 @@ describe('dateInputToNoonIso', () => {
     expect(parsed.getFullYear()).toBe(2026)
     expect(parsed.getMonth()).toBe(2)
     expect(parsed.getDate()).toBe(10)
+  })
+})
+
+describe('hasAired', () => {
+  it('is true for today or earlier and false for a future or missing date', () => {
+    expect(hasAired('2000-01-01')).toBe(true)
+    expect(hasAired('2999-01-01')).toBe(false)
+    expect(hasAired(null)).toBe(false)
+    expect(hasAired(undefined)).toBe(false)
   })
 })
 

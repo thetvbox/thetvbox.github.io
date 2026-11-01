@@ -72,6 +72,11 @@ export function dateInputToNoonIso(dateInput: string): string {
 }
 
 /** True if a TMDB date-only string is still ahead of today, by the viewer's local calendar day. */
+/** True once a date-only string is today or earlier; false for a missing date. */
+export function hasAired(dateStr: string | null | undefined): boolean {
+  return Boolean(dateStr) && !isFutureDate(dateStr as string)
+}
+
 export function isFutureDate(dateStr: string): boolean {
   const [y, m, d] = dateStr.split('-').map(Number)
   if (!y || !m || !d) return false

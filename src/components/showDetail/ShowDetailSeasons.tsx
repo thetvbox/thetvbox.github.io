@@ -6,7 +6,8 @@ import RatingSummary from '../RatingSummary'
 import DateMarkControl from '../DateMarkControl'
 import EpisodeRow from '../EpisodeRow'
 import { EpisodeRowSkeleton } from '../Skeletons'
-import { formatShortDate, isFutureDate } from '../../lib/date'
+import NotAiredBadge from '../NotAiredBadge'
+import { formatShortDate, hasAired, isFutureDate } from '../../lib/date'
 import { pluralSuffix } from '../../lib/format'
 import { scrollBehavior } from '../../lib/motion'
 import { computeSeasonProgress } from '../../lib/seasonProgress'
@@ -72,7 +73,9 @@ export default function ShowDetailSeasons({
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
   const seasonAirDate = season?.air_date ?? null
-  const seasonUpcoming = Boolean(seasonAirDate && isFutureDate(seasonAirDate))
+  const datedEpisodes = episodesWithEffectiveDates?.filter((ep) => ep.air_date) ?? []
+  const seasonAired =
+    datedEpisodes.length > 0 ? datedEpisodes.some((ep) => hasAired(ep.air_date)) : hasAired(seasonAirDate)
 
   const seasonSegments = useMemo(
     () => computeSeasonProgress(show.seasons, countWatchedBySeason(Object.values(watched)))?.segments ?? [],
@@ -132,10 +135,8 @@ export default function ShowDetailSeasons({
       </div>
 
       <div className="mb-5">
-        {seasonUpcoming ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline-strong px-3 py-1.5 text-xs font-medium text-base-500">
-            Airs {formatShortDate(seasonAirDate!)}
-          </span>
+        {!seasonAired ? (
+          <NotAiredBadge airDate={seasonAirDate} />
         ) : (
           <RatingSummary
             ratings={seasonRatings}

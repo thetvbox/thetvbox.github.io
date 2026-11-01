@@ -85,6 +85,23 @@ describe('ShowDetailHero', () => {
     expect(screen.getByRole('radiogroup', { name: 'Rate this show' })).toBeInTheDocument()
   })
 
+  it("can't rate a show before it premieres, and says when it airs", () => {
+    renderHero({ show: show({ first_air_date: '2099-03-04', status: 'In Production' }) })
+    expect(screen.getByText('Airs Mar 4')).toBeInTheDocument()
+    expect(screen.queryByRole('radiogroup', { name: 'Rate this show' })).not.toBeInTheDocument()
+  })
+
+  it("can't rate an announced show with no premiere date", () => {
+    renderHero({ show: show({ first_air_date: null, status: 'Planned' }) })
+    expect(screen.getByText('Not aired yet')).toBeInTheDocument()
+    expect(screen.queryByRole('radiogroup', { name: 'Rate this show' })).not.toBeInTheDocument()
+  })
+
+  it('can rate a show TMDB has no premiere date for when its status says episodes are out', () => {
+    renderHero({ show: show({ first_air_date: null, status: 'Ended' }) })
+    expect(screen.getByRole('radiogroup', { name: 'Rate this show' })).toBeInTheDocument()
+  })
+
   it('shows an estimated rating from season ratings when the show itself is unrated', () => {
     renderHero({
       estimatedShowRating: {

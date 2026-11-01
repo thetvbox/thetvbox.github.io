@@ -332,6 +332,13 @@ All notable changes to TV Box are documented here. Format loosely follows
   actions now say so when nothing has aired yet.
 - Opening another member's profile no longer briefly keeps the previous
   person's diary.
+- Filtering Search by a platform or genre with nothing typed only narrowed
+  this week's 20 trending shows, so Netflix looked nearly empty (#4). It
+  now also browses TMDB's most popular shows on the chosen platforms and
+  genres.
+- A season with no air date yet, or a show that hasn't premiered, could
+  still be rated (#3). Both now show "Not aired yet" or their premiere date
+  instead of the rating control.
 
 - Activity's new Filters sheet computed its Genre options from the
   *already person-filtered* Now Watching list, so selecting a person
