@@ -196,6 +196,64 @@ describe('useShowDetail', () => {
     warn.mockRestore()
   })
 
+  it('defaults to the season the user is partway through', async () => {
+    vi.mocked(getShowDetail).mockResolvedValue(
+      makeShow({
+        seasons: [
+          { id: 1, season_number: 1, name: 'Season 1', episode_count: 1, poster_path: null, air_date: '2020-01-01' },
+          { id: 2, season_number: 2, name: 'Season 2', episode_count: 2, poster_path: null, air_date: '2021-01-01' },
+        ],
+      }),
+    )
+    vi.mocked(fetchWatchedForShow).mockResolvedValue({ '1-1': watchedRow() } as never)
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.activeSeason).toBe(2))
+  })
+
+  it('falls back to specials when that is all a show has, and to no season when it has none', async () => {
+    vi.mocked(getShowDetail).mockResolvedValue(
+      makeShow({ seasons: [{ id: 9, season_number: 0, name: 'Specials', episode_count: 2, poster_path: null, air_date: null }] }),
+    )
+    const specials = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(specials.result.current.activeSeason).toBe(0))
+
+    vi.mocked(getShowDetail).mockResolvedValue(makeShow({ seasons: [] }))
+    const empty = renderHook(() => useShowDetail(2, user))
+    await waitFor(() => expect(empty.result.current.checkingSeasons).toBe(false))
+    expect(empty.result.current.activeSeason).toBeNull()
+  })
+
+  it('surfaces a season load error', async () => {
+    vi.mocked(getSeasonDetail).mockRejectedValue(new Error('season down'))
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.error).toBe('season down'))
+    expect(result.current.loadingSeason).toBe(false)
+  })
+
+  it('surfaces an error when the reload after a new split fails', async () => {
+    vi.mocked(syncSeasonSplits).mockResolvedValue(true)
+    vi.mocked(getShowDetail).mockResolvedValueOnce(makeShow()).mockRejectedValueOnce(new Error('reload failed'))
+    const { result } = renderHook(() => useShowDetail(1, user))
+    await waitFor(() => expect(result.current.error).toBe('reload failed'))
+    expect(result.current.checkingSeasons).toBe(false)
+  })
+
+  it('loads nothing for an invalid show id', () => {
+    renderHook(() => useShowDetail(Number.NaN, user))
+    expect(getShowDetail).not.toHaveBeenCalled()
+    expect(syncSeasonSplits).not.toHaveBeenCalled()
+  })
+
+  it('ignores results that arrive after unmounting', async () => {
+    let finishShow!: (show: TmdbShowDetail) => void
+    vi.mocked(getShowDetail).mockReturnValue(new Promise((resolve) => (finishShow = resolve)))
+    const { result, unmount } = renderHook(() => useShowDetail(1, user))
+    unmount()
+    finishShow(makeShow())
+    await Promise.resolve()
+    expect(result.current.show).toBeNull()
+  })
+
   it('marking an episode watched resumes a dismissed, dropped, and watchlisted show', async () => {
     vi.mocked(fetchDismissedItem).mockResolvedValue({
       id: 'd1',

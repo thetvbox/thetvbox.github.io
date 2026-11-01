@@ -8,9 +8,25 @@ vi.mock('../components/Toast', () => ({
   default: ({ toast }: { toast: { message: string } | null }) => <div>{toast ? `Toast: ${toast.message}` : null}</div>,
 }))
 vi.mock('../components/showDetail/ShowDetailHero', () => ({ default: () => <div>Hero</div> }))
-vi.mock('../components/showDetail/ShowDetailQuickActions', () => ({ default: () => <div>QuickActions</div> }))
+vi.mock('../components/showDetail/ShowDetailQuickActions', () => ({
+  default: ({ onToggleListPicker, onCloseListPicker }: { onToggleListPicker: () => void; onCloseListPicker: () => void }) => (
+    <div>
+      QuickActions
+      <button onClick={onToggleListPicker}>Toggle lists</button>
+      <button onClick={onCloseListPicker}>Close lists</button>
+    </div>
+  ),
+}))
 vi.mock('../components/showDetail/ShowDetailProgress', () => ({ default: () => <div>Progress</div> }))
-vi.mock('../components/showDetail/ShowDetailStreaming', () => ({ default: () => <div>Streaming</div> }))
+vi.mock('../components/showDetail/ShowDetailStreaming', () => ({
+  default: ({ onTogglePicker, onClosePicker }: { onTogglePicker: () => void; onClosePicker: () => void }) => (
+    <div>
+      Streaming
+      <button onClick={onTogglePicker}>Toggle picker</button>
+      <button onClick={onClosePicker}>Close picker</button>
+    </div>
+  ),
+}))
 vi.mock('../components/showDetail/ShowDetailSeasons', () => ({ default: () => <div>Seasons</div> }))
 
 import { useAuth } from '../contexts/AuthContext'
@@ -228,6 +244,23 @@ describe('ShowDetail', () => {
     vi.mocked(useShowDetail).mockReturnValue(baseState({ show: null }))
     renderShowDetail()
     expect(document.title).toBe('TV Box')
+  })
+
+  it('toggles and closes the list picker and the streaming picker', () => {
+    const setListPickerOpen = vi.fn()
+    const setPickerOpen = vi.fn()
+    vi.mocked(useShowDetail).mockReturnValue(baseState({ show: show(), setListPickerOpen, setPickerOpen }))
+    renderShowDetail()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle lists' }))
+    expect(setListPickerOpen.mock.calls[0][0](false)).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Close lists' }))
+    expect(setListPickerOpen).toHaveBeenLastCalledWith(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle picker' }))
+    expect(setPickerOpen.mock.calls[0][0](true)).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Close picker' }))
+    expect(setPickerOpen).toHaveBeenLastCalledWith(false)
   })
 
   it('goes back to home when the back button is the only screen in history', () => {
