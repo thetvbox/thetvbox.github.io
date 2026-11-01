@@ -20,6 +20,22 @@ function snapshotBulkTargets(
   return { previousRows, addedKeys }
 }
 
+type BatchEpisode = { seasonNumber: number; episodeNumber: number; episodeName: string | null; runtimeMinutes: number | null }
+
+/** The episodes that have aired (or have no air date), as bulk mark-watched targets. */
+function airedTargets(episodes: TmdbEpisode[]): BatchEpisode[] {
+  return episodes
+    .filter((ep) => !(ep.air_date && isFutureDate(ep.air_date)))
+    .map((ep) => ({
+      seasonNumber: ep.season_number,
+      episodeNumber: ep.episode_number,
+      episodeName: ep.name,
+      runtimeMinutes: ep.runtime,
+    }))
+}
+
+const NOTHING_AIRED_MESSAGE = "Nothing's aired yet, so there's nothing to mark watched."
+
 /** Marking, unmarking, and bulk-marking episodes watched for the active show/season. */
 export function useEpisodeWatchHandlers(
   watched: WatchedMap,
@@ -130,11 +146,15 @@ export function useEpisodeWatchHandlers(
 
   /** Marks a batch of episodes watched on one date, with an undo that restores whatever each one had before. */
   async function markBatchWatched(
-    episodes: { seasonNumber: number; episodeNumber: number; episodeName: string | null; runtimeMinutes: number | null }[],
+    episodes: BatchEpisode[],
     input: { watchedAt: string; unknownDate: boolean },
     failureMessage: string,
   ) {
-    if (!user || !show || episodes.length === 0) return
+    if (!user || !show) return
+    if (episodes.length === 0) {
+      showError(NOTHING_AIRED_MESSAGE)
+      return
+    }
     const { previousRows, addedKeys } = snapshotBulkTargets(watched, episodes)
     try {
       const saved = await bulkMarkWatched({
@@ -171,24 +191,11 @@ export function useEpisodeWatchHandlers(
     const seasonDetails = await Promise.all(
       realSeasons.map((s) => getSeasonDetail(show.id, s.season_number).catch(() => null)),
     )
-    const detailByKey = new Map<string, TmdbEpisode>()
-    for (const detail of seasonDetails) {
-      for (const ep of detail?.episodes ?? []) detailByKey.set(watchedKey(ep.season_number, ep.episode_number), ep)
+    if (seasonDetails.some((detail) => detail === null)) {
+      showError("Couldn't load every season's episodes. Try again.")
+      return
     }
-    const episodes = realSeasons.flatMap((s) =>
-      Array.from({ length: s.episode_count }, (_, i) => {
-        const episodeNumber = i + 1
-        const ep = detailByKey.get(watchedKey(s.season_number, episodeNumber))
-        return { ep, seasonNumber: s.season_number, episodeNumber }
-      })
-        .filter(({ ep }) => !(ep?.air_date && isFutureDate(ep.air_date)))
-        .map(({ ep, seasonNumber, episodeNumber }) => ({
-          seasonNumber,
-          episodeNumber,
-          episodeName: ep?.name ?? null,
-          runtimeMinutes: ep?.runtime ?? null,
-        })),
-    )
+    const episodes = seasonDetails.flatMap((detail) => airedTargets(detail?.episodes ?? []))
     await markBatchWatched(episodes, input, 'Failed to mark episodes watched. Try again.')
   }
 
@@ -227,15 +234,7 @@ export function useEpisodeWatchHandlers(
   /** Marks every aired episode of the active season watched in one action. */
   async function handleMarkSeasonWatched(input: { watchedAt: string; unknownDate: boolean }) {
     if (!season) return
-    const episodes = season.episodes
-      .filter((ep) => !(ep.air_date && isFutureDate(ep.air_date)))
-      .map((ep) => ({
-        seasonNumber: ep.season_number,
-        episodeNumber: ep.episode_number,
-        episodeName: ep.name,
-        runtimeMinutes: ep.runtime,
-      }))
-    await markBatchWatched(episodes, input, 'Failed to mark season watched. Try again.')
+    await markBatchWatched(airedTargets(season.episodes), input, 'Failed to mark season watched. Try again.')
   }
 
   return {

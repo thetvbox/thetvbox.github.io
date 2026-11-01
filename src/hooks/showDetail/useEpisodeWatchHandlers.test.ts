@@ -251,6 +251,84 @@ describe('useEpisodeWatchHandlers', () => {
     )
   })
 
+  it("handleMarkAllWatched marks nothing and says so when a season's episodes fail to load", async () => {
+    vi.mocked(getSeasonDetail).mockRejectedValue(new Error('offline'))
+    const showError = vi.fn()
+    const { result } = renderHook(() => useHarness({}, { showError }))
+
+    await act(() => result.current.handleMarkAllWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+
+    expect(bulkMarkWatched).not.toHaveBeenCalled()
+    expect(showError).toHaveBeenCalledWith("Couldn't load every season's episodes. Try again.")
+  })
+
+  it('handleMarkAllWatched shows an error when saving fails', async () => {
+    vi.mocked(getSeasonDetail).mockResolvedValue(
+      season([{ id: 1, episode_number: 1, season_number: 1, name: 'Pilot', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 }]),
+    )
+    vi.mocked(bulkMarkWatched).mockRejectedValue(new Error('boom'))
+    const showError = vi.fn()
+    const { result } = renderHook(() => useHarness({}, { showError }))
+
+    await act(() => result.current.handleMarkAllWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+
+    expect(showError).toHaveBeenCalledWith('Failed to mark episodes watched. Try again.')
+  })
+
+  it("handleMarkSeasonWatched says so instead of doing nothing when no episode has aired", async () => {
+    const future = { id: 2, episode_number: 1, season_number: 1, name: 'E1', overview: '', still_path: null, air_date: '2099-12-25', runtime: 42 }
+    const showError = vi.fn()
+    const { result } = renderHook(() => useHarness({}, { season: season([future]), showError }))
+
+    await act(() => result.current.handleMarkSeasonWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+
+    expect(bulkMarkWatched).not.toHaveBeenCalled()
+    expect(showError).toHaveBeenCalledWith("Nothing's aired yet, so there's nothing to mark watched.")
+  })
+
+  it('bulk marking reports overwritten rows, and undo restores them', async () => {
+    const aired = { id: 1, episode_number: 1, season_number: 1, name: 'E1', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 }
+    const previous = watchedRow({ watched_at: '2019-01-01T00:00:00Z' })
+    const saved = watchedRow({ watched_at: '2020-02-01T00:00:00Z' })
+    vi.mocked(bulkMarkWatched).mockResolvedValue([saved])
+    vi.mocked(restoreWatched).mockResolvedValue([previous])
+    const showUndo = vi.fn()
+    const { result } = renderHook(() => useHarness({ '1-1': previous }, { season: season([aired]), showUndo }))
+
+    await act(() => result.current.handleMarkSeasonWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+    expect(showUndo).toHaveBeenCalledWith('Marked 1 episodes watched (1 overwritten)', expect.any(Function))
+
+    await act(() => showUndo.mock.calls[0][1]())
+    expect(restoreWatched).toHaveBeenCalledWith([previous])
+    expect(bulkUnmarkWatched).not.toHaveBeenCalled()
+    expect(result.current.watched['1-1']).toEqual(previous)
+  })
+
+  it('undo shows an error when restoring fails', async () => {
+    const aired = { id: 1, episode_number: 1, season_number: 1, name: 'E1', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 }
+    vi.mocked(bulkMarkWatched).mockResolvedValue([watchedRow()])
+    vi.mocked(bulkUnmarkWatched).mockRejectedValue(new Error('boom'))
+    const showUndo = vi.fn()
+    const showError = vi.fn()
+    const { result } = renderHook(() => useHarness({}, { season: season([aired]), showUndo, showError }))
+
+    await act(() => result.current.handleMarkSeasonWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+    await act(() => showUndo.mock.calls[0][1]())
+
+    expect(showError).toHaveBeenCalledWith('Failed to undo. Your watch history wasn’t changed back — try again.')
+  })
+
+  it('bulk handlers do nothing when signed out or with no season loaded', async () => {
+    const { result } = renderHook(() => useHarness({}, { user: null }))
+    await act(() => result.current.handleMarkAllWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+    await act(() => result.current.handleMarkSeasonWatched({ watchedAt: '2020-02-01T00:00:00Z', unknownDate: false }))
+    await act(() =>
+      result.current.handleMarkWatchedWithDate(1, 'Pilot', 42, { watchedAt: '2020-06-01T00:00:00Z', unknownDate: false }),
+    )
+    expect(getSeasonDetail).not.toHaveBeenCalled()
+    expect(bulkMarkWatched).not.toHaveBeenCalled()
+  })
+
   it('seasonWatchedCount counts only the active season episodes present in watched', () => {
     const aired = { id: 1, episode_number: 1, season_number: 1, name: 'E1', overview: '', still_path: null, air_date: '2020-01-01', runtime: 42 }
     const other = { id: 2, episode_number: 2, season_number: 1, name: 'E2', overview: '', still_path: null, air_date: '2020-01-08', runtime: 42 }
