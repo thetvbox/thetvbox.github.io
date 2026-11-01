@@ -463,19 +463,19 @@ describe('useShowDetail', () => {
 
     const { result } = renderHook(() => useShowDetail(1, user))
     await waitFor(() => expect(result.current.loadingShow).toBe(false))
-    await waitFor(() => expect(result.current.externalRatings).not.toBeNull())
+    await waitFor(() => expect(result.current.externalRatings).toBeTruthy())
 
     expect(getExternalRatings).toHaveBeenCalledWith(undefined)
     expect(result.current.externalRatings).toEqual({ imdbRating: 8.4, rottenTomatoesScore: 92 })
   })
 
-  it('leaves externalRatings null when OMDb has nothing for the show', async () => {
+  it('settles externalRatings on null when OMDb has nothing for the show', async () => {
     vi.mocked(getExternalRatings).mockResolvedValue(null)
 
     const { result } = renderHook(() => useShowDetail(1, user))
     await waitFor(() => expect(result.current.loadingShow).toBe(false))
 
-    expect(result.current.externalRatings).toBeNull()
+    await waitFor(() => expect(result.current.externalRatings).toBeNull())
   })
 
   it('handleRateSeason upserts a season rating scoped to the active season', async () => {

@@ -113,8 +113,13 @@ describe('ShowDetailHero', () => {
     expect(screen.getByText('92%')).toBeInTheDocument()
   })
 
-  it('does not show the IMDb rating before OMDb has resolved (or when it has nothing)', () => {
-    renderHero({ externalRatings: null })
+  it('shows no ratings row before OMDb has resolved', () => {
+    renderHero({ externalRatings: undefined })
     expect(screen.queryByRole('img', { name: 'IMDb' })).not.toBeInTheDocument()
+  })
+
+  it('says the ratings are not available when OMDb has nothing for the show', () => {
+    renderHero({ externalRatings: null })
+    expect(screen.getAllByText('Not available')).toHaveLength(2)
   })
 })

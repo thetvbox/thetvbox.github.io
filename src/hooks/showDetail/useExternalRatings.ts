@@ -2,22 +2,22 @@ import { useEffect, useState } from 'react'
 import { getExternalRatings } from '../../lib/omdb'
 import type { ExternalRatings, TmdbShowDetail } from '../../types'
 
-/** Fetches a show's IMDb rating + Rotten Tomatoes score from OMDb, keyed off TMDB's IMDb id. */
-export function useExternalRatings(show: TmdbShowDetail | null): ExternalRatings | null {
-  const [externalRatings, setExternalRatings] = useState<ExternalRatings | null>(null)
+/** A show's IMDb rating and Rotten Tomatoes score from OMDb: undefined while loading, null when OMDb has none or fails. */
+export function useExternalRatings(show: TmdbShowDetail | null): ExternalRatings | null | undefined {
+  const [loaded, setLoaded] = useState<{ show: TmdbShowDetail; ratings: ExternalRatings | null } | null>(null)
 
   useEffect(() => {
     if (!show) return
     let cancelled = false
     getExternalRatings(show.external_ids?.imdb_id)
+      .catch(() => null)
       .then((ratings) => {
-        if (!cancelled) setExternalRatings(ratings)
+        if (!cancelled) setLoaded({ show, ratings })
       })
-      .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [show])
 
-  return externalRatings
+  return show && loaded?.show === show ? loaded.ratings : undefined
 }

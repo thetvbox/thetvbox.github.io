@@ -13,7 +13,7 @@ interface ShowDetailHeroProps {
   showRatings: ShowRatingWithUser[]
   myRating: number
   estimatedShowRating?: { average: number; seasons: SeasonRatingWithUser[] } | null
-  externalRatings?: ExternalRatingsData | null
+  externalRatings?: ExternalRatingsData | null | undefined
   savingRating: boolean
   currentUserId?: string
   onRateShow: (value: number) => void
@@ -26,7 +26,7 @@ export default function ShowDetailHero({
   showRatings,
   myRating,
   estimatedShowRating = null,
-  externalRatings = null,
+  externalRatings,
   savingRating,
   currentUserId,
   onRateShow,

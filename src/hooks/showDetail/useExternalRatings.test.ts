@@ -25,13 +25,13 @@ beforeEach(() => {
 })
 
 describe('useExternalRatings', () => {
-  it('returns null initially, then the resolved external ratings once the fetch completes', async () => {
+  it('returns undefined while loading, then the resolved external ratings once the fetch completes', async () => {
     const ratings: ExternalRatings = { imdbRating: 8.4, rottenTomatoesScore: 92 }
     const { promise, resolve } = createDeferred<ExternalRatings | null>()
     vi.mocked(getExternalRatings).mockReturnValue(promise)
 
     const { result } = renderHook(() => useExternalRatings(show))
-    expect(result.current).toBeNull()
+    expect(result.current).toBeUndefined()
 
     resolve(ratings)
     await waitFor(() => expect(result.current).toEqual(ratings))
@@ -52,18 +52,22 @@ describe('useExternalRatings', () => {
 
   it('does nothing when show is null', async () => {
     const { result } = renderHook(() => useExternalRatings(null))
-    expect(result.current).toBeNull()
+    expect(result.current).toBeUndefined()
     await new Promise((r) => setTimeout(r, 0))
     expect(getExternalRatings).not.toHaveBeenCalled()
-    expect(result.current).toBeNull()
+    expect(result.current).toBeUndefined()
   })
 
-  it('leaves externalRatings null when the fetch rejects, without throwing', async () => {
+  it('settles on null, meaning not available, when OMDb has nothing for the show', async () => {
+    vi.mocked(getExternalRatings).mockResolvedValue(null)
+    const { result } = renderHook(() => useExternalRatings(show))
+    await waitFor(() => expect(result.current).toBeNull())
+  })
+
+  it('settles on null when the fetch rejects, without throwing', async () => {
     vi.mocked(getExternalRatings).mockRejectedValue(new Error('network error'))
     const { result } = renderHook(() => useExternalRatings(show))
-    await waitFor(() => expect(getExternalRatings).toHaveBeenCalled())
-    await new Promise((r) => setTimeout(r, 0))
-    expect(result.current).toBeNull()
+    await waitFor(() => expect(result.current).toBeNull())
   })
 
   it('does not update state or warn after unmounting while the fetch is still pending', async () => {
@@ -96,6 +100,7 @@ describe('useExternalRatings', () => {
     await waitFor(() => expect(result.current).toEqual(ratingsA))
 
     rerender({ show: showB })
+    expect(result.current).toBeUndefined()
     await waitFor(() => expect(result.current).toEqual(ratingsB))
 
     expect(getExternalRatings).toHaveBeenNthCalledWith(1, 'tt-a')
