@@ -6,12 +6,16 @@ import type {
   TmdbShowSummary,
   TmdbWatchProviders,
 } from '../types'
+import { ExpiringCache } from './expiringCache'
 
 const API_BASE = 'https://api.themoviedb.org/3'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p'
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
 export const isTmdbConfigured = Boolean(API_KEY)
+
+/** How long show, season, trending, and streaming data is reused before TMDB is asked again, so new seasons show up without a reload. */
+const TMDB_CACHE_TTL_MS = 60 * 60 * 1000
 
 class TmdbError extends Error {}
 
@@ -46,14 +50,15 @@ export async function searchShows(query: string): Promise<TmdbShowSummary[]> {
   return data.results
 }
 
-let trendingCache: TmdbShowSummary[] | null = null
+const trendingCache = new ExpiringCache<'week', TmdbShowSummary[]>(TMDB_CACHE_TTL_MS)
 
-/** Fetches this week's trending TV shows, session-cached since the list barely moves within a session. */
+/** Fetches this week's trending TV shows, cached for an hour since the list barely moves. */
 export async function getTrendingShows(): Promise<TmdbShowSummary[]> {
-  if (trendingCache) return trendingCache
+  const cached = trendingCache.get('week')
+  if (cached) return cached
   const data = await tmdbFetch<{ results: TmdbShowSummary[] }>('/trending/tv/week')
-  trendingCache = data.results
-  return trendingCache
+  trendingCache.set('week', data.results)
+  return data.results
 }
 
 let tvGenresCache: TmdbGenre[] | null = null
@@ -66,9 +71,9 @@ export async function getTvGenres(): Promise<TmdbGenre[]> {
   return tvGenresCache
 }
 
-const showDetailCache = new Map<number, TmdbShowDetail>()
+const showDetailCache = new ExpiringCache<number, TmdbShowDetail>(TMDB_CACHE_TTL_MS)
 
-/** Fetches a show's full detail, session-cached, including external_ids for TVmaze cross-referencing. */
+/** Fetches a show's full detail, cached for an hour, including external_ids for TVmaze cross-referencing. */
 export async function getShowDetail(showId: number): Promise<TmdbShowDetail> {
   const cached = showDetailCache.get(showId)
   if (cached) return cached
@@ -96,9 +101,9 @@ export async function getShowDetailsBulk(showIds: number[]): Promise<Map<number,
   return map
 }
 
-const seasonDetailCache = new Map<string, TmdbSeasonDetail>()
+const seasonDetailCache = new ExpiringCache<string, TmdbSeasonDetail>(TMDB_CACHE_TTL_MS)
 
-/** Fetches a season's full episode list, session-cached like getShowDetail. */
+/** Fetches a season's full episode list, cached for an hour like getShowDetail. */
 export async function getSeasonDetail(showId: number, seasonNumber: number): Promise<TmdbSeasonDetail> {
   const key = `${showId}:${seasonNumber}`
   const cached = seasonDetailCache.get(key)
@@ -108,9 +113,9 @@ export async function getSeasonDetail(showId: number, seasonNumber: number): Pro
   return detail
 }
 
-const watchProvidersCache = new Map<number, TmdbWatchProviders>()
+const watchProvidersCache = new ExpiringCache<number, TmdbWatchProviders>(TMDB_CACHE_TTL_MS)
 
-/** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB, session-cached. */
+/** Fetches streaming/rent/buy availability by country, sourced from JustWatch via TMDB, cached for an hour. */
 export async function getWatchProviders(showId: number): Promise<TmdbWatchProviders> {
   const cached = watchProvidersCache.get(showId)
   if (cached) return cached

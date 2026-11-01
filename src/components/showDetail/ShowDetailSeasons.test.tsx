@@ -184,6 +184,16 @@ describe('ShowDetailSeasons', () => {
     expect(screen.getByRole('radiogroup', { name: 'Rate Season 3' })).toBeInTheDocument()
   })
 
+  it("names the season rating after TMDB's season name when the show uses parts", () => {
+    renderSeasons({
+      activeSeason: 3,
+      show: show({
+        seasons: [{ id: 3, season_number: 3, name: 'Part 4', episode_count: 8, poster_path: null, air_date: '2026-10-23' }],
+      }),
+    })
+    expect(screen.getByRole('radiogroup', { name: 'Rate Part 4' })).toBeInTheDocument()
+  })
+
   it('shows an "Airs" badge instead of the rating control for a season that has not started airing yet', () => {
     renderSeasons({ activeSeason: 3, season: season({ air_date: '2099-06-15' }) })
     expect(screen.getByText(/Airs/)).toBeInTheDocument()

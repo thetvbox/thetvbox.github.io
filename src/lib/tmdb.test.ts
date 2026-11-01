@@ -77,6 +77,27 @@ describe('tmdb (VITE_TMDB_API_KEY configured)', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
+  it('getShowDetail and getSeasonDetail ask TMDB again once the hour-long cache expires, so new seasons appear', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(new Date('2026-10-31T12:00:00Z'))
+      vi.mocked(fetch).mockResolvedValue(jsonResponse({ id: 1, number_of_seasons: 3 }))
+      const { getShowDetail, getSeasonDetail } = await import('./tmdb')
+      await getShowDetail(1)
+      await getSeasonDetail(1, 3)
+      vi.setSystemTime(new Date('2026-10-31T12:59:59Z'))
+      await getShowDetail(1)
+      await getSeasonDetail(1, 3)
+      expect(fetch).toHaveBeenCalledTimes(2)
+      vi.setSystemTime(new Date('2026-10-31T13:00:00Z'))
+      await getShowDetail(1)
+      await getSeasonDetail(1, 3)
+      expect(fetch).toHaveBeenCalledTimes(4)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('getShowDetailsBulk resolves each id independently, dropping failures', async () => {
     vi.mocked(fetch).mockImplementation(async (input) => {
       const url = String(input)

@@ -12,10 +12,11 @@ beforeEach(() => {
 })
 
 function season(overrides: Partial<TmdbSeasonSummary> = {}): TmdbSeasonSummary {
+  const seasonNumber = overrides.season_number ?? 1
   return {
     id: 1,
-    name: 'Season 1',
-    season_number: 1,
+    name: seasonNumber === 0 ? 'Specials' : `Season ${seasonNumber}`,
+    season_number: seasonNumber,
     episode_count: 10,
     air_date: '2026-01-01',
     poster_path: null,
@@ -24,6 +25,19 @@ function season(overrides: Partial<TmdbSeasonSummary> = {}): TmdbSeasonSummary {
 }
 
 describe('SeasonTabs', () => {
+  it("labels each tab with TMDB's season name, so a show split into parts reads Part 3, Part 4", () => {
+    render(
+      <SeasonTabs
+        seasons={[season({ id: 1, season_number: 1 }), season({ id: 2, season_number: 2, name: 'Part 3' }), season({ id: 3, season_number: 3, name: 'Part 4' })]}
+        active={3}
+        onSelect={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Season 1')).toBeInTheDocument()
+    expect(screen.getByText('Part 3')).toBeInTheDocument()
+    expect(screen.getByText('Part 4').closest('button')).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('renders a tab per real season, hiding season 0 when there are other seasons', () => {
     render(
       <SeasonTabs
