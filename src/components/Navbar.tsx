@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
@@ -18,7 +19,8 @@ import HapticOverlay from './HapticOverlay'
 const linkBase =
   'relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-200 md:flex-row md:gap-1.5 md:text-sm md:px-3.5 md:py-1.5 md:rounded-full'
 
-function HomeIcon({ active }: { active: boolean }) {
+/** Shared frame for the tab icons: accent-coloured when its tab is active. */
+function TabIcon({ active, children }: { active: boolean; children: ReactNode }) {
   return (
     <svg
       width="21"
@@ -30,82 +32,55 @@ function HomeIcon({ active }: { active: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
+      {children}
+    </svg>
+  )
+}
+
+function HomeIcon({ active }: { active: boolean }) {
+  return (
+    <TabIcon active={active}>
       <circle cx="12" cy="12" r="9" />
       <path d="M10 8.5l6 3.5-6 3.5v-7Z" fill={active ? 'var(--color-accent-400)' : 'currentColor'} stroke="none" />
-    </svg>
+    </TabIcon>
   )
 }
 
 function SearchIcon({ active }: { active: boolean }) {
   return (
-    <svg
-      width="21"
-      height="21"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={active ? 'var(--color-accent-400)' : 'currentColor'}
-      strokeWidth="2"
-      strokeLinecap="round"
-    >
+    <TabIcon active={active}>
       <circle cx="11" cy="11" r="7" />
       <path d="M21 21l-4.3-4.3" />
-    </svg>
+    </TabIcon>
   )
 }
 
 function ActivityIcon({ active }: { active: boolean }) {
   return (
-    <svg
-      width="21"
-      height="21"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={active ? 'var(--color-accent-400)' : 'currentColor'}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <TabIcon active={active}>
       <circle cx="12" cy="12" r="9" />
       <path d="M7.5 12.5h2l1.3-3.4 2 6.8 1.3-3.4h2.4" />
-    </svg>
+    </TabIcon>
   )
 }
 
 function PeopleIcon({ active }: { active: boolean }) {
   return (
-    <svg
-      width="21"
-      height="21"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={active ? 'var(--color-accent-400)' : 'currentColor'}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <TabIcon active={active}>
       <circle cx="9" cy="8" r="3.2" />
       <path d="M2.5 20c1.2-3.4 4-5.2 6.5-5.2s5.3 1.8 6.5 5.2" />
       <path d="M16 8.2a3 3 0 1 1 3.2 3" />
       <path d="M15.5 14.9c2.1.3 4 1.8 4.9 5.1" />
-    </svg>
+    </TabIcon>
   )
 }
 
 function UserIcon({ active }: { active: boolean }) {
   return (
-    <svg
-      width="21"
-      height="21"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={active ? 'var(--color-accent-400)' : 'currentColor'}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <TabIcon active={active}>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6" />
-    </svg>
+    </TabIcon>
   )
 }
 

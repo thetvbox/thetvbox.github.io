@@ -82,94 +82,19 @@ function AppShell() {
             <ErrorBoundary>
               <Routes location={location}>
                 <Route path={ROUTES.login} element={<Login />} />
-                <Route
-                  path={ROUTES.home}
-                  element={
-                    <ProtectedRoute>
-                      <Home />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.activity}
-                  element={
-                    <ProtectedRoute>
-                      <Activity />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.search}
-                  element={
-                    <ProtectedRoute>
-                      <Search />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.show}
-                  element={
-                    <ProtectedRoute>
-                      <ShowDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.profile}
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.members}
-                  element={
-                    <ProtectedRoute>
-                      <Members />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.publicProfile}
-                  element={
-                    <ProtectedRoute>
-                      <PublicProfile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.showDiary}
-                  element={
-                    <ProtectedRoute>
-                      <ShowDiary />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.compare}
-                  element={
-                    <ProtectedRoute>
-                      <Compare />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.listDetail}
-                  element={
-                    <ProtectedRoute>
-                      <ListDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path={ROUTES.recap}
-                  element={
-                    <ProtectedRoute>
-                      <Recap />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route element={<ProtectedRoute />}>
+                  <Route path={ROUTES.home} element={<Home />} />
+                  <Route path={ROUTES.activity} element={<Activity />} />
+                  <Route path={ROUTES.search} element={<Search />} />
+                  <Route path={ROUTES.show} element={<ShowDetail />} />
+                  <Route path={ROUTES.profile} element={<Profile />} />
+                  <Route path={ROUTES.members} element={<Members />} />
+                  <Route path={ROUTES.publicProfile} element={<PublicProfile />} />
+                  <Route path={ROUTES.showDiary} element={<ShowDiary />} />
+                  <Route path={ROUTES.compare} element={<Compare />} />
+                  <Route path={ROUTES.listDetail} element={<ListDetail />} />
+                  <Route path={ROUTES.recap} element={<Recap />} />
+                </Route>
                 <Route path="/" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
                 <Route path="*" element={<Navigate to={user ? ROUTES.home : ROUTES.login} replace />} />
               </Routes>

@@ -5,16 +5,17 @@ import { useAuth } from '../contexts/AuthContext'
 import { fetchAllUsers } from '../lib/users'
 import { fetchFollowerIds, fetchFollowingIds } from '../lib/follows'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
-import { SKELETON_ROWS } from '../lib/constants'
 import { profileRoute } from '../lib/routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useFollowActions } from '../hooks/useFollowActions'
+import { useFollowToggles } from '../hooks/useFollowToggles'
 import FollowButton from '../components/FollowButton'
 import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import Toast from '../components/Toast'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
+import { RowListSkeleton } from '../components/Skeletons'
+import SearchField from '../components/SearchField'
 import type { AppUser } from '../types'
 
 /** People directory: search plus a Follow/Following button and "Follows you" badge per row. */
@@ -22,14 +23,14 @@ export default function Members() {
   const { user: me } = useAuth()
   useDocumentTitle('People')
   const [users, setUsers] = useState<AppUser[]>([])
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [followerIds, setFollowerIds] = useState<Set<string>>(new Set())
-  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { follow, unfollow, toast, dismiss } = useFollowActions()
+  const { followingIds, setFollowingIds, savingIds, handleFollow, handleUnfollow, toast, dismiss } = useFollowToggles(
+    (id) => users.find((u) => u.id === id)?.username,
+  )
 
   function setQuery(next: string) {
     setSearchParams(
@@ -69,7 +70,7 @@ export default function Members() {
     return () => {
       cancelled = true
     }
-  }, [me])
+  }, [me, setFollowingIds])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -77,73 +78,18 @@ export default function Members() {
     return users.filter((u) => u.username.toLowerCase().includes(q))
   }, [users, query])
 
-  function applyFollowing(targetId: string, following: boolean) {
-    setFollowingIds((prev) => {
-      const next = new Set(prev)
-      if (following) next.add(targetId)
-      else next.delete(targetId)
-      return next
-    })
-  }
-
-  async function handleFollow(targetId: string) {
-    setSavingIds((prev) => new Set(prev).add(targetId))
-    await follow(targetId, (following) => applyFollowing(targetId, following))
-    setSavingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(targetId)
-      return next
-    })
-  }
-
-  async function handleUnfollow(targetId: string) {
-    const target = users.find((u) => u.id === targetId)
-    setSavingIds((prev) => new Set(prev).add(targetId))
-    await unfollow(targetId, target?.username, (following) => applyFollowing(targetId, following))
-    setSavingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(targetId)
-      return next
-    })
-  }
-
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 md:pb-10">
       <motion.h1 {...PAGE_HEADER_MOTION} className="font-display mb-5 text-2xl font-semibold text-base-100">
         People
       </motion.h1>
 
-      <div className="relative mb-6">
-        <svg
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-base-500"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find a username…"
-          className="w-full rounded-xl border border-hairline-strong bg-base-850 py-3 pl-10 pr-4 text-base text-base-100 placeholder:text-base-500 transition-[border-color,box-shadow] duration-200 focus:border-accent-500/60 focus:ring-4 focus:ring-accent-500/10 sm:text-sm"
-        />
-      </div>
+      <SearchField value={query} onChange={setQuery} placeholder="Find a username…" className="mb-6" />
 
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
+        <RowListSkeleton />
       ) : filtered.length === 0 ? (
         <EmptyState icon="🔍">
           <p className="max-w-xs text-sm text-base-500">

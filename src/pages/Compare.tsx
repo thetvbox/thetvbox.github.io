@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { fetchRecentShowRatings } from '../lib/showRatings'
 import { fetchUserByUsername } from '../lib/users'
 import { PAGE_HEADER_MOTION, staggerRowMotion } from '../lib/motion'
-import { LARGE_ACTIVITY_FETCH_LIMIT, MAX_RATING_DIFF, SKELETON_ROWS } from '../lib/constants'
+import { LARGE_ACTIVITY_FETCH_LIMIT, MAX_RATING_DIFF } from '../lib/constants'
 import { ROUTES, showRoute } from '../lib/routes'
 import { useGoBack } from '../hooks/useGoBack'
 import BackButton from '../components/BackButton'
@@ -16,6 +16,7 @@ import PosterThumb from '../components/PosterThumb'
 import StatCard from '../components/StatCard'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
+import { RowListSkeleton } from '../components/Skeletons'
 import type { AppUser, ShowRating } from '../types'
 
 interface SharedShow {
@@ -119,11 +120,7 @@ export default function Compare() {
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
+        <RowListSkeleton />
       ) : shared.length === 0 ? (
         <EmptyState icon="🤝">
           <p className="max-w-xs text-sm text-base-500">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useFollowActions } from '../hooks/useFollowActions'
+import { useFollowToggles } from '../hooks/useFollowToggles'
 import { fetchFollowerIds, fetchFollowersWithUsers, fetchFollowingIds, fetchFollowingWithUsers } from '../lib/follows'
 import { profileRoute } from '../lib/routes'
 import FollowButton from './FollowButton'
@@ -33,12 +33,18 @@ export default function FollowListPanel({
 }: FollowListPanelProps) {
   const { user: me } = useAuth()
   const [people, setPeople] = useState<AppUser[]>([])
-  const [myFollowingIds, setMyFollowingIds] = useState<Set<string>>(new Set())
   const [myFollowerIds, setMyFollowerIds] = useState<Set<string>>(new Set())
-  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { follow, unfollow, toast, dismiss } = useFollowActions()
+  const {
+    followingIds: myFollowingIds,
+    setFollowingIds: setMyFollowingIds,
+    savingIds,
+    handleFollow,
+    handleUnfollow,
+    toast,
+    dismiss,
+  } = useFollowToggles((id) => people.find((p) => p.id === id)?.username, onMyFollowingCountChange)
 
   useEffect(() => {
     if (!me) return
@@ -67,38 +73,7 @@ export default function FollowListPanel({
     return () => {
       cancelled = true
     }
-  }, [userId, mode, me])
-
-  function applyFollowing(targetId: string, following: boolean) {
-    setMyFollowingIds((prev) => {
-      const next = new Set(prev)
-      if (following) next.add(targetId)
-      else next.delete(targetId)
-      return next
-    })
-    onMyFollowingCountChange?.(following ? 1 : -1)
-  }
-
-  async function handleFollow(targetId: string) {
-    setSavingIds((prev) => new Set(prev).add(targetId))
-    await follow(targetId, (following) => applyFollowing(targetId, following))
-    setSavingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(targetId)
-      return next
-    })
-  }
-
-  async function handleUnfollow(targetId: string) {
-    const target = people.find((p) => p.id === targetId)
-    setSavingIds((prev) => new Set(prev).add(targetId))
-    await unfollow(targetId, target?.username, (following) => applyFollowing(targetId, following))
-    setSavingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(targetId)
-      return next
-    })
-  }
+  }, [userId, mode, me, setMyFollowingIds])
 
   return (
     <Modal

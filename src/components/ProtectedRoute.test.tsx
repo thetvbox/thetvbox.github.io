@@ -14,14 +14,9 @@ function renderRoute() {
   return render(
     <MemoryRouter initialEntries={['/protected']}>
       <Routes>
-        <Route
-          path="/protected"
-          element={
-            <ProtectedRoute>
-              <p>Secret content</p>
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/protected" element={<p>Secret content</p>} />
+        </Route>
         <Route path="/login" element={<p>Login page</p>} />
       </Routes>
     </MemoryRouter>,

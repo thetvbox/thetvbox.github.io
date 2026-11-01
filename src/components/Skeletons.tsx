@@ -1,4 +1,5 @@
 import { POSTER_GRID_CLASSES } from './PosterTile'
+import { SKELETON_ROWS } from '../lib/constants'
 
 function ShowCardSkeleton({ progress = false }: { progress?: boolean }) {
   return (
@@ -35,6 +36,17 @@ export function EpisodeRowSkeleton() {
         <div className="h-3 w-full rounded bg-base-800" />
         <div className="h-3 w-4/5 rounded bg-base-800" />
       </div>
+    </div>
+  )
+}
+
+/** Placeholder rows for a list of row cards (people, compared shows, profile tabs) while it loads. */
+export function RowListSkeleton({ count = SKELETON_ROWS }: { count?: number }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
+      ))}
     </div>
   )
 }

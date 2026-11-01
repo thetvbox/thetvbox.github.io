@@ -14,7 +14,7 @@ import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from '../lib/watc
 import { dropShow, fetchDroppedForUser, undropShow } from '../lib/showDropped'
 import { createList, fetchListsForUser } from '../lib/lists'
 import { groupByDay } from '../lib/date'
-import { ACTIVITY_FETCH_LIMIT, SKELETON_ROWS } from '../lib/constants'
+import { ACTIVITY_FETCH_LIMIT } from '../lib/constants'
 import { useAuth } from '../contexts/AuthContext'
 import Chip from './Chip'
 import HistorySection from './HistorySection'
@@ -30,6 +30,7 @@ import { useToast } from '../hooks/useToast'
 import { useEscapeAndFocusReturn } from '../hooks/useEscapeAndFocusReturn'
 import { errorMessage } from '../lib/format'
 import ErrorText from '../components/ErrorText'
+import { RowListSkeleton } from './Skeletons'
 import type {
   EpisodeWatched,
   ShowDropped,
@@ -257,11 +258,7 @@ export default function ProfileActivity({ userId, username }: ProfileActivityPro
       {error && <ErrorText className="mb-4 text-sm">{error}</ErrorText>}
 
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-base-850/70" />
-          ))}
-        </div>
+        <RowListSkeleton />
       ) : tab === 'diary' ? (
         <DiaryTab groups={diaryGroups} undatedEntries={undatedDiaryEntries} username={username} />
       ) : tab === 'history' ? (
