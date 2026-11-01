@@ -4,7 +4,6 @@ import { CheckGlyph } from './ShowDetailGlyphs'
 import { SEASON_TAB_INDICATOR_SPRING } from '../lib/motion'
 import HapticOverlay from './HapticOverlay'
 import type { SeasonSegment } from '../lib/seasonProgress'
-import { seasonLabel } from '../lib/seasonLabel'
 import type { TmdbSeasonSummary } from '../types'
 
 interface SeasonTabsProps {
@@ -29,7 +28,7 @@ export default function SeasonTabs({ seasons, active, onSelect, segments = [] }:
         const isActive = season.season_number === active
         const segment = segmentBySeasonNumber.get(season.season_number)
         const isComplete = Boolean(segment && segment.total > 0 && segment.watched >= segment.total)
-        const label = seasonLabel(season)
+        const label = season.season_number === 0 ? 'Specials' : `Season ${season.season_number}`
         return (
           <button
             key={season.id}

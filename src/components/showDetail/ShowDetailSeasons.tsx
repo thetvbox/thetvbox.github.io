@@ -11,7 +11,6 @@ import { pluralSuffix } from '../../lib/format'
 import { scrollBehavior } from '../../lib/motion'
 import { computeSeasonProgress, countWatchedBySeason } from '../../lib/seasonProgress'
 import { watchedKey } from '../../lib/watched'
-import { seasonLabel } from '../../lib/seasonLabel'
 import type { SeasonRatingWithUser, TmdbEpisode, TmdbSeasonDetail, TmdbShowDetail, WatchedMap } from '../../types'
 
 interface ShowDetailSeasonsProps {
@@ -75,7 +74,6 @@ export default function ShowDetailSeasons({
     (ep) => !watched[watchedKey(ep.season_number, ep.episode_number)] && !(ep.air_date && isFutureDate(ep.air_date)),
   )
   const seasonAirDate = season?.air_date ?? null
-  const activeSeasonSummary = show.seasons.find((s) => s.season_number === activeSeason)
   const seasonUpcoming = Boolean(seasonAirDate && isFutureDate(seasonAirDate))
 
   const seasonSegments = useMemo(
@@ -149,7 +147,7 @@ export default function ShowDetailSeasons({
             currentUserId={currentUserId}
             size="md"
             emptyLabel="You're the first to rate this season"
-            ratingLabel={`Rate ${seasonLabel(activeSeasonSummary ?? { season_number: activeSeason })}`}
+            ratingLabel={`Rate Season ${activeSeason}`}
           />
         )}
       </div>
