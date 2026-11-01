@@ -14,6 +14,15 @@ All notable changes to TV Box are documented here. Format loosely follows
 
 ### Security
 
+- `supabase/schema.sql` no longer carries the original open "Anyone can ..."
+  access rules, which would have reopened every table if it were re-run on
+  production. Access rules come only from the `tv-box-native` migrations;
+  the summary views are members-only like their tables; and
+  `record_season_splits` runs from a private schema the API doesn't serve,
+  behind a same-name wrapper.
+- The push trigger reads the `send-push` URL from the Vault and sends only
+  the notification id, and `send-push` no longer sends to the retired Expo
+  app.
 - New members now need an invite code, which the database checks, and
   must confirm their email with a one-time code before creating an
   account.
